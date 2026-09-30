@@ -24,7 +24,10 @@ export interface PipelineCardProps {
   projects: ProjectSummary[];
   /** Rendered at the bottom of the card, overlapping the bars (the prompt band). */
   footer?: ReactNode;
-  /** Height of the bar area in px (default 296). */
+  /**
+   * Least height of the bar area in px (default 240). The funnel grows to fill the card, so beside
+   * Agent spend it matches that card's height; alone in its row it keeps this height.
+   */
   height?: number;
   className?: string;
 }
@@ -50,6 +53,9 @@ function figures(pipeline: DashboardData["pipeline"], projects: ProjectSummary[]
   });
 }
 
+/** Phone column labels: the stage short names, with "PO" for PO Review ("Sign-off" does not fit a fifth of 350px). */
+const FUNNEL_SHORT: Record<StageId, string> = Object.fromEntries(STAGES.map((s) => [s.id, s.id === "signoff" ? "PO" : s.short])) as Record<StageId, string>;
+
 /** Integer ticks for a count axis: about three, never fractional. */
 function countTicks(max: number): Array<{ value: number; label: string }> {
   if (max <= 1) return [];
@@ -59,7 +65,7 @@ function countTicks(max: number): Array<{ value: number; label: string }> {
   return out;
 }
 
-export function PipelineCard({ pipeline, projects, footer, height = 296, className }: PipelineCardProps) {
+export function PipelineCard({ pipeline, projects, footer, height = 240, className }: PipelineCardProps) {
   const router = useRouter();
   const [boxRef, box] = useElementSize<HTMLDivElement>();
   // Phones get a shorter funnel, so the card does not fill the whole screen.
@@ -73,8 +79,8 @@ export function PipelineCard({ pipeline, projects, footer, height = 296, classNa
 
   const columns: FunnelColumn[] = rows.map((r) => ({
     key: r.stage,
-    // Short stage names ("BRD", "Build") where the full titles would truncate.
-    label: (narrow ? STAGES.find((s) => s.id === r.stage)?.short : STAGES.find((s) => s.id === r.stage)?.title) ?? r.stage,
+    // Short stage names (BRD / AAD / Build / QA / PO) where the full titles would truncate.
+    label: (narrow ? FUNNEL_SHORT[r.stage] : STAGES.find((s) => s.id === r.stage)?.title) ?? r.stage,
     value: r.reached,
     display: String(r.reached),
     hint: `${plural(r.reached, "project")} reached it; ${r.here} here now, ${r.awaiting} awaiting approval, ${r.needInput} need input`,
@@ -95,28 +101,28 @@ export function PipelineCard({ pipeline, projects, footer, height = 296, classNa
         />
       }
       className={cn("overflow-hidden", className)}
-      bodyClassName={cn("flex flex-col justify-end", footer ? "pb-1 sm:pb-1" : undefined)}
+      bodyClassName={cn("flex flex-col", footer ? "pb-1 sm:pb-1" : undefined)}
     >
       <div ref={boxRef} className="flex min-h-0 min-w-0 flex-1 flex-col">
-      <FunnelColumns
-        columns={columns}
-        defaultActiveKey={busiest?.stage}
-        max={max}
-        height={barHeight}
-        fill
-        axis={countTicks(max)}
-        ariaLabel="Projects that reached each stage"
-        onSelect={(key) => router.push(`/projects?stage=${key}`)}
-        tooltip={(col) => {
-          const r = byStage.get(col.key as StageId);
-          if (!r) return [];
-          return [
-            { value: r.here, label: "here now", valueFirst: true },
-            { value: r.awaiting, label: "awaiting approval", valueFirst: true },
-            { value: r.needInput, label: r.needInput === 1 ? "needs input" : "need input", valueFirst: true },
-          ];
-        }}
-      />
+        <FunnelColumns
+          columns={columns}
+          defaultActiveKey={busiest?.stage}
+          max={max}
+          height={barHeight}
+          fill
+          axis={countTicks(max)}
+          ariaLabel="Projects that reached each stage"
+          onSelect={(key) => router.push(`/projects?stage=${key}`)}
+          tooltip={(col) => {
+            const r = byStage.get(col.key as StageId);
+            if (!r) return [];
+            return [
+              { value: r.here, label: "here now", valueFirst: true },
+              { value: r.awaiting, label: "awaiting approval", valueFirst: true },
+              { value: r.needInput, label: r.needInput === 1 ? "needs input" : "need input", valueFirst: true },
+            ];
+          }}
+        />
       </div>
       {/* The band sits 4px inside the card's sides and bottom, so it reads as the card's base. */}
       {footer ? <div className="relative z-30 -mx-4 -mt-8 sm:-mx-6 sm:-mt-14">{footer}</div> : null}

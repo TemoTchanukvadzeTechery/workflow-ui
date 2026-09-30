@@ -280,12 +280,15 @@ export function EvidenceHighlights({ projectId, bundle }: { projectId: string; b
       {items.length === 0 ? (
         <EmptyState size="sm" icon={Film} title="No recordings" body="QA attached no recordings to this project's tasks." />
       ) : (
-        <ul className="grid gap-4 @3xl/stage:grid-cols-2">
+        <ul className="grid gap-4 @3xl/stage:grid-cols-2 @5xl/stage:grid-cols-3">
           {items.map(({ epic, rec }) => (
             <li key={epic.id} className="min-w-0 space-y-2.5">
-              <div className="flex flex-wrap items-baseline gap-x-2 text-sm">
-                <span className="font-medium text-heading">{epic.title}</span>
-                <Link href={`/projects/${encodeURIComponent(projectId)}/tasks/${encodeURIComponent(rec!.task.id)}`} className="font-mono text-xs text-muted-foreground hover:text-foreground">
+              {/* One line (the full title on hover), so the players of a row line up. */}
+              <div className="flex min-w-0 items-baseline gap-x-2 text-sm">
+                <span className="min-w-0 truncate font-medium text-heading" title={epic.title}>
+                  {epic.title}
+                </span>
+                <Link href={`/projects/${encodeURIComponent(projectId)}/tasks/${encodeURIComponent(rec!.task.id)}`} className="shrink-0 font-mono text-xs text-muted-foreground hover:text-foreground">
                   {rec!.task.jiraKey ?? rec!.task.id}
                 </Link>
               </div>

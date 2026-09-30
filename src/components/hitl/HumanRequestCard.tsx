@@ -4,12 +4,14 @@
  * One weft human request, answerable in place. Accepts a PendingRequest (from a pending list; no
  * key or phase) or a HumanState (from a run), joins key/phase/status from useRun(runId), shows
  * the weft header as a glass strip (mono human.requested · h3, kind and key, risk, a "Waiting 3m"
- * chip; then workflow · runId · phase), the question verbatim as the card title, and the bespoke form for its key, else the generic SchemaForm. Answered and
+ * chip; then workflow · runId · phase; below a 420px container, as in the rail, one line of
+ * workflow · runId and the Waiting chip, with the rest in the form's "Show answer JSON"
+ * disclosure via RequestMetaContext), the question verbatim as the card title, and the bespoke form for its key, else the generic SchemaForm. Answered and
  * superseded requests collapse to a read-only summary.
  */
 import { Ban, CheckCircle2, Hourglass } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRun } from "@/lib/api/queries";
 import type { HumanState, PendingRequest, Risk } from "@/lib/weft/types";
@@ -18,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { FloatingChip } from "@/components/common";
 import { MonoChip, TimeAgo, TonePill, type Tone } from "./bits";
 import { GenericRequestForm, pickRequestForm } from "./forms";
+import { RequestMetaContext, type RequestMeta } from "./RequestFooter";
 import { toRequestView, type RequestView } from "./types";
 
 export interface HumanRequestCardProps {
@@ -37,6 +40,8 @@ export interface HumanRequestCardProps {
   memoryStale?: string[];
   /** Display name for answeredBy "human" in the summary, when the caller knows it. */
   answeredByName?: string;
+  /** Inside a card that already frames it (the inbox detail): no surface, edge or radius of its own. */
+  bare?: boolean;
   className?: string;
 }
 
@@ -48,35 +53,43 @@ export function requestDomId(runId: string, requestId: string): string {
 }
 
 function CardHeader({ view, compact }: { view: RequestView; compact?: boolean }) {
+  const pending = view.status === "pending";
+  const waiting = pending ? <FloatingChip size="sm" tone="attention" icon={Hourglass} value={<TimeAgo at={view.createdAt} prefix="Waiting " elapsed />} title="Holds the run until answered" /> : null;
+  // Narrow cards still show a risk that asks for care; "low" moves to the answer JSON disclosure.
+  const loudRisk = view.risk && view.risk !== "low";
   return (
     <div className={cn("glass flex flex-col gap-1.5", compact ? "m-1.5 rounded-[15px] px-3 py-2" : "m-2 rounded-[20px] px-3.5 py-2.5 @2xl:px-4")}>
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
+      {/* Wide (420px and up): the weft event, kind, key and risk, with the Waiting chip. */}
+      <div className="hidden flex-wrap items-center gap-x-2 gap-y-1.5 @min-[420px]:flex">
         <span className="font-mono text-[11.5px] text-muted-foreground">human.requested · {view.id}</span>
         <MonoChip>{view.kind}</MonoChip>
         {view.key ? <MonoChip className="hidden @md:inline-flex">{view.key}</MonoChip> : null}
         {view.risk ? <TonePill tone={RISK_TONE[view.risk]} className="h-6 gap-1 px-2 text-xs">risk: {view.risk}</TonePill> : null}
         <span className="flex-1" />
-        {view.status === "pending" ? (
-          <FloatingChip size="sm" tone="attention" icon={Hourglass} value={<TimeAgo at={view.createdAt} prefix="Waiting " elapsed />} title="Holds the run until answered" />
-        ) : null}
+        {waiting}
       </div>
-      <div className={cn("flex flex-wrap items-center gap-x-1.5 font-mono text-heading", compact ? "text-[11.5px]" : "text-xs")}>
-        <span>{view.workflow ?? "run"}</span>
+      {/* workflow · run (· phase when wide); narrow, this one line also carries the Waiting chip. */}
+      <div className={cn("flex min-w-0 items-center gap-x-1.5 font-mono text-heading @min-[420px]:flex-wrap", compact ? "text-[11.5px]" : "text-xs")}>
+        <span className="truncate">{view.workflow ?? "run"}</span>
         <span aria-hidden className="text-muted-foreground">
           ·
         </span>
-        <Link href={`/runs/${view.runId}`} className="text-primary underline-offset-2 hover:underline focus-visible:rounded focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none">
+        <Link href={`/runs/${view.runId}`} className="shrink-0 text-primary underline-offset-2 hover:underline focus-visible:rounded focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none">
           {view.runId}
         </Link>
         {view.phase ? (
-          <>
+          <span className="hidden items-center gap-x-1.5 @min-[420px]:inline-flex">
             <span aria-hidden className="text-muted-foreground">
               ·
             </span>
             <span>{view.phase}</span>
-          </>
+          </span>
         ) : null}
-        {view.status === "pending" ? <span className="ml-auto font-sans text-xs text-muted-foreground">Holds the run until answered</span> : null}
+        {pending ? <span className="ml-auto hidden font-sans text-xs text-muted-foreground @min-[420px]:inline">Holds the run until answered</span> : null}
+        <span className="ml-auto flex shrink-0 items-center gap-1.5 font-sans @min-[420px]:hidden">
+          {loudRisk && view.risk ? <TonePill tone={RISK_TONE[view.risk]} className="h-6 gap-1 px-2 text-xs">risk: {view.risk}</TonePill> : null}
+          {waiting}
+        </span>
       </div>
     </div>
   );
@@ -137,7 +150,7 @@ function ClosedSummary({ view, answeredByName }: { view: RequestView; answeredBy
   );
 }
 
-export function HumanRequestCard({ runId, request, projectId, workflow, compact, onAnswered, focused, editedTasks, memoryStale, answeredByName, className }: HumanRequestCardProps) {
+export function HumanRequestCard({ runId, request, projectId, workflow, compact, onAnswered, focused, editedTasks, memoryStale, answeredByName, bare, className }: HumanRequestCardProps) {
   const run = useRun(runId);
   const view = toRequestView(runId, request, run.data, workflow);
   const ref = useRef<HTMLElement>(null);
@@ -151,6 +164,7 @@ export function HumanRequestCard({ runId, request, projectId, workflow, compact,
   const picked = pickRequestForm(view);
   const Form = picked?.Component;
   const closed = view.status !== "pending";
+  const meta = useMemo<RequestMeta>(() => ({ id: view.id, kind: view.kind, key: view.key, phase: view.phase, risk: view.risk }), [view.id, view.kind, view.key, view.phase, view.risk]);
 
   return (
     <article
@@ -159,13 +173,15 @@ export function HumanRequestCard({ runId, request, projectId, workflow, compact,
       aria-label={`Request ${view.id} on run ${runId}`}
       data-form={picked?.name ?? "schema"}
       className={cn(
-        "@container card-surface min-w-0 scroll-mt-20",
-        compact ? "rounded-[20px]" : "rounded-2xl",
+        "@container min-w-0 scroll-mt-20",
+        !bare && "card-surface",
+        !bare && (compact ? "rounded-[20px]" : "rounded-2xl"),
         focused && "ring-2 ring-ring",
         className,
       )}
     >
       <CardHeader view={view} compact={compact} />
+      <RequestMetaContext.Provider value={meta}>
       <div className={cn("min-w-0", compact ? "space-y-3 px-3.5 pt-2 pb-3.5" : "space-y-5 px-5 pt-3 pb-5 @2xl:px-6 @2xl:pb-6")}>
       {closed ? (
         <ClosedSummary view={view} answeredByName={answeredByName} />
@@ -185,6 +201,7 @@ export function HumanRequestCard({ runId, request, projectId, workflow, compact,
         </>
       )}
       </div>
+      </RequestMetaContext.Provider>
     </article>
   );
 }

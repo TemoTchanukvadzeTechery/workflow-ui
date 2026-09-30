@@ -1,7 +1,7 @@
 export { HumanRequestCard, AnswerSummary, requestDomId, type HumanRequestCardProps } from "./HumanRequestCard";
 export { RequestList, type RequestListProps, type RequestListItem } from "./RequestList";
 export { SchemaForm, type SchemaFormProps } from "./SchemaForm";
-export { RequestFooter, answerBodyPreview, type RequestFooterProps } from "./RequestFooter";
+export { RequestFooter, RequestMetaContext, answerBodyPreview, type RequestFooterProps, type RequestMeta } from "./RequestFooter";
 export { AttachmentTabs, BlobContent, renderText, type BlobItem } from "./BlobContent";
 export { useAnswerRequest } from "./use-answer-request";
 export { toRequestView, findAttachment, fileSubject, artifactSubject, type RequestView, type RequestFormProps } from "./types";

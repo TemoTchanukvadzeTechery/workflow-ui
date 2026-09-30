@@ -213,6 +213,8 @@ Do not edit files you do not own. If you need a change in someone else's file, w
 
 ### 5.3 Visual system (brief §D.2)
 
+> The current visual spec is [docs/design/STYLE.md](design/STYLE.md), built from the reference images in `docs/design/reference/`. Where it differs from the notes below, STYLE.md wins.
+
 - Tokens in `globals.css` (shadcn variable names, Tailwind v4 `@theme inline`), light + `.dark`, via `next-themes` (`attribute="class"`, default system). Light: background `#F2F2F3`, card `#FFFFFF`, foreground `#232E32`, muted-foreground `#6B7075`, border `#E4E4E7`, primary `#1B47DB` (soft `#E8EEFC`), accent terracotta `#B26552` used rarely. Dark: background `#0F1214`, card `#171B1E`, foreground `#E7EAEC`, muted-fg `#9AA1A7`, border `#262B2F`, primary `#6997E4` (soft `#1A2440`).
 - Status tones (CSS vars `--status-<tone>-fg/-bg`): running `#1B47DB/#E8EEFC` (pulsing dot), needs_input `#B45309/#FEF3C7`, in_review `#5B4BB7/#EEEBFA`, approved/done/certified `#15803D/#DCFCE7` (check icon), failed/changes_requested/bugs_found `#B91C1C/#FEE2E2`, locked/not_started `#71717A/#F4F4F5` (lock icon). Dark variants: same hue, fg lighter, bg ~15% alpha. Status is never color-only: pill = icon + label.
 - Stages have no color of their own; icons: Requirements `FileText`, Architecture `Network`, Implementation `Code2`, QA `FlaskConical`, PO Review `BadgeCheck`.

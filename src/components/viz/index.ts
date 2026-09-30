@@ -18,7 +18,8 @@
  *   `intervalMs` (default 7000), `chipLabel` (default "Insights").
  * - `MeshBackdrop`: that card's backdrop alone (mesh, glass chevron, scrim, grain, dark dimmer) for
  *   other loud cards. Props: `glass` (default true), `className`. Parent: `relative isolate
- *   overflow-hidden` plus its radius.
+ *   overflow-hidden text-white` plus its radius; mark its bottom text block (a direct child) with
+ *   `data-mesh-text` so the backdrop keeps the area behind it deep blue (white type passes AA).
  * - `PromptBand`: the frosted prompt band. Props: `title`, `placeholder`, `compactPlaceholder`
  *   (default "Search or type a command", used when `placeholder` does not fit), `suggestions`
  *   ({ token, label, href? }[]; chips move to their own scrolling row when the band is narrow),

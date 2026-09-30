@@ -1,12 +1,11 @@
 "use client";
 
 /**
- * The run page header (weft RunHeader): back link, workflow name, id chip, status, the
- * "N steps · mm:ss · 46,099 tok · $6.92" line, where the run belongs, Cancel / Resume with a
- * confirm, a budget meter when the run has a USD limit, and a failure or waiting banner.
+ * The run page header (weft RunHeader): the workflow name with Cancel / Resume (with a confirm)
+ * on its right, status, id chip, where the run belongs, the "N steps · mm:ss · 46,099 tok · $6.92"
+ * facts, a budget meter when the run has a USD limit, and a failure or waiting banner.
  */
-import { ArrowLeft, CircleAlert, OctagonX, Play, RotateCcw, TriangleAlert } from "lucide-react";
-import Link from "next/link";
+import { CircleAlert, OctagonX, Play, RotateCcw, TriangleAlert } from "lucide-react";
 import { useState } from "react";
 import { Elapsed, FactCell, FactStrip, IdChip, RelativeTime, StatusPill, StripedBar } from "@/components/common";
 import {
@@ -33,37 +32,27 @@ export interface RunHeaderProps {
   entry?: RunIndexEntry;
   /** Open the Steps tab on a pending request. */
   onOpenRequest?: (h: HumanState) => void;
-  backHref?: string;
-  backLabel?: string;
 }
 
-export function RunHeader({ run, entry, onOpenRequest, backHref = "/runs", backLabel = "Runs" }: RunHeaderProps) {
+export function RunHeader({ run, entry, onOpenRequest }: RunHeaderProps) {
   const terminal = TERMINAL_RUN_STATUSES.includes(run.status);
   const pending = pendingHumans(run);
   return (
     <header className="flex min-w-0 flex-col gap-5">
-      <div>
-        <Link
-          href={backHref}
-          className="inline-flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-heading focus-visible:rounded-sm focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-        >
-          <ArrowLeft aria-hidden className="size-4" />
-          {backLabel}
-        </Link>
-      </div>
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between md:gap-6">
-        <div className="flex min-w-0 flex-col gap-3">
+      {/* The breadcrumb under the nav leads back to Runs; Cancel / Resume sit in the title row (page-header pattern). */}
+      <div className="flex min-w-0 flex-col gap-3">
+        <div className="flex min-w-0 flex-wrap items-center justify-between gap-x-6 gap-y-3">
           <h1 className="min-w-0 text-[34px] leading-[1.08] font-normal tracking-[-0.03em] break-all text-heading sm:text-[44px] sm:leading-[1.05] sm:tracking-[-0.035em]">{run.workflow}</h1>
-          <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <StatusPill status={{ kind: "run", value: run.status }} />
-            <WorkflowBadge workflow={run.workflow} />
-            <IdChip id={run.runId} />
+          <div className="flex shrink-0 flex-wrap items-center gap-2 empty:hidden">
+            <RunActions run={run} projectId={entry?.projectId} />
           </div>
-          <RunContext entry={entry} wrap className="text-sm" />
         </div>
-        <div className="flex shrink-0 flex-wrap items-center gap-2">
-          <RunActions run={run} projectId={entry?.projectId} />
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <StatusPill status={{ kind: "run", value: run.status }} />
+          <WorkflowBadge workflow={run.workflow} />
+          <IdChip id={run.runId} />
         </div>
+        <RunContext entry={entry} wrap className="text-sm" />
       </div>
       <FactStrip className="card-surface border-0 bg-card">
         <FactCell label="Steps" value={plural(run.steps.length, "step")} />

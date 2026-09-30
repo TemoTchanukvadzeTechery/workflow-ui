@@ -1,9 +1,10 @@
 "use client";
 
 /**
- * The frame every stage workspace shares: a big header (Stage n of 5 · Title with a copy-link
- * circle; owner, status and metric as chips; the stage's runs as a toolbar group and reopen on the
- * right; the sub-steps as a segmented control), the main column, a right rail card with Requests /
+ * The frame every stage workspace shares: a big header (row 1: Stage n of 5 · Title with a
+ * copy-link circle, full width; row 2: owner, status and metric as chips on the left, the stage's
+ * runs as a toolbar group, header actions and Reopen on the right; then the sub-steps as a
+ * segmented control), the main column, a right rail card with Requests /
  * Notes / Activity (stacked below on narrow screens) and the GateFooter band. The rail folds to a thin tab strip while it holds no
  * request or note of its own, so it does not take 360px from the page to say "nothing here".
  * Locked stages show LockedStage and keep any existing content, and its sub-steps, read-only.
@@ -24,7 +25,7 @@ import { cn } from "@/lib/utils";
 import { actorName, TimeAgo } from "../hitl/bits";
 import { RequestList } from "../hitl/RequestList";
 import { GateFooter, type GateNextAction } from "./GateFooter";
-import { nextActionLabel } from "./next-action";
+import { blockerActionLabel, nextActionLabel } from "./next-action";
 import { NotesPanel, type NoteAnchorOption } from "./NotesPanel";
 import { RunChip } from "./RunChip";
 import { LockedStage, ReopenDialog, StaleBanner } from "./StageBanners";
@@ -302,7 +303,7 @@ export function StageLayout({
       ? ns && ns.stage === stage
         ? { label: nextActionLabel(ns.text), href: ns.href, title: ns.text }
         : linked?.href
-          ? { label: linked.text, href: linked.href }
+          ? { label: blockerActionLabel(linked.text), href: linked.href, title: linked.text }
           : undefined
       : undefined;
   // Nothing to change before the stage produced anything; PO Review can always send back.
@@ -317,25 +318,25 @@ export function StageLayout({
   return (
     <div className="@container/stage flex min-w-0 flex-col gap-5">
       <header className="flex flex-col gap-5">
-        <div className="flex flex-col gap-4 @4xl/stage:flex-row @4xl/stage:items-end @4xl/stage:justify-between @4xl/stage:gap-6">
-          <div className="flex min-w-0 flex-col gap-3">
-            <div className="flex min-w-0 items-start gap-2.5">
-              <h1 className="min-w-0 text-[32px] leading-[1.08] font-normal tracking-[-0.03em] break-words text-heading @2xl/stage:text-[44px] @2xl/stage:leading-[1.05] @2xl/stage:tracking-[-0.035em] @6xl/stage:text-[52px]">
-                <span className="text-muted-label">Stage {def.n} of 5 · </span>
-                {def.title}
-              </h1>
-              <div className="shrink-0 pt-1 @2xl/stage:pt-2">
-                <CopyStageLink stage={def.title} step={activeStep} />
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <FloatingChip label="Owner" value={def.owner} icon={UserRound} title="Informational only: no roles yet, anyone can act" />
-              <StatusPill status={{ kind: "stage", value: view.status }} variant="chip" />
-              {view.metric ? <span className="px-1 text-[15px] text-muted-foreground tabular-nums">{view.metric}</span> : null}
-            </div>
+        {/* Row 1: the title and its copy-link circle get the full width, so a long title never wraps against the toolbar. */}
+        <div className="flex min-w-0 items-start gap-2.5">
+          <h1 className="min-w-0 text-[32px] leading-[1.08] font-normal tracking-[-0.03em] break-words text-heading @2xl/stage:text-[44px] @2xl/stage:leading-[1.05] @2xl/stage:tracking-[-0.035em] @6xl/stage:text-[52px]">
+            <span className="text-muted-label">Stage {def.n} of 5 · </span>
+            {def.title}
+          </h1>
+          <div className="shrink-0 pt-1 @2xl/stage:pt-2">
+            <CopyStageLink stage={def.title} step={activeStep} />
+          </div>
+        </div>
+        {/* Row 2: owner, status and metric on the left; the runs, actions and Reopen on the right. When both do not fit on one line, the right group wraps below whole. */}
+        <div className="-mt-1 flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <FloatingChip label="Owner" value={def.owner} icon={UserRound} title="Informational only: no roles yet, anyone can act" />
+            <StatusPill status={{ kind: "stage", value: view.status }} variant="chip" />
+            {view.metric ? <span className="px-1 text-[15px] text-muted-foreground">{view.metric}</span> : null}
           </div>
           {shownRuns.length > 0 || headerActions || view.status === "approved" ? (
-            <div className="flex min-w-0 flex-wrap items-center gap-2 @4xl/stage:justify-end">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
               {shownRuns.length > 0 ? (
                 <ToolbarGroup aria-label="Runs of this stage">
                   {shownRuns.map((r) => (
@@ -394,14 +395,16 @@ export function StageLayout({
         >
           {railExtra}
           {railOpen ? (
-            <div className="card-surface flex min-w-0 flex-col gap-4 rounded-2xl p-4">
-              <div className="flex items-center gap-2">
+            <div className="card-surface flex min-w-0 flex-col gap-3.5 rounded-2xl p-3">
+              {/* Segments size to their labels (never truncated); the track fills what the fold circle leaves. */}
+              <div className="flex items-center gap-1.5">
                 <SegmentedControl
                   role="tablist"
                   aria-label="Side panel"
                   size="sm"
                   fullWidth
                   className="min-w-0 flex-1"
+                  itemClassName="min-w-fit flex-auto px-2.5"
                   value={railTab}
                   onValueChange={(v) => setRailTab(v)}
                   items={[
@@ -412,7 +415,7 @@ export function StageLayout({
                 />
                 <CircleIconButton size="md" variant="ghost" icon={PanelRightClose} label="Fold the side panel" title="Fold the side panel" className="text-muted-foreground" onClick={() => setRailOpen(false)} />
               </div>
-              <div id={`${railId}-panel`} role="tabpanel" aria-labelledby={`${railId}-${railTab}`} className="min-w-0">
+              <div id={`${railId}-panel`} role="tabpanel" aria-labelledby={`${railId}-${railTab}`} className="min-w-0 px-0.5">
                 {railTab === "requests" ? (
                   <RequestList runIds={liveRunIds} projectId={projectId} hideRunIds={hideRequestsFor} focus={focusRequest} compact emptyText={hideRequestsFor?.length ? "Nothing else is waiting; open requests are shown in the page." : "Nothing in this stage is waiting on a person."} />
                 ) : railTab === "notes" ? (

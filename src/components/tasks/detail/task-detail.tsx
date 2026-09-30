@@ -10,10 +10,10 @@
  * The review form lists the changed files and hands the diff itself to the Changes tab
  * (TaskReviewHostContext), so the page never shows the same diff twice.
  */
-import { ArrowDown, ArrowLeft, Check, Copy, Eye, FolderX, GitBranch, Hourglass, Link2, ListTodo, Play, RefreshCw, Undo2 } from "lucide-react";
+import { ArrowDown, Check, Copy, Eye, FolderX, GitBranch, Hourglass, Link2, ListTodo, Play, RefreshCw, Undo2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { CircleIconButton, Duration, Elapsed, EmptyState, ErrorState, SegmentedControl, StatusDot, StatusPill } from "@/components/common";
+import { CircleIconButton, Duration, Elapsed, EmptyState, ErrorState, FloatingChip, SegmentedControl, StatusDot, StatusPill } from "@/components/common";
 import { EvidenceGallery } from "@/components/evidence";
 import { HumanRequestCard, Notice } from "@/components/hitl";
 import { TaskReviewHostContext, type TaskReviewHost } from "@/components/hitl/forms/TaskReviewForm";
@@ -39,13 +39,13 @@ import {
   QaReworkBadge,
   RepoChip,
   ReworkBadge,
-  ScopedTitle,
   TaskIdLabel,
   TraceChips,
   attemptStartedAt,
   isAgentWorking,
   isQueued,
   latestChecks,
+  splitScope,
   waitReason,
 } from "../task-bits";
 import { useStartTasksWorded } from "../use-start-tasks";
@@ -412,7 +412,7 @@ function ReviewBar({ task, label, onGo }: { task: DeliveryTask; label?: string; 
         <span className="font-medium text-heading">{task.jiraKey ?? task.id}</span> is waiting for your {qa ? "QA review" : "review"}
         {label ? <span className="ml-1.5 font-mono text-xs text-muted-foreground">{label}</span> : null}
       </p>
-      <Button className="shrink-0 bg-status-review-fg text-white dark:text-background" onClick={onGo}>
+      <Button className="shrink-0" onClick={onGo}>
         Review now
         <ArrowDown aria-hidden />
       </Button>
@@ -473,44 +473,46 @@ function TaskHeader({ projectId, bundle, task, branchFallback }: { projectId: st
   const latestRun = impl.runs.find((r) => r.runId === task.runIds.at(-1)) ?? bundle.stages.qa.runs.find((r) => r.runId === task.runIds.at(-1));
   const canRetry = canManage && !!latestRun && (latestRun.status === "failed" || latestRun.status === "cancelled") && task.status !== "done" && task.status !== "cancelled";
   const canStart = canManage && task.status === "ready" && !isQueued(task);
-  const inQa = impl.status === "approved" && task.qa.runIds.length > 0;
   const wait = waitReason(task, bundle.tasks);
   const runStarts = new Map([...impl.runs, ...bundle.stages.qa.runs].map((r) => [r.runId, r.createdAt] as const));
   const since = working ? attemptStartedAt(task, (id) => runStarts.get(id)) : undefined;
 
+  const { scope, rest } = splitScope(task.title);
+
   return (
     <header className="space-y-5">
-      <Link
-        href={inQa ? stageHref(projectId, "qa", { step: "tasks" }) : stageHref(projectId, "implementation", { step: "execution" })}
-        className="inline-flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-heading focus-visible:rounded-sm focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-      >
-        <ArrowLeft aria-hidden className="size-4" />
-        {inQa ? "QA Certification · tasks" : "Implementation · task board"}
-      </Link>
       <div className="flex flex-col gap-4 @3xl/task:flex-row @3xl/task:items-end @3xl/task:justify-between">
         <div className="min-w-0 flex-1 space-y-3">
-          <TaskIdLabel task={task} className="text-[13px]" />
+          {/* The "[repo]" prefix of the title is shown as the repo chip below, not in the heading. */}
           <div className="flex min-w-0 items-start gap-2.5">
             <h1 className="min-w-0 text-[28px] leading-[1.14] font-normal tracking-[-0.025em] break-words text-heading @3xl/task:text-[36px] @3xl/task:leading-[1.1] @3xl/task:tracking-[-0.03em] @6xl/task:text-[40px]">
-              <ScopedTitle title={task.title} />
+              {rest}
             </h1>
             <CopyTaskLink />
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <StatusPill status={{ kind: "task", value: task.status }} pulse={working} />
-            {showQa ? <StatusPill {...qaMeta} label={`QA · ${qaMeta.label}`} variant="chip" /> : null}
-            {task.reworkFrom === "qa" ? <QaReworkBadge /> : null}
-            <ReworkBadge count={task.reworkCount} max={MAX_REWORK} />
-            {task.escalated ? <EscalatedBadge /> : null}
-            <span className="chip-float text-[13px]">
-              <span className="text-muted-foreground">Wave</span>
-              <span className="font-medium tabular-nums">{task.wave}</span>
-              <span aria-hidden className="text-muted-foreground">
-                ·
+            <TaskIdLabel task={task} className="mr-1 text-[13px]" />
+            <RepoChip repo={task.repo} className="h-7 text-xs" />
+            {scope && scope !== task.repo ? (
+              <span title={`Scope ${scope}`} className="inline-flex h-7 items-center rounded-full bg-well px-2.5 font-mono text-xs text-muted-foreground">
+                {scope}
               </span>
-              <span className="text-muted-foreground">Size</span>
-              <span className="font-mono font-medium">{task.size}</span>
-            </span>
+            ) : null}
+            <StatusPill status={{ kind: "task", value: task.status }} pulse={working} />
+            {showQa ? <StatusPill {...qaMeta} label={`QA · ${qaMeta.label}`} /> : null}
+            {task.reworkFrom === "qa" ? <QaReworkBadge size="md" /> : null}
+            <ReworkBadge count={task.reworkCount} max={MAX_REWORK} size="md" />
+            {task.escalated ? <EscalatedBadge size="md" /> : null}
+            <FloatingChip
+              label={<>Wave</>}
+              value={
+                <>
+                  {task.wave}
+                  <span className="font-normal text-muted-foreground"> · Size </span>
+                  {task.size}
+                </>
+              }
+            />
           </div>
         </div>
         {canStart || canRetry || (canManage && task.status === "blocked") ? (
@@ -560,24 +562,21 @@ function TaskHeader({ projectId, bundle, task, branchFallback }: { projectId: st
               <span className="text-muted-foreground">-</span>
             )}
           </Fact>
-          <Fact label="Repo">
-            <RepoChip repo={task.repo} />
-          </Fact>
           <Fact label="Type · priority">
             <span className="capitalize">{task.type}</span>
             <span className="text-muted-foreground">·</span>
             <span className="capitalize">{task.priority}</span>
           </Fact>
-          <Fact label="Branch" className="col-span-2">
-            {branch ? <CopyBranch branch={branch} /> : <span className="text-muted-foreground">Created when the agent starts</span>}
-          </Fact>
           <Fact label="Depends on">
             {task.dependencies.length ? <DepChips deps={task.dependencies} tasks={bundle.tasks} projectId={projectId} /> : <span className="text-muted-foreground">Nothing</span>}
+          </Fact>
+          <Fact label="Branch" className="col-span-2">
+            {branch ? <CopyBranch branch={branch} /> : <span className="text-muted-foreground">Created when the agent starts</span>}
           </Fact>
           <Fact label="Traces">
             {task.traces.length ? <TraceChips traces={task.traces} /> : <span className="text-muted-foreground">-</span>}
           </Fact>
-          <Fact label="Agent" className="col-span-2 @4xl/task:col-span-4">
+          <Fact label="Agent">
             {working ? (
               <>
                 <AgentAvatar live />

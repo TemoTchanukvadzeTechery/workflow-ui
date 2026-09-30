@@ -58,7 +58,8 @@ function Body({ item, onAnswered }: { item: InboxItem; onAnswered?: () => void }
       const toTask = item.href.includes("/tasks/");
       return (
         <div className="space-y-4">
-          <HumanRequestCard key={item.id} runId={item.entry.runId} request={item.entry} workflow={item.entry.workflow} projectId={item.projectId} onAnswered={onAnswered} />
+          {/* One frame: the request card is bare and bleeds to this card's padding, so its glass strip spans the card and its text lines up with the header. */}
+          <HumanRequestCard key={item.id} bare className="-mx-5 sm:-mx-6" runId={item.entry.runId} request={item.entry} workflow={item.entry.workflow} projectId={item.projectId} onAnswered={onAnswered} />
           <div className="flex flex-wrap items-center gap-2">
             <Button asChild variant="secondary">
               <Link href={item.href}>

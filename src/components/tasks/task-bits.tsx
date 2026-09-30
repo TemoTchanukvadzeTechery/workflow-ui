@@ -217,17 +217,20 @@ export function DiffStat({ stats, className }: { stats?: { adds: number; dels: n
   );
 }
 
-export function ReworkBadge({ count, max = MAX_REWORK }: { count: number; max?: number }) {
+/** Badge size: sm (24px, cards and tables) or md (28px, next to the task page's status pills). */
+type BadgeSize = "sm" | "md";
+
+export function ReworkBadge({ count, max = MAX_REWORK, size = "sm" }: { count: number; max?: number; size?: BadgeSize }) {
   if (count <= 0) return null;
-  return <StatusPill tone="attention" icon={RotateCcw} size="sm" label={`Rework ${count}/${max}`} title={`${count} of ${max} rework cycles used`} />;
+  return <StatusPill tone="attention" icon={RotateCcw} size={size} label={`Rework ${count}/${max}`} title={`${count} of ${max} rework cycles used`} />;
 }
 
-export function EscalatedBadge() {
-  return <StatusPill tone="danger" icon={AlertTriangle} size="sm" label="Escalated" title="Rework limit reached; the developer decides" />;
+export function EscalatedBadge({ size = "sm" }: { size?: BadgeSize }) {
+  return <StatusPill tone="danger" icon={AlertTriangle} size={size} label="Escalated" title="Rework limit reached; the developer decides" />;
 }
 
-export function QaReworkBadge() {
-  return <StatusPill tone="danger" icon={Undo2} size="sm" label="Rework from QA" title="QA found bugs; this attempt fixes them" />;
+export function QaReworkBadge({ size = "sm" }: { size?: BadgeSize }) {
+  return <StatusPill tone="danger" icon={Undo2} size={size} label="Rework from QA" title="QA found bugs; this attempt fixes them" />;
 }
 
 export function BlockedLine({ reason, className }: { reason?: string; className?: string }) {

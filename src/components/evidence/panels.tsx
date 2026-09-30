@@ -12,7 +12,7 @@ import { useCopy } from "@/hooks/use-copy";
 import type { Evidence } from "@/lib/delivery/types";
 import { cn } from "@/lib/utils";
 import { EvidenceItem } from "./EvidenceItem";
-import { lineLevel, type LogLevel } from "./utils";
+import { lineLevel, TEST_LEVEL_LABEL, type LogLevel } from "./utils";
 
 interface PanelProps {
   items: Evidence[];
@@ -95,7 +95,7 @@ export function TestOutputTab({ items, onSelectAc, activeAc, highlightId, onJump
             {e.command ? <CommandLine command={e.command} /> : null}
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
               {e.exitCode !== undefined ? <ExitCode code={e.exitCode} /> : null}
-              {e.testLevel ? <span className="text-xs text-muted-foreground">Level <span className="font-medium text-foreground uppercase">{e.testLevel}</span></span> : null}
+              {e.testLevel ? <span className="text-xs text-muted-foreground">Level <span className="font-medium text-foreground">{TEST_LEVEL_LABEL[e.testLevel]}</span></span> : null}
               {e.counts ? <CountsBar counts={e.counts} /> : null}
             </div>
             {e.excerpt ? <Excerpt text={e.excerpt} toneLines /> : null}

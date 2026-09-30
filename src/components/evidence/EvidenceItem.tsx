@@ -12,7 +12,7 @@ import type { Evidence } from "@/lib/delivery/types";
 import { formatBytes, formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { evidenceResultMeta } from "@/lib/weft/labels";
-import { evidenceDomId, KIND_LABEL } from "./utils";
+import { evidenceDomId, KIND_LABEL, TEST_LEVEL_LABEL } from "./utils";
 
 const KIND_ICON: Record<Evidence["kind"], LucideIcon> = {
   video: Film,
@@ -149,7 +149,7 @@ export function EvidenceItem({ item, children, actions, onSelectAc, activeAc, on
               {level ? (
                 <>
                   <span aria-hidden>·</span>
-                  <span className="uppercase">{level}</span>
+                  <span>{TEST_LEVEL_LABEL[level]}</span>
                 </>
               ) : null}
               {item.sizeBytes ? (

@@ -1,9 +1,9 @@
 "use client";
 
 /**
- * HTML5 player for a recorded agent session (Plexus web-recording style): overlay facts (task,
- * build, environment), BEFORE / AFTER / PARITY segment labels, and mm:ss timeline markers that
- * seek the video. The active marker follows playback.
+ * HTML5 player for a recorded agent session (Plexus web-recording style): a poster with a play
+ * circle until it is played, overlay facts (task, build, environment), Before / After / Parity
+ * segment tags, and mm:ss timeline markers that seek the video. The active marker follows playback.
  */
 import { Play } from "lucide-react";
 import { useRef, useState } from "react";
@@ -15,12 +15,15 @@ type SegmentLabel = "BEFORE" | "AFTER" | "PARITY";
 
 const SEGMENT_CLASS: Record<SegmentLabel, string> = {
   BEFORE: "bg-status-neutral-bg text-status-neutral-fg",
-  AFTER: "bg-primary-soft text-primary",
+  AFTER: "bg-status-running-bg text-status-running-fg",
   PARITY: "bg-status-review-bg text-status-review-fg",
 };
 
+const SEGMENT_TEXT: Record<SegmentLabel, string> = { BEFORE: "Before", AFTER: "After", PARITY: "Parity" };
+
+/** A soft sentence-case tag for a recording segment ("After", "Parity"). */
 export function SegmentChip({ label, className }: { label: SegmentLabel; className?: string }) {
-  return <span className={cn("inline-flex h-5 items-center rounded-full px-2 font-mono text-[11px] font-semibold tracking-[0.06em]", SEGMENT_CLASS[label], className)}>{label}</span>;
+  return <span className={cn("inline-flex h-6 shrink-0 items-center rounded-full px-2 text-xs leading-none font-medium", SEGMENT_CLASS[label], className)}>{SEGMENT_TEXT[label]}</span>;
 }
 
 /** The segment a marker belongs to, read from its text ("(AFTER only)", "(parity)"). */
@@ -47,39 +50,64 @@ export function RecordingPlayer({ item, taskLabel, compact, className }: Recordi
   const markers = (item.timeline ?? []).map((m) => ({ ...m, sec: parseClock(m.t), segment: markerSegment(m.text) })).filter((m) => Number.isFinite(m.sec));
   const activeIdx = markers.reduce((acc, m, i) => (time + 0.25 >= m.sec ? i : acc), -1);
 
+  // Until it is played the video is a poster: its first frame (or the well gradient while that
+  // loads) under a centred play circle, with no native controls.
+  const [started, setStarted] = useState(false);
+
+  const play = () => {
+    setStarted(true);
+    void ref.current?.play().catch(() => {});
+  };
+
   const seek = (sec: number) => {
     const v = ref.current;
     if (!v) return;
     v.currentTime = sec;
     setTime(sec);
-    void v.play().catch(() => {});
+    play();
   };
 
   if (!item.url) {
-    return <p className="rounded-[16px] border border-dashed border-circle-border px-3 py-6 text-center text-sm text-muted-foreground">The recording file is not available.</p>;
+    return <p className="rounded-[20px] border border-dashed border-circle-border px-3 py-6 text-center text-sm text-muted-foreground">The recording file is not available.</p>;
   }
+
+  const chip = "rounded-full bg-white/80 px-2.5 py-1.5 text-[#1a1a1a] shadow-[0_0_0_1px_rgb(0_0_0/0.06),0_4px_10px_-4px_rgb(0_0_0/0.3)] backdrop-blur-md";
 
   return (
     <div className={cn("min-w-0 space-y-3", className)}>
-      <div className="relative overflow-hidden rounded-[16px] bg-black shadow-[0_0_0_1px_rgb(0_0_0/0.08),0_14px_30px_-16px_rgb(0_0_0/0.55)]">
+      <div className="relative overflow-hidden rounded-[20px] bg-linear-to-b from-well to-[color-mix(in_srgb,var(--well)_70%,var(--card))] shadow-[0_0_0_1px_var(--rule)]">
         <video
           ref={ref}
           src={item.url}
-          controls
+          controls={started}
           preload="metadata"
           playsInline
-          className="aspect-video w-full bg-black"
+          className="block aspect-video w-full"
           aria-label={`Recording: ${item.title}`}
+          onPlay={() => setStarted(true)}
           onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)}
           onLoadedMetadata={(e) => {
             const d = e.currentTarget.duration;
             if (Number.isFinite(d) && d > 0) setDuration(d);
           }}
         />
-        <div className="pointer-events-none absolute top-2.5 left-2.5 flex max-w-[calc(100%-1.25rem)] flex-wrap gap-1.5 font-mono text-[11px] leading-none text-white">
-          {taskLabel ? <span className="rounded-full bg-black/55 px-2.5 py-1.5 ring-1 ring-white/15 backdrop-blur-md">{taskLabel}</span> : null}
-          <span className="max-w-full truncate rounded-full bg-black/55 px-2.5 py-1.5 ring-1 ring-white/15 backdrop-blur-md">{item.environment}</span>
-          {!compact ? <span className="max-w-full truncate rounded-full bg-black/55 px-2.5 py-1.5 ring-1 ring-white/15 backdrop-blur-md">build {item.build}</span> : null}
+        {!started ? (
+          <button
+            type="button"
+            onClick={play}
+            aria-label={`Play recording: ${item.title}`}
+            className="group/play absolute inset-0 flex items-center justify-center bg-black/[0.04] outline-none"
+          >
+            <span className="inline-flex size-14 items-center justify-center rounded-full bg-white text-[#0b0b0b] shadow-[0_0_0_1px_rgb(0_0_0/0.06),0_10px_24px_-8px_rgb(0_0_0/0.45)] transition-transform duration-150 group-hover/play:scale-105 group-focus-visible/play:ring-4 group-focus-visible/play:ring-ring/60">
+              <Play aria-hidden className="ml-0.5 size-[22px] fill-current" strokeWidth={1.75} />
+            </span>
+            {item.durationSec ? <span className={cn(chip, "absolute right-2.5 bottom-2.5 text-xs leading-none tabular-nums")}>{clock(item.durationSec)}</span> : null}
+          </button>
+        ) : null}
+        <div className="pointer-events-none absolute top-2.5 left-2.5 flex max-w-[calc(100%-1.25rem)] flex-wrap gap-1.5 font-mono text-[11px] leading-none">
+          {taskLabel ? <span className={chip}>{taskLabel}</span> : null}
+          <span className={cn(chip, "max-w-full truncate")}>{item.environment}</span>
+          {!compact ? <span className={cn(chip, "max-w-full truncate")}>build {item.build}</span> : null}
         </div>
       </div>
 
@@ -131,7 +159,7 @@ export function RecordingPlayer({ item, taskLabel, compact, className }: Recordi
                       i === activeIdx && "bg-status-running-bg hover:bg-status-running-bg",
                     )}
                   >
-                    <span className="inline-flex shrink-0 items-center gap-1 font-mono text-xs text-primary tabular-nums">
+                    <span className="inline-flex shrink-0 items-center gap-1 text-[13px] font-medium text-primary tabular-nums">
                       <Play aria-hidden className="size-3" />
                       {m.t}
                     </span>
@@ -142,7 +170,7 @@ export function RecordingPlayer({ item, taskLabel, compact, className }: Recordi
               ))}
             </ol>
           ) : (
-            <p className="font-mono text-xs text-muted-foreground tabular-nums">
+            <p className="text-xs text-muted-foreground tabular-nums">
               {clock(time)} / {clock(duration)} · {markers.length} markers
             </p>
           )}

@@ -8,7 +8,7 @@
  * (the server writes the same shared draft otherwise). After approval it links to the stored
  * Ready for test document and on to QA Certification.
  */
-import { AlertTriangle, ArrowRight, ArrowUpRight, CheckCircle2, ChevronDown, ChevronUp, CircleSlash, Eye, FileText, FlaskConical, Pencil, RotateCcw, ShieldCheck } from "lucide-react";
+import { AlertTriangle, ArrowRight, ArrowUpRight, CheckCircle2, ChevronDown, ChevronUp, CircleSlash, Eye, FileText, FlaskConical, Lock, Pencil, RotateCcw, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useId, useState } from "react";
 import { RelativeTime, actorText } from "@/components/common";
@@ -98,9 +98,11 @@ export function HandoffGate({ projectId, bundle, className }: { projectId: strin
   const blocked = blockers.length > 0;
   const summary = blocked ? `${plural(blockers.length, "blocker")} before the hand-off` : "Ready to hand off";
   const primary = (
-    <Button disabled={blocked} onClick={() => setOpen(true)} className="max-md:flex-1">
+    <Button disabled={blocked} onClick={() => setOpen(true)} className={cn("max-md:flex-1", blocked && "gap-1.5 font-normal")}>
+      {/* Locked like the shared GateFooter's approve: a hairline ghost with a lock, no arrow. */}
+      {blocked ? <Lock aria-hidden className="size-3.5" /> : null}
       {LABEL}
-      <ArrowRight aria-hidden />
+      {blocked ? <span className="sr-only">, locked until the blockers are resolved</span> : <ArrowRight aria-hidden />}
     </Button>
   );
 

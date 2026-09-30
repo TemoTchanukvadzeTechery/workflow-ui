@@ -2,12 +2,13 @@
 
 /**
  * The five-stage pipeline. Large: five reference cards (number, icon, title, owner, status, metric,
- * and a striped status bar), the current one ringed in brand blue; a done project has no current
- * stage. Compact: a striped segmented bar with stage titles. Stages carry no color of their own;
+ * and a striped status bar); the current one glows soft brand blue from the top, like the active
+ * funnel column, and carries a "Current" pill. A done project has no current stage. Compact: a striped segmented bar with stage titles. Stages carry no color of their own;
  * color always means status.
  */
+import { CircleDot } from "lucide-react";
 import Link from "next/link";
-import { StageIcon, toneClasses } from "@/components/common";
+import { StageIcon, StatusPill, toneClasses } from "@/components/common";
 import { STAGES, type StageId, type StageStatus, type StageView } from "@/lib/delivery/types";
 import { cn } from "@/lib/utils";
 import type { Tone } from "@/lib/weft/labels";
@@ -95,23 +96,24 @@ export function StageStepper({ projectId, stages, current, done, variant, classN
                 className={cn(
                   "card-surface relative flex h-full flex-col gap-4 overflow-hidden rounded-[24px] p-4 transition-shadow duration-150 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none @4xl:p-5",
                   "hover:shadow-[var(--card-edge),0_1px_2px_rgb(0_0_0/0.04),0_20px_40px_-18px_rgb(0_0_0/0.16)]",
-                  isCurrent && "ring-2 ring-primary",
                 )}
               >
-                <div className="flex items-center gap-2">
+                {/* The current stage glows from the top like the reference's active funnel column (no ring). */}
+                {isCurrent ? <span aria-hidden className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,var(--primary-soft),transparent_70%)]" /> : null}
+                <div className="relative flex items-center gap-2">
                   <span className="circle-btn size-9 text-heading">
                     <StageIcon stage={def.id} className="size-4" />
                   </span>
                   <span className="font-mono text-xs text-muted-foreground tabular-nums">0{def.n}</span>
                   <span className="flex-1" />
-                  {isCurrent ? <span className="kicker text-primary">Current</span> : null}
+                  {isCurrent ? <StatusPill tone="running" icon={CircleDot} label="Current" size="sm" /> : null}
                 </div>
-                <div className="min-w-0">
+                <div className="relative min-w-0">
                   <div className={cn("truncate text-[17px] leading-6 font-medium tracking-[-0.015em]", status === "locked" && !isCurrent ? "text-muted-foreground" : "text-heading")}>{def.title}</div>
                   <div className="text-[13px] text-muted-foreground">{def.owner}</div>
                 </div>
                 {/* The metric has its own line (reserved when empty) so every card's pill sits at the same height. */}
-                <div className="mt-auto space-y-2.5">
+                <div className="relative mt-auto space-y-2.5">
                   <div className="flex min-h-7 flex-wrap items-center gap-x-2 gap-y-1">
                     <StageStatusPill status={status} />
                     <p className="min-w-0 truncate text-xs text-muted-foreground tabular-nums">{view?.metric ?? ""}</p>

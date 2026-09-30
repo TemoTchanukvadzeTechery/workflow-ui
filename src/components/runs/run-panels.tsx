@@ -298,7 +298,7 @@ export function ArtifactsPanel({ run, onOpenStep, onOpenChanges }: { run: RunDet
             {a.kind === "patch" ? <GitCommitHorizontal aria-hidden className="size-4 text-status-success-fg" /> : <FileText aria-hidden className="size-4 text-muted-foreground" />}
             <span className="min-w-0 truncate font-mono text-[13px] font-medium text-heading">{a.gate ? (a.gate.kind === "review" ? `review attachment · ${a.id}` : a.id) : a.id}</span>
             <span className={cn("inline-flex h-5 items-center rounded-full px-2 text-xs font-medium", a.kind === "patch" ? "bg-status-success-bg text-status-success-fg" : "bg-well text-muted-foreground")}>{a.kind}</span>
-            {a.size !== null && <span className="font-mono text-xs text-muted-foreground">{formatBytes(a.size)}</span>}
+            {a.size !== null && <span className="text-xs text-muted-foreground tabular-nums">{formatBytes(a.size)}</span>}
             {!a.available && <span className="text-xs text-status-attention-fg">not available</span>}
             <span className="flex-1" />
             {a.kind === "patch" ? (

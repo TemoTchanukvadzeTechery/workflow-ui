@@ -7,7 +7,7 @@
  * table. The period switch in the header (7, 14 or 30 days) drives every chart. Everything is
  * live: SSE invalidates the queries as runs progress.
  */
-import { FolderKanban, Plus } from "lucide-react";
+import { ArrowRight, FolderKanban, Plus } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, type ReactNode } from "react";
 import { EmptyState, ErrorState, SectionCard } from "@/components/common";
@@ -24,6 +24,9 @@ import { useActivity, useDashboard, useInbox, useRuns } from "@/lib/api/queries"
 import type { DashboardData } from "@/lib/delivery/types";
 import { plural } from "@/lib/format";
 import { cn } from "@/lib/utils";
+
+/** How many project cards Home shows on phones before the "All projects" link. */
+const PHONE_PROJECTS = 3;
 
 /** "/ambassador-agreement" from "Ambassador Agreement Acceptance Reporting": a short, typeable token. */
 function projectToken(name: string): string {
@@ -157,10 +160,19 @@ export function HomeView() {
               />
             ) : (
               <>
+                {/* Phones: the three most recent as cards, then a link to the full list (seven cards made Home 7,000px tall). */}
                 <div className="grid gap-3 px-4 pb-4 sm:hidden">
-                  {d.projects.map((p) => (
+                  {d.projects.slice(0, PHONE_PROJECTS).map((p) => (
                     <ProjectCard key={p.id} project={p} />
                   ))}
+                  {d.projects.length > PHONE_PROJECTS ? (
+                    <Button asChild variant="secondary" className="h-11 justify-between px-4.5">
+                      <Link href="/projects">
+                        All {d.projects.length} projects
+                        <ArrowRight aria-hidden />
+                      </Link>
+                    </Button>
+                  ) : null}
                 </div>
                 <ProjectsTable rows={d.projects} className="hidden sm:table" />
               </>

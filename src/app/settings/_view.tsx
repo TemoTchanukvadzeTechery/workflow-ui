@@ -37,7 +37,11 @@ const SPEEDS: Array<{ value: DemoSpeed; label: string; factor: string; line: str
 
 const REAL_WORKFLOWS = new Set(["po-brd", "architect-aad"]);
 
-/** A radio card: one option of a segmented choice, with a one-line explanation. */
+/**
+ * A radio card: one option of a segmented choice, with a one-line explanation. Drawn like the
+ * stage forms' OptionCards: options sit in a well track (see the radiogroup), the checked one is
+ * a raised segment with an ink check.
+ */
 function OptionCard({ checked, onSelect, disabled, title, badge, children, icon }: { checked: boolean; onSelect: () => void; disabled?: boolean; title: string; badge?: ReactNode; children: ReactNode; icon?: ReactNode }) {
   return (
     <button
@@ -47,20 +51,23 @@ function OptionCard({ checked, onSelect, disabled, title, badge, children, icon 
       disabled={disabled}
       onClick={onSelect}
       className={cn(
-        "flex min-w-0 flex-col gap-1.5 rounded-[20px] p-4 text-left transition-[background-color,box-shadow] duration-150 outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-60",
-        checked ? "bg-(--chip-bg) shadow-[0_0_0_1.5px_var(--ring),0_8px_20px_-12px_rgb(27_111_252/0.45)]" : "bg-well hover:bg-well-hover",
+        "group flex min-w-0 flex-col gap-1.5 rounded-[16px] p-3.5 text-left transition-[background-color,box-shadow] duration-150 outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-60",
+        checked ? "bg-raised shadow-(--raised-shadow)" : "hover:bg-raised/60",
       )}
     >
       <span className="flex items-center gap-2">
-        <span aria-hidden className={cn("inline-flex size-4 shrink-0 items-center justify-center rounded-full border", checked ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/40")}>
-          {checked ? <Check className="size-2.5" strokeWidth={3} /> : null}
+        <span
+          aria-hidden
+          className={cn("inline-flex size-5 shrink-0 items-center justify-center rounded-full border transition-colors", checked ? "border-transparent bg-ink text-ink-foreground" : "border-muted-foreground/45")}
+        >
+          {checked ? <Check className="size-3" strokeWidth={3} /> : null}
         </span>
         {icon}
-        <span className="text-[15px] font-medium text-heading">{title}</span>
+        <span className={cn("text-[15px] font-medium", checked ? "text-heading" : "text-muted-foreground group-hover:text-heading")}>{title}</span>
         <span className="flex-1" />
         {badge}
       </span>
-      <span className="pl-6 text-[13px] leading-5 text-muted-foreground">{children}</span>
+      <span className="pl-7 text-[13px] leading-5 text-muted-foreground">{children}</span>
     </button>
   );
 }
@@ -242,12 +249,11 @@ function DataSourceCard({ settings }: { settings?: Settings }) {
     <SectionCard title="Data source" description="Where the weft API (/api/weft) is served from.">
       {!settings ? (
         <div className="space-y-2" aria-hidden>
-          <Skeleton className="h-20 rounded-[20px]" />
-          <Skeleton className="h-20 rounded-[20px]" />
+          <Skeleton className="h-44 rounded-[20px]" />
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          <div role="radiogroup" aria-label="Data source" className="grid gap-2">
+          <div role="radiogroup" aria-label="Data source" className="grid gap-1 rounded-[20px] bg-well p-1">
             <OptionCard
               checked={!weft}
               disabled={update.isPending}

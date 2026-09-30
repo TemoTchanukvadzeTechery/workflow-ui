@@ -305,11 +305,12 @@ export function TaskReviewForm({ request, run, projectId, compact, onAnswered }:
         </FormRow>
       </div>
 
-      {/* The decision bar: pinned to the bottom of the viewport while the form is on screen. */}
+      {/* The decision bar: pinned to the bottom of the viewport while the form is on screen; opaque, lifted by a soft top shadow. */}
       <div
         className={cn(
           "space-y-3 border-t border-rule pt-4",
-          !compact && "sticky bottom-0 z-10 -mx-5 -mb-5 rounded-b-2xl bg-card/95 px-5 pb-5 backdrop-blur @2xl:-mx-6 @2xl:-mb-6 @2xl:px-6 @2xl:pb-6 @3xl:flex @3xl:items-end @3xl:gap-6 @3xl:space-y-0",
+          !compact &&
+            "sticky bottom-0 z-10 -mx-5 -mb-5 rounded-b-2xl bg-card px-5 pb-5 shadow-[0_-14px_28px_-20px_rgb(0_0_0/0.18)] @2xl:-mx-6 @2xl:-mb-6 @2xl:px-6 @2xl:pb-6 @3xl:flex @3xl:items-end @3xl:gap-6 @3xl:space-y-0 dark:shadow-[0_-14px_28px_-18px_rgb(0_0_0/0.7)]",
         )}
       >
         <FormRow label="Decision" id={decisionId} required className="min-w-0 @3xl:max-w-[60%]">

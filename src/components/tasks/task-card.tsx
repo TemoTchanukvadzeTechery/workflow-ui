@@ -71,12 +71,12 @@ export function TaskCard({ task, projectId, tasks, pending = [], model, canStart
       className={cn(
         // A raised card inside the lane's well (STYLE.md 1): the reference's selected-segment surface with a soft lift.
         "group/card relative flex min-w-0 flex-col gap-2.5 rounded-[16px] bg-raised p-3.5 shadow-[var(--raised-shadow),0_10px_24px_-18px_rgb(0_0_0/0.35)] transition-shadow duration-150 hover:shadow-[var(--raised-shadow),0_14px_30px_-16px_rgb(0_0_0/0.4)]",
-        review && "shadow-[var(--raised-shadow),0_0_0_1.5px_color-mix(in_srgb,var(--status-review-solid)_45%,transparent),0_10px_24px_-16px_color-mix(in_srgb,var(--status-review-solid)_45%,transparent)]",
         className,
       )}
     >
       <div className="flex items-center gap-2">
         <TaskIdLabel task={task} className="min-w-0 flex-1" />
+        {review ? <StatusDot tone="review" size="lg" label={review.kind === "qa-review" ? "QA review waiting on you" : "Review waiting on you"} /> : null}
         <MiniChip title={`Wave ${task.wave}`}>W{task.wave}</MiniChip>
         <MiniChip title={`Size ${task.size}`}>{task.size}</MiniChip>
       </div>
@@ -115,7 +115,7 @@ export function TaskCard({ task, projectId, tasks, pending = [], model, canStart
           </p>
         </div>
       ) : task.status === "in_review" && task.latestStep ? (
-        <p className="truncate text-[13px] text-status-review-fg" title={task.latestStep}>
+        <p className="truncate text-[13px] text-muted-foreground" title={task.latestStep}>
           {task.latestStep}
         </p>
       ) : null}
@@ -155,7 +155,7 @@ export function TaskCard({ task, projectId, tasks, pending = [], model, canStart
       {reviewHref || (canStart && onStart) ? (
         <div className="relative z-[1] flex items-center gap-2 pt-0.5">
           {reviewHref && review ? (
-            <Button asChild size="sm" className="flex-1 bg-status-review-fg text-white dark:text-background">
+            <Button asChild size="sm">
               <Link href={reviewHref}>
                 <Eye aria-hidden />
                 {review.kind === "qa-review" ? "QA review" : "Review"}

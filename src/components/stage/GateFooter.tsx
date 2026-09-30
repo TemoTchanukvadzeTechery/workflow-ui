@@ -2,7 +2,8 @@
 
 /**
  * The stage gate, sticky under the stage workspace while the stage is open. Blockers (from the
- * server's StageView, linked where they are resolved) disable the approve button and are listed
+ * server's StageView, linked where they are resolved) lock the approve button (a hairline ghost with
+ * a lock, never mistaken for an enabled pill) and are listed
  * inline behind "Show all", which works on touch; when blockers remain, the next action (the
  * project's next step on this stage) is the primary control. Warnings must each be ticked in the
  * confirm dialog and are stored as acknowledgedWarnings. Request changes records the decision
@@ -12,7 +13,7 @@
  * the band collapses to its status line and one button; the line expands to the details.
  * Once the stage is approved it is a plain, non-sticky card line with a link on to the next stage.
  */
-import { AlertTriangle, ArrowRight, CheckCircle2, ChevronDown, ChevronUp, CircleSlash, ShieldCheck, Undo2 } from "lucide-react";
+import { AlertTriangle, ArrowRight, CheckCircle2, ChevronDown, ChevronUp, CircleSlash, Lock, ShieldCheck, Undo2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useId, useState, type ComponentProps, type MouseEvent, type ReactNode } from "react";
@@ -28,10 +29,10 @@ import { actorName, TimeAgo } from "../hitl/bits";
 import { revealTarget } from "./next-action";
 
 export interface GateNextAction {
-  /** Button text, e.g. "Start the requirements run". */
+  /** Button text: a short verb phrase of 28 characters at most, e.g. "Confirm dependencies" (nextActionLabel). */
   label: string;
   href: string;
-  /** The full next-step text, for the tooltip. */
+  /** The full next-step text, for the tooltip and the button's accessible description. */
   title?: string;
 }
 
@@ -120,6 +121,7 @@ export function GateFooter({ projectId, stage, view, approveLabel, nextStage, de
   const [showAll, setShowAll] = useState(false);
   const detailsId = useId();
   const listId = useId();
+  const nextDescId = useId();
   const items: StageBlocker[] = view.blockerItems && view.blockerItems.length === view.blockers.length ? view.blockerItems : view.blockers.map((text) => ({ text }));
   const warnings = view.warnings;
   const lastApproval = [...decisions].reverse().find((d) => d.decision === "approved");
@@ -166,17 +168,21 @@ export function GateFooter({ projectId, stage, view, approveLabel, nextStage, de
   const StatusIcon = blocked ? CircleSlash : CheckCircle2;
   const statusIconClass = blocked ? "text-status-danger-fg" : "text-status-success-fg";
 
+  // While blockers remain, approve is a locked ghost (hairline, muted text, a lock), so it cannot
+  // pass for the enabled "Request changes" well pill beside it.
   const approve = (compact: boolean) => (
     <Button
       variant={primaryNext ? "secondary" : "default"}
-      className={cn(compact && "max-w-full min-w-0 md:max-w-none")}
+      className={cn(compact && "max-w-full min-w-0 md:max-w-none", blocked && "gap-1.5 font-normal")}
       disabled={blocked}
       onClick={() => setApproveOpen(true)}
       title={blocked ? `Resolve first: ${view.blockers.join("; ")}` : undefined}
     >
+      {blocked ? <Lock aria-hidden className="size-3.5" /> : null}
       {compact ? <span className="truncate md:hidden">{shortLabel(approveLabel)}</span> : null}
       <span className={compact ? "hidden md:inline" : undefined}>{title}</span>
-      {!isSignoff && !primaryNext ? <ArrowRight aria-hidden /> : null}
+      {blocked ? <span className="sr-only">, locked until the blockers are resolved</span> : null}
+      {!isSignoff && !primaryNext && !blocked ? <ArrowRight aria-hidden /> : null}
     </Button>
   );
   const changesButton = canRequestChanges ? (
@@ -192,9 +198,15 @@ export function GateFooter({ projectId, stage, view, approveLabel, nextStage, de
         {lastChanges.comment ? `: "${lastChanges.comment}"` : ""}
       </p>
     ) : null;
+  // A short verb phrase (nextActionLabel keeps it to 28 characters); the full next step is its tooltip and description.
   const nextButton = primaryNext ? (
-    <Button asChild className="max-w-full min-w-0 md:max-w-[min(26rem,40vw)]">
-      <GateLink href={primaryNext.href} label={primaryNext.label} title={primaryNext.title ?? primaryNext.label}>
+    <Button asChild className="max-w-full min-w-0">
+      <GateLink
+        href={primaryNext.href}
+        label={primaryNext.label}
+        title={primaryNext.title ?? primaryNext.label}
+        aria-describedby={primaryNext.title && primaryNext.title !== primaryNext.label ? nextDescId : undefined}
+      >
         <span className="truncate">{primaryNext.label}</span>
         <ArrowRight aria-hidden />
       </GateLink>
@@ -311,6 +323,11 @@ export function GateFooter({ projectId, stage, view, approveLabel, nextStage, de
             {nextButton ? <span className="contents [&>a]:w-full md:[&>a]:w-auto">{nextButton}</span> : null}
           </div>
         </div>
+        {primaryNext?.title && primaryNext.title !== primaryNext.label ? (
+          <span id={nextDescId} hidden>
+            {primaryNext.title}
+          </span>
+        ) : null}
       </div>
       <ApproveDialog open={approveOpen} onOpenChange={setApproveOpen} projectId={projectId} stage={stage} warnings={warnings} title={title} nextTitle={next?.title} isSignoff={isSignoff} />
       {isSignoff ? (

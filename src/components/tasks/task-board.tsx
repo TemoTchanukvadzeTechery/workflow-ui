@@ -513,7 +513,7 @@ function TaskTable({ projectId, tasks, pending, model, canStartTask, startingKey
                     </td>
                     <td className={ACTION_CELL}>
                       {review ? (
-                        <Button asChild size="sm" className="bg-status-review-fg text-white dark:text-background">
+                        <Button asChild size="sm">
                           <Link href={taskHref(projectId, t.id, `${review.runId}:${review.requestId}`)}>{review.kind === "qa-review" ? "QA review" : "Review"}</Link>
                         </Button>
                       ) : canStartTask(t) ? (

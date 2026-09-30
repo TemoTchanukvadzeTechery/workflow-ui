@@ -1,8 +1,9 @@
 "use client";
 
 /**
- * The "draft report" attachment of a review request as tabs with counts (wrapping onto more rows
- * when narrow). Its format is a series of `## <Title>\n\n- item` sections, and an empty section is
+ * The "draft report" attachment of a review request as tabs with counts: short labels
+ * ("Questions 3", "Untraced 2") on one row that scrolls sideways when narrow, the full section
+ * name in the tooltip, the accessible name and a caption over the open panel. Its format is a series of `## <Title>\n\n- item` sections, and an empty section is
  * `- none` (po-brd main.ts section()). The same parser reads the plan report and the memory
  * "changes" attachment.
  */
@@ -64,6 +65,24 @@ export function parseReportSections(markdown: string): ReportSection[] {
   return sections;
 }
 
+/** Short tab labels for the report sections the workflows write (po-brd, architect-aad, planner, memory). */
+const SHORT_TITLES: ReadonlyArray<[RegExp, string]> = [
+  [/^blocking questions$/i, "Questions"],
+  [/^open questions$/i, "Questions"],
+  [/^decisions needed$/i, "Decisions"],
+  [/requirements not traced$/i, "Untraced"],
+  [/^requirements not covered/i, "Uncovered"],
+  [/^conflicts\b/i, "Conflicts"],
+  [/^sections not yet provided$/i, "Missing"],
+  [/^instructions found in sources and ignored$/i, "Ignored"],
+  [/^changes in this round$/i, "Changes"],
+  [/^affects other documents$/i, "Affects"],
+];
+
+export function shortSectionTitle(title: string): string {
+  return SHORT_TITLES.find(([re]) => re.test(title))?.[1] ?? title;
+}
+
 /** Sections that deserve attention when non-empty get an amber count. */
 const ATTENTION = /blocking|conflict|decisions needed|not traced|not covered|risk|open question/i;
 
@@ -84,31 +103,31 @@ export function DraftReportTabs({ markdown, className, onCitationClick, emptyTex
   const active = tab !== null && sections.some((s, i) => `s${i}` === tab) ? tab : "s0";
   return (
     <Tabs value={active} onValueChange={setTab} className={cn("min-w-0 gap-3", className)}>
-      {/* Tabs wrap onto more rows instead of scrolling sideways, so no section is hidden off the edge. */}
-      <div className="pb-1">
-        <TabsList className="h-auto max-w-full flex-wrap justify-start group-data-horizontal/tabs:h-auto">
-          {sections.map((section, i) => {
-            const count = section.items.length;
-            const loud = count > 0 && ATTENTION.test(section.title);
-            return (
-              <TabsTrigger key={i} value={`s${i}`} className="h-9 flex-none px-3.5">
-                <span>{section.title}</span>
-                <span
-                  className={cn(
-                    "inline-flex tabular-nums",
-                    loud ? "h-5 min-w-5 items-center justify-center rounded-full bg-status-attention-bg px-1.5 text-[11px] font-semibold text-status-attention-fg" : "text-xs font-normal text-muted-foreground",
-                  )}
-                  aria-label={`${count} items`}
-                >
-                  {count}
-                </span>
-              </TabsTrigger>
-            );
-          })}
-        </TabsList>
-      </div>
+      {/* One row of short labels; it scrolls sideways (with an edge fade) when narrow, and keeps the active tab in view. */}
+      <TabsList className="max-w-full justify-start">
+        {sections.map((section, i) => {
+          const count = section.items.length;
+          const loud = count > 0 && ATTENTION.test(section.title);
+          const short = shortSectionTitle(section.title);
+          return (
+            <TabsTrigger key={i} value={`s${i}`} className="flex-none px-3" title={short !== section.title ? section.title : undefined} aria-label={`${section.title}, ${count} ${count === 1 ? "item" : "items"}`}>
+              <span aria-hidden>{short}</span>
+              <span
+                aria-hidden
+                className={cn(
+                  "inline-flex tabular-nums",
+                  loud ? "h-5 min-w-5 items-center justify-center rounded-full bg-status-attention-bg px-1.5 text-[11px] font-semibold text-status-attention-fg" : "text-xs font-normal text-muted-foreground",
+                )}
+              >
+                {count}
+              </span>
+            </TabsTrigger>
+          );
+        })}
+      </TabsList>
       {sections.map((section, i) => (
-        <TabsContent key={i} value={`s${i}`} className="min-w-0">
+        <TabsContent key={i} value={`s${i}`} className="min-w-0 space-y-2">
+          {shortSectionTitle(section.title) !== section.title ? <p className="px-1 text-[13px] text-muted-foreground">{section.title}</p> : null}
           {section.items.length === 0 && !section.body ? (
             <p className="rounded-[16px] bg-well/60 px-4 py-6 text-center text-[13px] text-muted-foreground">None.</p>
           ) : (

@@ -178,14 +178,16 @@ function segment(rows: DiffRow[], context: number): Segment[] {
   return out;
 }
 
+// Dark mode tints the rows at 60% (full-strength tints read as solid blocks there); the +/- gutter keeps the tone.
 const ROW_CLASS: Record<RowType, string> = {
-  add: "bg-status-success-bg",
-  del: "bg-status-danger-bg",
+  add: "bg-status-success-bg dark:bg-status-success-bg/60",
+  del: "bg-status-danger-bg dark:bg-status-danger-bg/60",
   ctx: "",
   hunk: "bg-status-running-bg text-status-running-fg",
   meta: "text-muted-foreground",
 };
 const MARK: Record<RowType, string> = { add: "+", del: "-", ctx: " ", hunk: "", meta: "" };
+const MARK_CLASS: Partial<Record<RowType, string>> = { add: "text-status-success-fg", del: "text-status-danger-fg" };
 
 function Rows({ rows, showNumbers }: { rows: DiffRow[]; showNumbers: boolean }) {
   return (
@@ -198,7 +200,7 @@ function Rows({ rows, showNumbers }: { rows: DiffRow[]; showNumbers: boolean }) 
               <span className="pr-2 text-right text-muted-foreground/70 select-none">{row.newNo ?? ""}</span>
             </>
           ) : null}
-          <span aria-hidden className="text-center select-none">
+          <span aria-hidden className={cn("text-center select-none", MARK_CLASS[row.type])}>
             {MARK[row.type]}
           </span>
           <span className="pr-3 break-words whitespace-pre-wrap">

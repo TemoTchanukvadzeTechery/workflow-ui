@@ -2,8 +2,9 @@
 
 /**
  * Agent spend, built like the reference's Gross Volume: the period's total as a hero number with
- * a delta chip against the previous period of the same length, a rule, then one striped bar per
- * stage that runs agents (share of the total, value right-aligned).
+ * a delta chip against the previous period of the same length (run count and the previous total
+ * in a muted line under it), a rule, then one striped bar per stage that runs agents (share of
+ * the total, value right-aligned).
  */
 import { Activity, FolderKanban } from "lucide-react";
 import { FloatingChip, SectionCard, StripedBar } from "@/components/common";
@@ -48,18 +49,25 @@ export function AgentSpendCard({ metrics, className }: { metrics?: HomeMetrics; 
         </div>
       ) : (
         <>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-3 pb-6 sm:pt-5 sm:pb-7">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-2 pb-5">
             <span className="text-[52px] leading-none font-normal tracking-[-0.045em] text-heading tabular-nums sm:text-[64px] xl:text-[72px]">{formatUsd(metrics.spend)}</span>
-            {change !== undefined ? (
-              <FloatingChip
-                tone="running"
-                delta={change >= 0 ? "up" : "down"}
-                value={`${Math.abs(change)}%`}
-                title={`${change >= 0 ? "Up" : "Down"} ${Math.abs(change)}% on the previous ${metrics.period} days (${formatUsd(metrics.prevSpend)})`}
-              />
-            ) : null}
+            {/* The delta chip, with what it compares against in a muted line under it. */}
+            <span className="flex min-w-0 flex-col items-start gap-1.5">
+              {change !== undefined ? (
+                <FloatingChip
+                  tone="running"
+                  delta={change >= 0 ? "up" : "down"}
+                  value={`${Math.abs(change)}%`}
+                  title={`${change >= 0 ? "Up" : "Down"} ${Math.abs(change)}% on the previous ${metrics.period} days (${formatUsd(metrics.prevSpend)})`}
+                />
+              ) : null}
+              <span className="text-[13px] leading-5 text-muted-foreground">
+                {plural(metrics.runs, "run")} · vs {formatUsd(metrics.prevSpend)}
+                <span className="sr-only"> the {metrics.period} days before</span>
+              </span>
+            </span>
           </div>
-          <ul className="flex flex-col gap-5 border-t border-rule pt-5 sm:gap-6 sm:pt-6">
+          <ul className="flex flex-col gap-4 border-t border-rule pt-5">
             {metrics.spendByStage.map((row) => {
               const title = stageDef(row.stage).title;
               return (
@@ -79,9 +87,6 @@ export function AgentSpendCard({ metrics, className }: { metrics?: HomeMetrics; 
               );
             })}
           </ul>
-          <p className="mt-auto pt-5 text-[13px] leading-5 text-muted-foreground">
-            {plural(metrics.runs, "agent run")} in the last {metrics.period} days · {formatUsd(metrics.prevSpend)} the {metrics.period} days before
-          </p>
         </>
       )}
     </SectionCard>

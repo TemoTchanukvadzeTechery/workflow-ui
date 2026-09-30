@@ -150,7 +150,7 @@ export function VersionsCard({
           const hasPrev = i < newestFirst.length - 1;
           const run = v.runId ? runIndex?.[v.runId] : undefined;
           return (
-            <li key={v.n} className={cn("relative rounded-[14px] px-3 py-2.5 transition-[background-color,box-shadow]", selected ? "bg-raised shadow-[var(--raised-shadow),0_0_0_1px_var(--circle-border)]" : "hover:bg-foreground/[0.03]")}>
+            <li key={v.n} className={cn("relative rounded-[20px] px-3 py-2.5 transition-[background-color,box-shadow]", selected ? "bg-raised shadow-[var(--raised-shadow),0_0_0_1px_var(--circle-border)]" : "hover:bg-foreground/[0.03]")}>
               <div className="flex items-start gap-2.5">
                 <span className={cn("mt-0.5 grid size-7 shrink-0 place-items-center rounded-full", selected ? "bg-ink text-ink-foreground" : "bg-well text-muted-foreground")}>
                   <Icon aria-hidden className="size-3.5" />
@@ -161,7 +161,7 @@ export function VersionsCard({
                       type="button"
                       onClick={() => onSelect(v.n)}
                       aria-current={selected ? "true" : undefined}
-                      className="rounded text-sm font-medium text-heading after:absolute after:inset-0 after:rounded-[14px] hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                      className="rounded text-sm font-medium text-heading after:absolute after:inset-0 after:rounded-[20px] hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
                     >
                       {label?.label ?? `v${v.n}`}
                       <span className="sr-only">{selected ? " (shown)" : ", show this version"}</span>
@@ -340,7 +340,7 @@ export function MemoryCard({ memory, isMemoryDoc }: { memory: NonNullable<DocDet
         {memory.status === "updated" ? <span className="rounded-full bg-well px-2 py-0.5 text-xs font-medium text-muted-foreground">{memory.major ? "Major update" : "Minor update"}</span> : null}
       </div>
       {memory.changes.length === 0 ? (
-        <p className="rounded-[14px] bg-well px-3 py-3 text-center text-sm text-muted-foreground">No changes recorded.</p>
+        <p className="rounded-[20px] bg-well px-3 py-3 text-center text-sm text-muted-foreground">No changes recorded.</p>
       ) : (
         <ul className="flex flex-col gap-1.5">
           <ShowMore
@@ -350,7 +350,7 @@ export function MemoryCard({ memory, isMemoryDoc }: { memory: NonNullable<DocDet
             render={(item, i) => {
               const c = parseChangeItem(item);
               return (
-                <li key={i} className="flex min-w-0 flex-col gap-1 rounded-[14px] bg-well px-3 py-2.5">
+                <li key={i} className="flex min-w-0 flex-col gap-1 rounded-[20px] bg-well px-3 py-2.5">
                   {c.kind ? <span className="inline-flex h-5 w-fit items-center rounded-full bg-raised px-2 font-mono text-xs text-muted-foreground shadow-(--raised-shadow)">{c.kind}</span> : null}
                   <div className="min-w-0 [overflow-wrap:anywhere]">
                     <Markdown source={c.summary} size="sm" className="[&_p]:my-0" />
@@ -362,7 +362,7 @@ export function MemoryCard({ memory, isMemoryDoc }: { memory: NonNullable<DocDet
         </ul>
       )}
       {memory.stale.length ? (
-        <div className="mt-3 rounded-[14px] bg-status-attention-bg px-3.5 py-2.5 text-[13px] text-status-attention-fg">
+        <div className="mt-3 rounded-[20px] bg-status-attention-bg px-3.5 py-2.5 text-[13px] text-status-attention-fg">
           <p className="font-medium">{plural(memory.stale.length, "stale register entry", "stale register entries")}</p>
           <ul className="mt-1 list-disc space-y-0.5 pl-4">
             {memory.stale.map((s, i) => (

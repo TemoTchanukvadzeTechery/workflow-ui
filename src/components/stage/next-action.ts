@@ -1,7 +1,7 @@
 /**
  * The project's next step (ProjectBundle.nextStep, e.g. "Developer: review CP-52204 · Row limit
- * …") as a control: the role split off for the overview card, a short button label for the gate
- * footer, and a way to reach the in-page control or request the step points at.
+ * …") as a control: the role split off for the overview card, a short button label (28 characters at
+ * most) for the gate footer, and a way to reach the in-page control or request the step points at.
  */
 import { parseRequestParam } from "@/hooks/use-stage-params";
 import { requestDomId } from "../hitl/HumanRequestCard";
@@ -15,9 +15,35 @@ export function splitRole(text: string): { role?: string; action: string } {
 
 const VERB = /^(start|review|answer|accept|approve|confirm|generate|run|resolve|add|unblock|open|sign)\b/i;
 
+/** The gate footer's primary button stays a short verb phrase; the full text goes in its title. */
+export const ACTION_LABEL_MAX = 28;
+
+/** Wordy objects shortened for a button: "confirm the dependencies found for the BRD" → "Confirm dependencies". */
+const SHORTER: ReadonlyArray<[RegExp, string]> = [
+  [/^confirm the dependencies\b.*$/i, "Confirm dependencies"],
+  [/^review the memory update\b.*$/i, "Review memory update"],
+  [/^review the implementation plan \(round (\d+)\)$/i, "Review plan round $1"],
+  [/^review the implementation plan\b.*$/i, "Review the plan"],
+  [/^generate it again$/i, "Generate the plan again"],
+  [/^accept the epic updates\b.*$/i, "Accept epic updates"],
+  [/^resolve requirements without evidence\b.*$/i, "Resolve requirement gaps"],
+  [/^review (\d+) code and memory changes?$/i, "Review $1 changes"],
+  [/^approve (.+?) and move to .+$/i, "Approve $1"],
+];
+
+/** Cut to at most `max` characters at a word boundary, with an ellipsis when anything was cut. */
+function clip(text: string, max = ACTION_LABEL_MAX): string {
+  if (text.length <= max) return text;
+  const cut = text.slice(0, max - 1);
+  const space = cut.lastIndexOf(" ");
+  return `${(space > max / 2 ? cut.slice(0, space) : cut).replace(/[\s,;:·-]+$/, "")}…`;
+}
+
 /**
- * A short label for a next step: the action without its role and trailing detail.
+ * A short label (28 characters at most) for a next step: the action without its role, trailing
+ * detail, parentheses or articles.
  * "Developer: review CP-52204 · Row limit …" → "Review CP-52204";
+ * "Product Owner: confirm the dependencies found for the BRD (pass 1)" → "Confirm dependencies";
  * "Product Owner: the last po-brd run ended without acceptance — start another run" → "Start another run";
  * "Architect: AAD round 1 is waiting — 3 blocking questions" → "Review AAD round 1";
  * "Owner: qa-verify needs your input" → "Answer qa-verify".
@@ -26,12 +52,51 @@ export function nextActionLabel(text: string): string {
   let action = splitRole(text).action;
   const [head, tail] = action.split(" — ");
   action = tail && VERB.test(tail) ? tail : head;
-  action = action.split(" · ")[0];
+  action = action.split(" · ")[0].trim();
+  const pending = /^(\d+) pending (requests?)\b/.exec(action);
   const waiting = /^(.+?) is waiting$/.exec(action);
-  if (waiting) action = `Review ${waiting[1]}`;
   const input = /^(.+?) needs your input$/.exec(action);
-  if (input) action = `Answer ${input[1]}`;
-  return capitalize(action.trim());
+  if (pending) action = `Answer ${pending[1]} pending ${pending[2]}`;
+  else if (waiting) action = `Review ${uncapitalize(waiting[1])}`;
+  else if (input) action = `Answer ${uncapitalize(input[1])}`;
+  else if (!VERB.test(action)) action = blockerLabel(action) ?? action;
+  const short = SHORTER.find(([re]) => re.test(action));
+  if (short) action = action.replace(short[0], short[1]);
+  if (action.length > ACTION_LABEL_MAX) action = action.replace(/\s*\([^)]*\)\s*$/, "");
+  // "Unblock CP-52201, CP-52202, CP-52203" → "Unblock 3 tasks".
+  const ids = /^(\w+) ([A-Z][A-Z0-9]*-\d+(?:, [A-Z][A-Z0-9]*-\d+)+)$/.exec(action);
+  if (action.length > ACTION_LABEL_MAX && ids) action = `${ids[1]} ${ids[2].split(", ").length} tasks`;
+  if (action.length > ACTION_LABEL_MAX) action = action.replace(/\b(the|a|an) /gi, "");
+  return clip(capitalize(action.trim()));
+}
+
+/** Blocker text → a short control label for the gate, when the blocker (not a next step) is the primary control. */
+const BLOCKER_ACTION: ReadonlyArray<[RegExp, string]> = [
+  [/^The (BRD|AAD) is not accepted yet$/, "Review the $1"],
+  [/^No epics yet/, "Add an epic"],
+  [/^Epic updates from the AAD/, "Accept epic updates"],
+  [/epics? not accepted yet$/, "Review proposed epics"],
+  [/^The implementation plan is not approved/, "Review the plan"],
+  [/^The plan has no tasks$/, "Open the plan"],
+  [/tasks? not done:/, "Open unfinished tasks"],
+  [/^No tasks to certify$/, "Open tasks"],
+  [/tasks? not certified:/, "Open uncertified tasks"],
+  [/requirements? not met or waived:/, "Open traceability"],
+  [/change reviews? pending$/, "Review changes"],
+  [/^(.+) is not approved$/, "Go to $1"],
+];
+
+function blockerLabel(text: string): string | undefined {
+  for (const [re, to] of BLOCKER_ACTION) {
+    const m = re.exec(text);
+    if (m) return clip(to.replace(/\$(\d)/g, (_, i: string) => m[Number(i)] ?? ""));
+  }
+  return undefined;
+}
+
+/** "2 of 5 tasks not certified: T-2 (CP-52202), …" → "Open uncertified tasks"; unknown blockers → "Resolve the blocker". */
+export function blockerActionLabel(text: string): string {
+  return blockerLabel(text) ?? "Resolve the blocker";
 }
 
 /** Lowercase words without articles or punctuation: "Start the requirements run" ≈ "Start requirements run". */
@@ -76,4 +141,9 @@ export function revealTarget(href: string, label?: string): void {
 
 function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+/** Undo splitRole's capital on a lowercase name ("Qa-verify" → "qa-verify"), keeping acronyms ("AAD round 1"). */
+function uncapitalize(s: string): string {
+  return /^[A-Z][a-z0-9-]/.test(s) ? s.charAt(0).toLowerCase() + s.slice(1) : s;
 }

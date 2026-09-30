@@ -304,17 +304,17 @@ function RunsGrid({ runs, index, indexPending }: { runs: RunRow[]; index: RunInd
             <TableCell>
               <div className="flex max-w-[260px] min-w-0 @6xl:max-w-[340px]">{indexPending ? <Skeleton className="h-4 w-40" /> : <RunContext entry={index?.[r.runId]} stacked />}</div>
             </TableCell>
-            <TableCell className="text-right font-mono text-xs tabular-nums">{r.steps ?? "-"}</TableCell>
+            <TableCell className="text-right text-[13px] tabular-nums">{r.steps ?? "-"}</TableCell>
             <TableCell className="text-right">
-              <Money usd={r.spend?.usd} className="font-mono text-xs" />
+              <Money usd={r.spend?.usd} className="text-[13px] text-heading" />
             </TableCell>
             <TableCell className="text-right">
-              <Tokens n={r.spend?.tokens} compact className="text-xs text-muted-foreground" />
+              <Tokens n={r.spend?.tokens} compact className="text-[13px] text-muted-foreground" />
             </TableCell>
-            <TableCell className="hidden text-right text-xs text-muted-foreground @5xl:table-cell">
+            <TableCell className="hidden text-right text-[13px] text-muted-foreground tabular-nums @5xl:table-cell">
               <RelativeTime at={r.createdAt} />
             </TableCell>
-            <TableCell className="pr-5 text-right text-xs text-muted-foreground">
+            <TableCell className="pr-5 text-right text-[13px] text-muted-foreground tabular-nums">
               <RelativeTime at={r.updatedAt} />
             </TableCell>
           </TableRow>

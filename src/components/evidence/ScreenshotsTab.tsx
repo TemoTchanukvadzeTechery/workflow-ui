@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/compone
 import type { Evidence } from "@/lib/delivery/types";
 import { cn } from "@/lib/utils";
 import { AcChips, EvidenceFacts, EvidenceItem, EvidenceResultPill } from "./EvidenceItem";
+import { SegmentChip } from "./RecordingPlayer";
 import { beforeAfterPairs } from "./utils";
 
 export interface ScreenshotsTabProps {
@@ -75,7 +76,8 @@ export function ScreenshotsTab({ items, onSelectAc, activeAc, highlightId, onJum
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={e.url} alt={e.title} loading="lazy" className="aspect-video w-full rounded-[14px] object-cover object-top shadow-[0_0_0_1px_var(--chip-edge),0_10px_24px_-14px_rgb(0_0_0/0.35)]" />
                   <figcaption className="text-xs text-muted-foreground">
-                    <span className="font-mono font-semibold tracking-[0.08em]">{i === 0 ? "BEFORE" : "AFTER"}</span> · {e.title}
+                    <SegmentChip label={i === 0 ? "BEFORE" : "AFTER"} className="mr-1.5 h-5" />
+                    {e.title}
                   </figcaption>
                 </figure>
               ))}

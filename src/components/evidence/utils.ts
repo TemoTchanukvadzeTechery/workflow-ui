@@ -32,6 +32,9 @@ export function evidenceTab(e: Evidence): EvidenceTab {
   }
 }
 
+/** Test level in sentence case ("Unit", "API", "E2E", "Manual"), never shouted. */
+export const TEST_LEVEL_LABEL: Record<NonNullable<Evidence["testLevel"]>, string> = { unit: "Unit", api: "API", e2e: "E2E", manual: "Manual" };
+
 export const KIND_LABEL: Record<Evidence["kind"], string> = {
   video: "Recording",
   screenshot: "Screenshot",

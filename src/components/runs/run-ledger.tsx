@@ -173,7 +173,7 @@ function LedgerRow({ entry, selected, onSelect, compact }: { entry: LedgerEntry;
 }
 
 function RowMeta({ entry }: { entry: LedgerEntry }) {
-  const cls = "shrink-0 font-mono text-[11px] tabular-nums text-muted-foreground";
+  const cls = "shrink-0 text-xs tabular-nums text-muted-foreground";
   if (entry.type === "human") {
     const h = entry.human;
     if (h.status === "pending") return <Elapsed since={h.requestedAt} className={cn(cls, "text-status-attention-fg")} />;

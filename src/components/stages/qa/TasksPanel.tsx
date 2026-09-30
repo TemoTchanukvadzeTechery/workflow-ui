@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useStartQa } from "@/lib/api/queries";
 import type { DeliveryTask, ProjectBundle, QaStep } from "@/lib/delivery/types";
+import { plural } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { qaStatusMeta, taskStatusMeta, type StatusMeta } from "@/lib/weft/labels";
 import { ReadyForTestCard } from "./ReadyForTestCard";
@@ -198,8 +199,11 @@ function LoopBackCard({ projectId, bundle, task }: { projectId: string; bundle: 
         </div>
       </div>
       <div className="mt-4 grid gap-3 @2xl/qa:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]">
-        <div className="space-y-2 rounded-[16px] bg-status-danger-bg/60 px-4 py-3.5">
-          <h4 className="text-[13px] font-medium text-status-danger-fg">Bugs QA reported</h4>
+        <div className="space-y-2.5 rounded-[20px] bg-well px-4 py-3.5">
+          <h4 className="flex flex-wrap items-center gap-2 text-[13px] font-medium text-heading">
+            <StatusPill tone="danger" icon={Bug} size="sm" label={task.qa.bugs.length ? plural(task.qa.bugs.length, "bug") : "Bugs"} />
+            <span className="font-normal text-muted-foreground">reported by QA</span>
+          </h4>
           <ol className="space-y-1.5">
             {task.qa.bugs.map((b, i) => (
               <li key={i} className="flex items-start gap-2 text-sm text-heading">
@@ -216,8 +220,8 @@ function LoopBackCard({ projectId, bundle, task }: { projectId: string; bundle: 
             </p>
           ) : null}
         </div>
-        <div className="space-y-2 rounded-[16px] bg-well px-4 py-3.5">
-          <h4 className="text-[13px] font-medium text-heading">Rework</h4>
+        <div className="space-y-2 rounded-[20px] bg-well px-4 py-3.5">
+          <h4 className="flex min-h-6 items-center text-[13px] font-medium text-heading">Rework</h4>
           <p className="flex items-center gap-1.5 text-sm text-heading">
             {task.status === "in_progress" || task.status === "verifying" ? <StatusDot tone="running" pulse size="sm" /> : null}
             <span>{task.latestStep ?? tMeta.label}</span>

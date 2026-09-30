@@ -7,7 +7,7 @@
  * open questions. ?v= selects a version without a server round trip (history.replaceState keeps
  * useSearchParams in sync); version texts come from the blob store and stay cached.
  */
-import { ArrowLeft, ArrowRight, Check, Download, FileX, History, Link2 } from "lucide-react";
+import { ArrowRight, Check, Download, FileX, History, Link2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -137,36 +137,34 @@ function Loaded({ projectId, doc, text: latestText, version, requested }: { proj
 
   return (
     <div className="flex min-w-0 flex-col gap-6">
+      {/* The breadcrumb under the nav leads back; the kind and stage sit in the chip row. */}
       <header className="flex min-w-0 flex-col gap-5">
-        <div>
-          <Link
-            href={backHref}
-            className="inline-flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-heading focus-visible:rounded-sm focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-          >
-            <ArrowLeft aria-hidden className="size-4" />
-            {stageTitle}
-          </Link>
-        </div>
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between md:gap-6">
-          <div className="flex min-w-0 flex-col gap-2.5">
-            <p className="text-[13px] text-muted-foreground">
-              {kicker} <span aria-hidden>·</span> Stage {stageDef(stage).n} {stageTitle}
-            </p>
+          <div className="flex min-w-0 flex-col gap-3">
             <div className="flex min-w-0 items-start gap-2.5">
               <h1 className="min-w-0 text-[30px] leading-[1.12] font-normal tracking-[-0.025em] break-words text-heading sm:text-[38px] sm:leading-[1.08] sm:tracking-[-0.03em] xl:text-[42px]">{heading}</h1>
               <CopyDocLink />
             </div>
-            <p className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1.5 text-[13px] text-muted-foreground">
+            <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1.5 text-[13px] text-muted-foreground">
               <StatusPill status={{ kind: "doc", value: doc.status }} />
-              <span className="inline-flex h-7 min-w-0 items-center rounded-full bg-well px-2.5 font-mono text-xs break-all text-heading">{doc.path}</span>
-              <span aria-hidden>·</span>
-              <span>
-                {labelOf(current.n)} <span aria-hidden>·</span>{" "}
-                {isLatest && doc.status === "accepted" ? `accepted${doc.acceptedBy ? ` by ${actorText(doc.acceptedBy)}` : ""}` : SOURCE_LABEL[current.source].toLowerCase()}
+              <span className="inline-flex h-7 max-w-full min-w-0 items-center gap-1.5 rounded-full bg-well px-2.5 text-xs whitespace-nowrap">
+                {kicker !== "Document" ? (
+                  <>
+                    <span className="font-medium text-heading">{kicker}</span>
+                    <span aria-hidden>·</span>
+                  </>
+                ) : null}
+                <span className="truncate text-foreground/80">
+                  Stage {stageDef(stage).n} {stageTitle}
+                </span>
               </span>
-              <span aria-hidden>·</span>
-              <RelativeTime at={current.at} />
-            </p>
+              <span className="inline-flex h-7 min-w-0 items-center rounded-full bg-well px-2.5 font-mono text-xs break-all text-heading">{doc.path}</span>
+              <span className="ml-0.5">
+                {labelOf(current.n)} <span aria-hidden>·</span>{" "}
+                {isLatest && doc.status === "accepted" ? `accepted${doc.acceptedBy ? ` by ${actorText(doc.acceptedBy)}` : ""}` : SOURCE_LABEL[current.source].toLowerCase()} <span aria-hidden>·</span>{" "}
+                <RelativeTime at={current.at} />
+              </span>
+            </div>
           </div>
           <div className="flex shrink-0 flex-wrap items-center gap-2">
             <Button variant="secondary" onClick={download} disabled={text === undefined}>
