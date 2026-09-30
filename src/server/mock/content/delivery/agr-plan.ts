@@ -1,0 +1,240 @@
+import "server-only";
+/**
+ * AGR (Ambassador Agreement Acceptance Reporting): the plan from brief F.5, 9 tasks in 3 waves,
+ * traced to the real BRD requirements (BR-1..BR-8) and AAD FR1..FR8.
+ */
+import type { PlanPack } from "./types";
+
+const COVERAGE_EPIC = { title: "Agreement Progress page: aggregate coverage", refs: ["BR-1", "BR-2", "BR-3", "BR-5", "BR-6"] };
+const ACCESS_EPIC = { title: "Access control & rollout for agreement reporting", refs: ["BR-7", "FR7"] };
+const FILTER_EPIC = { title: "Filters and segmentation by agreement and version", refs: ["BR-4", "FR4"] };
+
+export const AGR_PLAN: PlanPack = {
+  summary:
+    "Deliver the aggregate Agreement Progress report on website-customer-portal, backed by a new read-only coverage endpoint in customer-service-v2 and exposed through api-gateway, all behind a LaunchDarkly flag defaulted off. Wave 1 lays the data and contract foundations (coverage query, api-contracts spec, flag); wave 2 builds the endpoint, the gateway route and the page; wave 3 adds Legal-only authorization, the filters and the E2E suite. Option 1 (direct retrieval) is assumed for the data source until Q2 is decided; the record-level list (BR-8) is not planned until Q3 confirms it.",
+  tasks: [
+    {
+      id: "T-1",
+      title: "[customer-service-v2] Aggregate coverage query per CustomerAgreementTypeID",
+      description:
+        "Set-based SQL over CustomerAgreementType, CustomerAgreementRequirement and CustomerAgreement that returns the eligible population and distinct acceptances per active agreement version, with the supporting index. No per-customer fan-out (AAD PROD-load constraint).",
+      priority: "high",
+      tags: ["backend", "sql", "data"],
+      dependencies: [],
+      relatedFiles: [
+        "src/main/resources/db/queries/agreement-coverage.sql",
+        "src/main/java/com/plexus/customer/agreements/coverage/CoverageSql.java",
+      ],
+      acceptanceCriteria: [
+        { id: "AC-1", text: "Returns requiredCount, acceptedCount and notAcceptedCount per agreement type and version" },
+        { id: "AC-2", text: "Only agreement types with IsActive = 1 are counted" },
+        { id: "AC-3", text: "D2A duplicate acceptance sets are counted once per ambassador (assumption pending Q7)" },
+      ],
+      epic: COVERAGE_EPIC,
+      type: "story",
+      repo: "customer-service-v2",
+      size: "M",
+      wave: 1,
+      traces: ["BR-3", "BR-5", "FR3", "FR5"],
+    },
+    {
+      id: "T-2",
+      title: "[api-contracts] Publish aggregate coverage contract GET /v1/agreements/coverage",
+      description:
+        "OpenAPI spec for the aggregate coverage endpoint, published before the owning service deploys (AAD delivery step 4). Field names follow the AAD's proposed response shape.",
+      priority: "high",
+      tags: ["contract", "openapi"],
+      dependencies: [],
+      relatedFiles: ["agreements/coverage.yaml", "index.yaml"],
+      acceptanceCriteria: [
+        { id: "AC-1", text: "Response fields match the AAD list: agreementTypeId, description, version, countryCode, stateProvince, requiredCount, acceptedCount, notAcceptedCount, coveragePercent, asOf" },
+        { id: "AC-2", text: "401, 403 and 503 responses are documented; the spec passes redocly lint with no breaking-change findings" },
+      ],
+      epic: COVERAGE_EPIC,
+      type: "task",
+      repo: "api-contracts",
+      size: "S",
+      wave: 1,
+      traces: ["BR-2", "BR-3", "FR2", "FR3"],
+    },
+    {
+      id: "T-3",
+      title: "[website-customer-portal] LaunchDarkly flag agreement-progress-page, default off",
+      description:
+        "Register the flag in the portal with an off fallback and hide the Agreement Progress navigation entry behind it, so the surface can be disabled without a deploy (AAD rollout safety, delivery step 2).",
+      priority: "medium",
+      tags: ["frontend", "rollout"],
+      dependencies: [],
+      relatedFiles: ["src/app/core/flags/feature-flags.ts", "src/app/layout/nav.config.ts"],
+      acceptanceCriteria: [
+        { id: "AC-1", text: "With the flag off, the Agreement Progress entry is not shown" },
+        { id: "AC-2", text: "With the flag on, the entry is shown to signed-in users" },
+        { id: "AC-3", text: "If LaunchDarkly is unreachable the flag falls back to off" },
+      ],
+      epic: ACCESS_EPIC,
+      type: "task",
+      repo: "website-customer-portal",
+      size: "XS",
+      wave: 1,
+      traces: ["BR-7", "FR7"],
+    },
+    {
+      id: "T-4",
+      title: "[customer-service-v2] Coverage endpoint implementation",
+      description:
+        "GET /v1/agreements/coverage in customer-service-v2 using the T-1 query and the T-2 contract: validated filters, derived notAcceptedCount and coveragePercent, asOf timestamp, and an explicit 503 instead of partial figures on timeout. Replaces the 501 placeholder in AgreementsController.",
+      priority: "high",
+      tags: ["backend", "api"],
+      dependencies: ["T-1", "T-2"],
+      relatedFiles: [
+        "src/main/java/com/plexus/customer/agreements/coverage/CoverageController.java",
+        "src/main/java/com/plexus/customer/agreements/coverage/CoverageQuery.java",
+        "src/main/java/com/plexus/customer/agreements/coverage/CoverageRepository.java",
+      ],
+      acceptanceCriteria: [
+        { id: "AC-1", text: "GET /v1/agreements/coverage returns the contract fields for every active agreement version" },
+        { id: "AC-2", text: "coveragePercent is acceptedCount / requiredCount to one decimal, and 0 when requiredCount is 0" },
+        { id: "AC-3", text: "agreementTypeId and version filters narrow the result; unknown values return an empty list, not 404" },
+        { id: "AC-4", text: "A query timeout returns 503 with no figures; p95 latency stays under 500 ms on the test dataset" },
+      ],
+      epic: COVERAGE_EPIC,
+      type: "story",
+      repo: "customer-service-v2",
+      size: "L",
+      wave: 2,
+      traces: ["BR-3", "BR-5", "BR-6", "FR3", "FR5", "FR6"],
+    },
+    {
+      id: "T-5",
+      title: "[api-gateway] Route for the coverage endpoint (authenticate + forward only)",
+      description:
+        "New api-gateway route exposing GET /v1/agreements/coverage to the portal: Okta JWT authentication and forwarding only, no domain logic (AAD integration convention). Needed while Q8 is open.",
+      priority: "medium",
+      tags: ["gateway"],
+      dependencies: ["T-2"],
+      relatedFiles: ["routes/agreements.yaml"],
+      acceptanceCriteria: [
+        { id: "AC-1", text: "Authenticated portal requests reach customer-service-v2 /v1/agreements/coverage" },
+        { id: "AC-2", text: "Requests without a valid Okta token get 401 and never reach the service" },
+        { id: "AC-3", text: "Query parameters are forwarded unchanged" },
+      ],
+      epic: COVERAGE_EPIC,
+      type: "task",
+      repo: "api-gateway",
+      size: "S",
+      wave: 2,
+      traces: ["BR-1", "FR1"],
+    },
+    {
+      id: "T-6",
+      title: "[website-customer-portal] Agreement Progress page",
+      description:
+        "The Agreement Progress page: latest agreements and versions with required, accepted and not-accepted counts and coverage toward the 100% goal, the as-of timestamp, and an explicit error state with no figures when the endpoint fails.",
+      priority: "high",
+      tags: ["frontend"],
+      dependencies: ["T-2", "T-3"],
+      relatedFiles: [
+        "src/app/agreements/agreement-progress/agreement-progress.component.ts",
+        "src/app/agreements/agreement-progress/agreement-progress.service.ts",
+      ],
+      acceptanceCriteria: [
+        { id: "AC-1", text: "Lists the latest agreements and versions with required, accepted and not-accepted counts" },
+        { id: "AC-2", text: "Shows coverage toward the 100% goal per agreement version" },
+        { id: "AC-3", text: "When the endpoint fails the page shows an error state and no figures" },
+        { id: "AC-4", text: "Shows the as-of timestamp of the figures" },
+      ],
+      epic: COVERAGE_EPIC,
+      type: "story",
+      repo: "website-customer-portal",
+      size: "M",
+      wave: 2,
+      traces: ["BR-1", "BR-2", "BR-5", "FR1", "FR2", "FR5"],
+    },
+    {
+      id: "T-7",
+      title: "[website-customer-portal] Route-level authorization for the Legal role",
+      description:
+        "Restrict the agreement reporting routes to the Legal/Compliance audience with a route guard on the Okta groups claim. The group name comes from open question Q4.",
+      priority: "high",
+      tags: ["frontend", "security"],
+      dependencies: ["T-6"],
+      relatedFiles: ["src/app/core/auth/legal-role.guard.ts"],
+      acceptanceCriteria: [
+        { id: "AC-1", text: "Members of the Legal/Compliance Okta group can open Agreement Progress" },
+        { id: "AC-2", text: "Other signed-in users are redirected to /forbidden" },
+        { id: "AC-3", text: "Users with no groups claim are redirected to /forbidden" },
+      ],
+      epic: ACCESS_EPIC,
+      type: "story",
+      repo: "website-customer-portal",
+      size: "S",
+      wave: 3,
+      traces: ["BR-7", "FR7"],
+      blockedBy: "Q4: which Okta group",
+    },
+    {
+      id: "T-8",
+      title: "[website-customer-portal] Filters by agreement and version",
+      description: "Agreement and version filters on Agreement Progress, passed to the coverage endpoint as query parameters (FR4). Country and state filters wait for Q5.",
+      priority: "medium",
+      tags: ["frontend"],
+      dependencies: ["T-6"],
+      relatedFiles: ["src/app/agreements/coverage-filters/coverage-filters.component.ts"],
+      acceptanceCriteria: [
+        { id: "AC-1", text: "Filtering by agreement shows only that agreement's versions" },
+        { id: "AC-2", text: "Filtering by version shows only rows for that version" },
+        { id: "AC-3", text: "Clearing the filters restores the full list" },
+      ],
+      epic: FILTER_EPIC,
+      type: "story",
+      repo: "website-customer-portal",
+      size: "M",
+      wave: 3,
+      traces: ["BR-4", "FR4"],
+    },
+    {
+      id: "T-9",
+      title: "[QA] E2E: Agreement Progress page behind the flag",
+      description:
+        "pww-automation Playwright suite for Agreement Progress on internal-apps-test: figures render for a Legal user, the page is hidden with the flag off, and non-Legal users are refused.",
+      priority: "medium",
+      tags: ["qa", "e2e"],
+      dependencies: ["T-6", "T-7"],
+      relatedFiles: ["src/test/kotlin/com/plexus/pww/agreements/AgreementProgressTest.kt"],
+      acceptanceCriteria: [
+        { id: "AC-1", text: "A Legal user sees Agreement Progress with figures" },
+        { id: "AC-2", text: "With the flag off the page is not reachable" },
+        { id: "AC-3", text: "Coverage shown for Brand Ambassador Agreement matches the API response" },
+        { id: "AC-4", text: "A non-Legal user is refused" },
+      ],
+      epic: COVERAGE_EPIC,
+      type: "task",
+      repo: "pww-automation",
+      size: "S",
+      wave: 3,
+      traces: ["BR-1", "BR-3", "BR-7", "FR1", "FR7"],
+    },
+  ],
+  report: {
+    assumptions: [
+      "Option 1 (direct retrieval from ThatOtherGuy/PlexusSync) is the data source until Q2 is decided; T-1 and T-4 change if the BI Platform is chosen.",
+      "customer-service-v2 owns the aggregate query, per the AAD's recommended ownership (Q6).",
+      "D2A duplicate acceptance sets are counted once per ambassador and agreement version (pending Q7).",
+      "The portal reaches customer-service-v2 through a new api-gateway route (Q8); T-5 is dropped if a direct internal path exists.",
+      "A new LaunchDarkly flag agreement-progress-page gates the page (Q9), rather than reusing ambassador-upgrade-agreements-enabled.",
+      "All tasks belong to team Customer Guardians; Kraken Up reviews portal changes as repository owner.",
+    ],
+    openQuestions: [
+      "Q2: data source (direct retrieval, BI Platform, or a materialized summary); blocks T-1 and T-4 beyond Option 1",
+      "Q4: which Okta group or role gates the report; blocks T-7",
+      "Q7: counting rule for D2A duplicates and Arizona-scoped agreements; affects T-1 AC-3",
+      "Q8: does the portal reach customer-service-v2 through api-gateway or directly; affects T-5",
+    ],
+    uncovered: ["BR-8 (Candidate): record-level acceptance list, pending Q3; no task until the PO confirms scope"],
+    risks: [
+      "PROD database load from the aggregate query (AAD NFR); T-4 includes a p95 latency check at full ambassador-base scale on the test dataset.",
+      "T-7 cannot start until Q4 names the Okta group; the page stays behind the flag until then.",
+      "website-customer-portal carries 16 open critical Snyk findings (CP-51568); a dependency bump there may conflict with T-6 and T-8.",
+    ],
+  },
+};

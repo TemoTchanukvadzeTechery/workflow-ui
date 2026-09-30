@@ -1,0 +1,1340 @@
+{
+ "brd": {
+  "runId": "0035d37f",
+  "input": {
+   "request": "We need a place for seeing reports for what customers have accepted. Review this ticket CP-50908 and all relevant tickets in the parent epic.\nThere are already existing web services that could host it and you can check implementation in other parent epic, but the scope of this one is purely seeing the numbers like list of latest agreements, how many have accepted, how many have not accepted and etc. Just overall analytics",
+   "out": "brd/brd.md",
+   "skill": ".claude/skills/po-brd/SKILL.md",
+   "memory": "memory/brd-memory.md",
+   "maxRounds": 3,
+   "discover": true,
+   "seeds": [
+    "CP-50894",
+    "CP-50908"
+   ],
+   "discoveryRounds": 2,
+   "maxQueries": 6
+  },
+  "rounds": [
+   {
+    "queries": [
+     {
+      "purpose": "List all siblings under the epic CP-50894 — the PO asked for all relevant tickets in the parent epic, and the reporting/analytics view is likely a sibling story",
+      "args": [
+       "jira",
+       "issue",
+       "list",
+       "parent = CP-50894 ORDER BY created ASC",
+       "--limit",
+       "25"
+      ]
+     },
+     {
+      "purpose": "Fetch CP-51264, the SPIKE cloned from CP-50908, which may carry feasibility findings and data constraints for acceptance reporting",
+      "args": [
+       "jira",
+       "issue",
+       "get",
+       "CP-51264"
+      ]
+     },
+     {
+      "purpose": "Fetch PLAN-358, the parent plan of the epic, to see the initiative-level scope and sibling epics (including the Phase 1 epic the notes refer to)",
+      "args": [
+       "jira",
+       "issue",
+       "get",
+       "PLAN-358"
+      ]
+     },
+     {
+      "purpose": "Find the Phase 1 / other parent epic and any other ambassador agreement acceptance epics the notes mention as already-implemented",
+      "args": [
+       "jira",
+       "issue",
+       "list",
+       "project = CP AND issuetype = Epic AND text ~ \"ambassador agreement\" ORDER BY created DESC",
+       "--limit",
+       "25"
+      ]
+     },
+     {
+      "purpose": "Find other CP tickets about agreement acceptance reporting/analytics that could duplicate or overlap this BRD's scope",
+      "args": [
+       "jira",
+       "issue",
+       "list",
+       "project = CP AND text ~ \"acceptance reporting\" ORDER BY created DESC",
+       "--limit",
+       "25"
+      ]
+     },
+     {
+      "purpose": "Find an existing BRD or SOP in PSE for ambassador agreement acceptance — an existing BRD for this area is the costliest thing to miss",
+      "args": [
+       "confluence",
+       "search",
+       "space = PSE and text ~ \"ambassador agreement\"",
+       "--limit",
+       "25"
+      ]
+     },
+     {
+      "purpose": "Find any Confluence page (BRD, spike summary, decision record, release page) keyed to the epic or story",
+      "args": [
+       "confluence",
+       "search",
+       "text ~ \"CP-50894\" or text ~ \"CP-50908\" or text ~ \"CP-51264\"",
+       "--limit",
+       "25"
+      ]
+     }
+    ],
+    "relevant": [
+     {
+      "ref": "CP-50894",
+      "kind": "jira",
+      "title": "Phase 2 Fast Follow: Legal & Compliance Reporting",
+      "relation": "parent epic",
+      "why": "Named by the PO and is CP-50908's parent. Its description scopes on-demand visibility into acceptance status \"by ambassador and by agreement version\" for Legal/Compliance — the by-agreement-version half is exactly the aggregate analytics view N1 L2 asks for. Also names the branch feature-CP-50894-amb-agreement-phase-2 and LD flag ambassador-upgrade-agreements-enabled."
+     },
+     {
+      "ref": "CP-50908",
+      "kind": "jira",
+      "title": "Phase 2: Look Up an Individual Ambassador's Acceptance Status",
+      "relation": "related ticket",
+      "why": "Named by the PO (N1 L1). Covers the per-individual lookup (search by Customer ID or name, which document version accepted and when), which bounds this BRD: the PO scopes this one to aggregate numbers, so CP-50908 is the adjacent, likely out-of-scope sibling. Labels Auth0/Data/Legal identify the data and access surfaces."
+     },
+     {
+      "ref": "CP-51264",
+      "kind": "jira",
+      "title": "SPIKE - Phase 2: Look Up an Individual Ambassador's Acceptance Status",
+      "relation": "related ticket",
+      "why": "Listed on CP-50908 as \"is cloned by\" — a spike on the same data, likely holding feasibility findings, data-source constraints, and possibly the hosting web service the PO refers to in N1 L2. Not yet fetched."
+     },
+     {
+      "ref": "PLAN-358",
+      "kind": "jira",
+      "title": "Shopping Experience: Misc Tasks & Bug Fixes (2026 Q3)",
+      "relation": "parent epic",
+      "why": "Parent of CP-50894 per its PARENT field. Fetching it should reveal sibling epics, including the \"other parent epic\" whose implementation N1 L2 says can be checked. Not yet fetched."
+     }
+    ],
+    "done": false
+   },
+   {
+    "queries": [
+     {
+      "purpose": "Fetch CP-50909 — the sibling story 'Retrieve Acceptance Status Across the Full Ambassador Base' is almost certainly the core scope of this BRD (aggregate/analytics view), not the individual lookup in CP-50908",
+      "args": [
+       "jira",
+       "issue",
+       "get",
+       "CP-50909",
+       "-o",
+       "json"
+      ]
+     },
+     {
+      "purpose": "Re-fetch CP-51264 with json — the table output showed no description, and the SPIKE cloned from CP-50908 likely carries the feasibility findings, data sources and constraints for acceptance reporting",
+      "args": [
+       "jira",
+       "issue",
+       "get",
+       "CP-51264",
+       "-o",
+       "json"
+      ]
+     },
+     {
+      "purpose": "Fetch CP-50891 'Acceptance Evidence & Audit Logging' — the Phase 1 epic that captured the acceptance records; it defines the data the reporting view would read, and is likely the 'other parent epic' whose implementation N1 L2 points to",
+      "args": [
+       "jira",
+       "issue",
+       "get",
+       "CP-50891",
+       "-o",
+       "json"
+      ]
+     },
+     {
+      "purpose": "Fetch CP-50893 'Future Agreement Versioning & Re-Acceptance' — 'accepted vs not accepted' counts depend on what the current version is, a constraint this epic decided",
+      "args": [
+       "jira",
+       "issue",
+       "get",
+       "CP-50893",
+       "-o",
+       "json"
+      ]
+     },
+     {
+      "purpose": "Fetch CP-50889 'Mandatory Agreement Acceptance Experience' — the Phase 1 epic that produced acceptance events and defines which documents and populations are in play",
+      "args": [
+       "jira",
+       "issue",
+       "get",
+       "CP-50889",
+       "-o",
+       "json"
+      ]
+     },
+     {
+      "purpose": "List the children of CP-50891 to see how acceptance evidence is stored and whether a reporting/export story already exists there (avoiding a duplicate BRD scope)",
+      "args": [
+       "jira",
+       "issue",
+       "list",
+       "parent = CP-50891 ORDER BY created ASC",
+       "--limit",
+       "25"
+      ]
+     },
+     {
+      "purpose": "Find any existing ticket for an acceptance analytics/dashboard view across the CP project, which would overlap or duplicate this BRD's scope",
+      "args": [
+       "jira",
+       "issue",
+       "list",
+       "project = CP AND text ~ \"acceptance status\" ORDER BY created DESC",
+       "--limit",
+       "25"
+      ]
+     },
+     {
+      "purpose": "The PSE-scoped Confluence search returned zero rows, which may mean the wrong space key rather than no page — search site-wide for ambassador agreement pages (BRD, SOP, spike summary)",
+      "args": [
+       "confluence",
+       "search",
+       "text ~ \"ambassador agreement\" and type = page",
+       "--limit",
+       "25"
+      ]
+     },
+     {
+      "purpose": "Find any Confluence page tied to these epics by Jira key (Plexus titles ticket-linked pages by key), including a BRD or spike summary for the Phase 2 reporting work",
+      "args": [
+       "confluence",
+       "search",
+       "text ~ \"CP-50894\" or text ~ \"CP-50908\" or text ~ \"CP-50909\"",
+       "--limit",
+       "25"
+      ]
+     },
+     {
+      "purpose": "Confirm which space keys actually exist and are reachable with these credentials, so an empty PSE result can be read as 'no page' rather than 'wrong key'",
+      "args": [
+       "confluence",
+       "space",
+       "ls",
+       "--limit",
+       "25"
+      ]
+     }
+    ],
+    "relevant": [
+     {
+      "ref": "CP-50894",
+      "kind": "jira",
+      "title": "Phase 2 Fast Follow: Legal & Compliance Reporting",
+      "relation": "parent epic",
+      "why": "The epic this BRD sits under. Its description states Legal and Compliance need on-demand visibility into acceptance status 'by ambassador and by agreement version', and names the branch feature-CP-50894-amb-agreement-phase-2 and LD flag ambassador-upgrade-agreements-enabled — the epic's stated purpose is the BRD's problem statement, and the by-base half matches N1's analytics scope."
+     },
+     {
+      "ref": "CP-50908",
+      "kind": "jira",
+      "title": "Phase 2: Look Up an Individual Ambassador's Acceptance Status",
+      "relation": "related ticket",
+      "why": "The ticket N1 L1 names. It is the per-ambassador lookup (search by Customer ID or name, see which version of the Brand Ambassador Agreement, P&P and Privacy Policy was accepted and when). N1 L2 scopes this BRD to aggregate numbers instead, so CP-50908 is adjacent scope and a likely Out of Scope / boundary item — it also names the three documents and the 'has not accepted current version' indicator the analytics must count."
+     },
+     {
+      "ref": "CP-50909",
+      "kind": "jira",
+      "title": "Retrieve Acceptance Status Across the Full Ambassador Base",
+      "relation": "related ticket",
+      "why": "Sibling under CP-50894 (epic child list, Backlog, unassigned). The title matches N1 L2's scope — latest agreements, how many accepted, how many not — so this is probably the ticket this BRD actually backs. Not yet fetched; queued."
+     },
+     {
+      "ref": "CP-51264",
+      "kind": "jira",
+      "title": "SPIKE - Phase 2: Look Up an Individual Ambassador's Acceptance Status",
+      "relation": "spec",
+      "why": "Done, cloned from CP-50908 (link on CP-50908). A completed spike on reading acceptance data is the likeliest source of feasibility findings, data availability and constraints for any reporting view. The table fetch returned no description; re-queued as json."
+     },
+     {
+      "ref": "PLAN-358",
+      "kind": "jira",
+      "title": "Shopping Experience: Misc Tasks & Bug Fixes (2026 Q3)",
+      "relation": "parent epic",
+      "why": "Parent of CP-50894 (issue get), a Q3 misc container in Development owned by Art Villa. Sets the delivery context and the likely Product lead name, but carries no scope of its own."
+     },
+     {
+      "ref": "CP-50891",
+      "kind": "jira",
+      "title": "Acceptance Evidence & Audit Logging",
+      "relation": "related ticket",
+      "why": "Done Phase 1 epic found by the ambassador-agreement epic search. Acceptance evidence and audit logging is the data layer any acceptance analytics reads from, and is a strong candidate for the 'other parent epic' whose implementation N1 L2 says can be checked."
+     },
+     {
+      "ref": "CP-50893",
+      "kind": "jira",
+      "title": "Future Agreement Versioning & Re-Acceptance",
+      "relation": "related ticket",
+      "why": "Done Phase 1 epic. 'How many have accepted vs not accepted' is only meaningful against a current agreement version, and this epic decided versioning and re-acceptance behavior — a possible constraint or conflicting decision for the metrics."
+     },
+     {
+      "ref": "CP-50889",
+      "kind": "jira",
+      "title": "Mandatory Agreement Acceptance Experience",
+      "relation": "related ticket",
+      "why": "Done Phase 1 epic that delivered the acceptance experience generating the records to be counted; it defines which documents and which ambassador population are in scope for the numbers."
+     },
+     {
+      "ref": "CP-50892",
+      "kind": "jira",
+      "title": "Prevent Arc Login Acceptance on Behalf of Ambassadors",
+      "relation": "related ticket",
+      "why": "Done Phase 1 epic. It constrains who may accept on an ambassador's behalf, which bears on how an 'accepted' record should be interpreted and reported."
+     },
+     {
+      "ref": "CP-51347",
+      "kind": "jira",
+      "title": "Ambassador Agreement Minor Adjustments",
+      "relation": "related ticket",
+      "why": "Done epic in the same area, found by the ambassador-agreement epic search; may carry late changes to the agreements or acceptance data that the reporting numbers must reflect."
+     },
+     {
+      "ref": "CP-50416",
+      "kind": "jira",
+      "title": "[Research] BA Agreement & P&P Consent Capture",
+      "relation": "spec",
+      "why": "Done research epic that preceded the whole programme; likely holds the original consent-capture model and terminology the BRD should reuse."
+     }
+    ],
+    "done": false
+   },
+   {
+    "queries": [],
+    "relevant": [
+     {
+      "ref": "CP-50894",
+      "kind": "jira",
+      "title": "Phase 2 Fast Follow: Legal & Compliance Reporting",
+      "relation": "parent epic",
+      "why": "The epic the PO pointed at via CP-50908. Its Purpose & Value states Legal/Compliance need on-demand visibility into acceptance status by ambassador and by agreement version — the direct scope frame for this BRD. In Progress, under PLAN-358, carries LD flag ambassador-upgrade-agreements-enabled and branch feature-CP-50894-amb-agreement-phase-2."
+     },
+     {
+      "ref": "CP-50909",
+      "kind": "jira",
+      "title": "Retrieve Acceptance Status Across the Full Ambassador Base",
+      "relation": "related ticket",
+      "why": "Closest match to N1 L2's 'purely seeing the numbers' scope: coverage across the ambassador base, filterable by agreement and version, on demand, with ambassador ID, name, status and version accepted. Mentions a 100% acceptance goal — a candidate success metric source. Backlog; depends on CP-51264."
+     },
+     {
+      "ref": "CP-50908",
+      "kind": "jira",
+      "title": "Phase 2: Look Up an Individual Ambassador's Acceptance Status",
+      "relation": "related ticket",
+      "why": "The ticket the PO named in N1 L1. Individual lookup by Customer ID or name, showing which version of the BA Agreement, P&P and Privacy Policy was accepted and when, and flagging non-acceptance of the current version. Defines the three documents and the per-ambassador detail; N1 L2 scopes this BRD to aggregate numbers, so the boundary between the two needs the PO's confirmation."
+     },
+     {
+      "ref": "CP-51264",
+      "kind": "jira",
+      "title": "SPIKE - Phase 2: Look Up an Individual Ambassador's Acceptance Status",
+      "relation": "spec",
+      "why": "Done spike cloned from CP-50908 and depended on by CP-50909 — the feasibility work both Phase 2 reporting stories rest on. Its description only restates CP-50908 and CP-50909, so the actual findings (data sources, constraints, hosting service) are not in the issue body and would need the PO or the spike's outcome doc."
+     },
+     {
+      "ref": "CP-50891",
+      "kind": "jira",
+      "title": "Acceptance Evidence & Audit Logging",
+      "relation": "related ticket",
+      "why": "Done Phase 1 epic that captures and stores each acceptance event (identity, action, timestamp, IP, device) tamper-evidently at full base scale. This is the data the reporting view would read. Its children (CP-50902 Done; CP-50903 tamper-evidence and CP-50904 scale QA both Won't Do) mean some evidence guarantees were not delivered — a constraint for what the report can claim."
+     },
+     {
+      "ref": "CP-50889",
+      "kind": "jira",
+      "title": "Mandatory Agreement Acceptance Experience",
+      "relation": "related ticket",
+      "why": "Done Phase 1 epic producing the acceptance events: post-login acceptance of the Brand Ambassador Agreement, P&P and Privacy Policy, any device, English or Spanish. Defines the populations, documents and the litigation-risk driver behind the reporting need. Its links (DATA-3141, DATA-3142, DV-*) name the schema and Kafka plumbing the report would draw on."
+     },
+     {
+      "ref": "CP-50893",
+      "kind": "jira",
+      "title": "Future Agreement Versioning & Re-Acceptance",
+      "relation": "decision record",
+      "why": "Done Phase 1 epic establishing agreement versioning and re-acceptance triggers. 'How many have accepted vs not accepted' (N1 L2) is only meaningful relative to the current version, so this epic's versioning decisions set the definition of the counts this BRD proposes."
+     },
+     {
+      "ref": "PLAN-818",
+      "kind": "jira",
+      "title": "Ambassador Agreement Compliance",
+      "relation": "parent epic",
+      "why": "Parent of the Phase 1 epics CP-50889, CP-50891 and CP-50893 — this is the 'other parent epic' N1 L2 says to check for existing implementation. Its Phase 1 work is the already-built acceptance capture this reporting view sits on top of."
+     },
+     {
+      "ref": "PLAN-358",
+      "kind": "jira",
+      "title": "Shopping Experience: Misc Tasks & Bug Fixes (2026 Q3)",
+      "relation": "parent epic",
+      "why": "Parent project of CP-50894 (Development, owned by Art Villa). Places this BRD's work in the Q3 misc/fast-follow bucket rather than a dedicated initiative — relevant to how the work is planned and who the product lead is."
+     },
+     {
+      "ref": "CP-50892",
+      "kind": "jira",
+      "title": "Prevent Arc Login Acceptance on Behalf of Ambassadors",
+      "relation": "related ticket",
+      "why": "Done Phase 1 epic under the ambassador agreement program. Constrains what counts as a valid acceptance record (no acceptance via ARC login on an ambassador's behalf), which affects how the report's accepted/not-accepted numbers should be interpreted."
+     },
+     {
+      "ref": "CP-50890",
+      "kind": "jira",
+      "title": "QA | Site Access Enforcement Until Acceptance",
+      "relation": "related ticket",
+      "why": "Done epic in the same ambassador-agreement family covering enforcement of site access until acceptance. Explains why non-acceptance is a measurable, bounded population and supports the coverage numbers the BRD reports."
+     },
+     {
+      "ref": "CP-51347",
+      "kind": "jira",
+      "title": "Ambassador Agreement Minor Adjustments",
+      "relation": "related ticket",
+      "why": "Done follow-up epic in the same area; may have altered acceptance behavior or copy after Phase 1, so its changes could shift what the reported counts mean. Listed for the PO to confirm or drop."
+     },
+     {
+      "ref": "CP-50416",
+      "kind": "jira",
+      "title": "[Research] BA Agreement & P&P Consent Capture",
+      "relation": "spec",
+      "why": "Done research epic that preceded the whole ambassador agreement program — the earliest recorded thinking on consent capture, useful background for the problem statement. Listed for the PO to confirm or drop."
+     },
+     {
+      "ref": "CP-51485",
+      "kind": "jira",
+      "title": "Decommission reports-service-v3",
+      "relation": "other",
+      "why": "N1 L2 says existing web services could host the reporting view. Surfaced while searching for acceptance reporting: reports-service and reports-service-v3 are actively being decommissioned (CP-51485/51486/51487/51488, CP-51439–51441), so those are not candidate hosts. A constraint and an open question about which service would host this analytics view."
+     }
+    ],
+    "done": true
+   }
+  ],
+  "report": {
+   "path": "brd/brd.md",
+   "missingSections": [
+    "Business and Product Lead — no source names the business stakeholder or Product Manager",
+    "Implementation Plan — all five checklist items are 'Not yet provided.'; no source gives status or dates"
+   ],
+   "blockingQuestions": [
+    "Q3: N1 scopes the work to aggregate numbers only [N1 L2] yet also asks that CP-50908, the individual-lookup story, be reviewed [N1 L1] — is individual lookup in or out of scope?",
+    "Q4: CP-50909 [R2] and CP-50908 [R3] already exist under epic CP-50894 [R1] and cover this need — does this BRD supersede, feed, or duplicate them?",
+    "Q2: how often Legal/Compliance need these numbers and what the current data-pull route costs — needed to state customer and business impact [R2, R3]",
+    "Q8: which population the report covers — US Ambassadors only [R13] or also VIP/Retail",
+    "Q14: an existing Confluence BRD 'Ambassador Data Tracking Improvements (Clickwrap)' is referenced by [R5, R6, R7, R11] but was not supplied, so it has not been compared against this draft",
+    "Q6: the product line's core KPI is not stated in any source, so Success Metrics are candidates only"
+   ],
+   "conflicts": [
+    "Scope conflict inside N1: L1 directs review of CP-50908 (individual ambassador lookup) while L2 restricts scope to 'purely seeing the numbers … just overall analytics'. Drafted with individual lookup Out of Scope and flagged as Q3.",
+    "Overlap with existing backlog: CP-50909 [R2] covers retrieving acceptance status across the full ambassador base and CP-50908 [R3] covers individual lookup, both already under epic CP-50894 [R1], which is In Progress. This BRD restates work that already has tickets — Q4.",
+    "Record-level vs aggregate: R2's acceptance criteria require a list including ambassador ID, name, status and version accepted, which is record-level data, whereas N1 L2 asks for counts only. Captured as candidate requirement 8 and Q3.",
+    "Hosting constraint: N1 L2 says existing web services could host it, while R14 (CP-51485) is decommissioning reports-service-v3 and moving Virtual Office reports to reporting-service. Any hosting assumption pointing at v3 would be wrong — Q5.",
+    "Reporting semantics vs the 30-day written opt-out provision described in R13: an opted-out ambassador's status is undefined for these counts — Q9."
+   ],
+   "ignoredInstructions": [
+    "N1 L1: 'Review this ticket CP-50908 and all relevant tickets in the parent epic' — treated as PO-supplied discovery context, not executed as a new action; the confirmed R1–R14 references were used as the source set and no further Jira/Confluence searching was performed.",
+    "N1 L2: 'you can check implementation in other parent epic' — not acted on; the referenced epic is unnamed and implementation detail is out of BRD scope. Recorded as Q5.",
+    "R13 contains embedded Q&A directives from earlier scoping (e.g. 'this project is not to be stalled for those future changes', 'No need for an opt-out notice to be on the click-wrap'). Treated as data about past decisions on the acceptance project, not as instructions for this BRD.",
+    "R14 contains engineering directives ('#2 is not optional', 'gate each environment on #1'). Treated as data; only the reports-service-v3 / reporting-service constraint was carried into the draft.",
+    "No file was sent, published, or shared; no ticket or memory update was written (memory update is only proposed after PO acceptance and on request)."
+   ],
+   "changes": [
+    "Created brd/brd.md as a first draft from N1 and the PO-confirmed references R1–R14, plus the empty BRD memory M.",
+    "Problem to be Solved built from the gap between the delivered acceptance record [R5, R6] and the lack of on-demand visibility [R2, R3], framed by the PO's ask [N1 L1-L2]; customer tie-back stated as thin and flagged as Q2.",
+    "Proposed Solution kept high level: an on-demand acceptance analytics view [N1 L2, R2]; hosting left undecided with the reports-service-v3 decommission constraint noted [R14, Q5].",
+    "Requirements 1–7 written as observable capabilities from [N1 L2, R2]; the record-level list from R2's acceptance criteria held back as candidate requirement 8 pending Q3.",
+    "Success Metrics offered as three candidates tied to the 100% acceptance goal [R2] and litigation-exposure aim [R8], all marked for BI validation (Thomas Hamilton); no baselines, targets, owners, or dates invented — M holds no KPI.",
+    "Out of Scope populated from the delivered/adjacent epics [R5, R6, R7, R10, R11, R12, R14] and the PO's scope sentence [N1 L2]; implied-but-unstated exclusions routed to Open Questions instead.",
+    "15 open questions recorded with an answerer where a source identifies one; Business and Product Lead and all Implementation Plan items marked 'Not yet provided.'",
+    "Sources appendix added with all 16 identifiers matching body citations, noted as removable before circulation."
+   ]
+  },
+  "memoryChanges": [
+   "other: First accepted version of this BRD; new register entry created for \"Ambassador Agreement Acceptance Reporting\" (`brd/brd.md`).",
+   "requirement: Seven requirements accepted: on-demand aggregate acceptance analytics for Legal/Compliance without a data-pull request; latest agreements and versions; accepted/not-accepted counts; filter/segment by agreement and version; coverage readable against the 100% goal; as-needed rather than fixed-schedule availability; access restricted to the internal audience (`brd/brd.md` Requirements). One candidate requirement (retrieval of the underlying record-level list) remains unconfirmed.",
+   "scope: Scope fixed to aggregate analytics only; individual ambassador lookup (CP-50908), acceptance capture/clickwrap/enforcement/evidence (CP-50889, CP-50890, CP-50891), versioning and re-acceptance (CP-50893), ARC ghosted-in prevention (CP-50892), agreement content changes (CP-51347), reports-service-v3 decommission (CP-51485), and technical design/ticket breakdown are out of scope (`brd/brd.md` Out of Scope).",
+   "decision: Standing constraint recorded: reports-service-v3 is being decommissioned under CP-51485, so any hosting decision targets reporting-service; the specific service, surface, and access model are deliberately undecided (`brd/brd.md` Proposed Solution, Q5).",
+   "lead: Business and Product Lead unassigned — no source names a business stakeholder or Product Manager; Legal/Compliance is recorded as the consuming group (`brd/brd.md` Business and Product Lead, Q1).",
+   "metric: Three candidate success metrics recorded (manual data-pull requests per period, time to answer a Legal/Compliance acceptance question, measured acceptance coverage), all unvalidated with BI and without baseline, target, owner, or date; the product line's core KPI is unstated (`brd/brd.md` Success Metrics, Q6, Q7).",
+   "dependency: Dependencies recorded on Jira epic CP-50894 and stories CP-50909 / CP-50908 (possible overlap, system of record unresolved — Q4), on the delivered acceptance-evidence work CP-50891 (Q13), on the CP-51485 decommission constraint, and on an unseen Confluence page \"BRD - Ambassador Data Tracking Improvements (Clickwrap)\" (Q14) (`brd/brd.md`).",
+   "date: No target date or release window is stated; the Implementation Plan's five items are all unstarted and unscheduled (`brd/brd.md` Implementation Plan, Q15)."
+  ]
+ },
+ "aad": {
+  "runId": "f442e3a3",
+  "input": {
+   "request": "Create a AAD for agreements report. I expect that solution includes utilizing existing website that is appropriate, maybe customer portal? There should be customer specific agreeemtns so reports should be near it ",
+   "notes": [],
+   "brd": "brd/brd.md",
+   "out": "aad/aad.md",
+   "skill": ".claude/skills/architect-aad/SKILL.md",
+   "memory": "memory/aad-memory.md",
+   "maxRounds": 3,
+   "discover": true,
+   "seeds": [],
+   "discoveryRounds": 2,
+   "maxQueries": 6
+  },
+  "rounds": [
+   {
+    "queries": [
+     {
+      "purpose": "Fetch CP-51709, the actual parent epic of both reporting stories (CP-50908, CP-50909) — it was not in the PO list and is the immediate scope owner for this AAD",
+      "args": [
+       "jira",
+       "issue",
+       "get",
+       "CP-51709",
+       "-o",
+       "json"
+      ]
+     },
+     {
+      "purpose": "Fetch CP-51441, the reports-service-v3 → reporting-service migration ticket named in CP-51485 scope; it names the live reporting stack, client packages and repos this design must target",
+      "args": [
+       "jira",
+       "issue",
+       "get",
+       "CP-51441",
+       "-o",
+       "json"
+      ]
+     },
+     {
+      "purpose": "Fetch DATA-3141 — the table creation/alteration ticket for customer agreement re-acceptance; it is the data model the report reads (BRD Q13)",
+      "args": [
+       "jira",
+       "issue",
+       "get",
+       "DATA-3141",
+       "-o",
+       "json"
+      ]
+     },
+     {
+      "purpose": "Fetch DATA-3142 — current values of CustomerAgreementType, i.e. the agreement/version reference data the report filters by",
+      "args": [
+       "jira",
+       "issue",
+       "get",
+       "DATA-3142",
+       "-o",
+       "json"
+      ]
+     },
+     {
+      "purpose": "Fetch DV-5907 — Kafka topics for Agreement Acceptance on Post Login, the integration path that produces the acceptance record",
+      "args": [
+       "jira",
+       "issue",
+       "get",
+       "DV-5907",
+       "-o",
+       "json"
+      ]
+     },
+     {
+      "purpose": "Find any remaining open work under the phase 2 reporting epics (children of CP-50894 and CP-51709) not yet in the relevant list",
+      "args": [
+       "jira",
+       "issue",
+       "list",
+       "--jql",
+       "parent in (CP-50894, CP-51709) ORDER BY created ASC",
+       "--limit",
+       "25",
+       "-o",
+       "json"
+      ]
+     },
+     {
+      "purpose": "Find the existing Confluence BRD referenced by every phase 1 epic ('BRD - Ambassador Data Tracking Improvements (Clickwrap)')",
+      "args": [
+       "confluence",
+       "search",
+       "title ~ \"Ambassador Data Tracking\" OR text ~ \"Ambassador Data Tracking Improvements\"",
+       "--limit",
+       "10"
+      ]
+     },
+     {
+      "purpose": "Find earlier Architecture Approach Documents that set conventions for reporting and for the customer-facing/internal portals this design may reuse",
+      "args": [
+       "confluence",
+       "search",
+       "title ~ \"Architecture Approach\" AND (text ~ \"reporting-service\" OR text ~ \"customer portal\" OR text ~ \"backoffice\")",
+       "--limit",
+       "25"
+      ]
+     },
+     {
+      "purpose": "Find architecture proposals, spikes or decision records about agreement acceptance, clickwrap or Auth0 terms gate",
+      "args": [
+       "confluence",
+       "search",
+       "text ~ \"clickwrap\" OR text ~ \"agreement acceptance\" OR text ~ \"terms gate\"",
+       "--limit",
+       "25"
+      ]
+     },
+     {
+      "purpose": "List Confluence spaces so the next searches can be scoped to the spaces that hold AADs, decision records, spikes and BRDs",
+      "args": [
+       "confluence",
+       "space",
+       "ls",
+       "--limit",
+       "25"
+      ]
+     }
+    ],
+    "relevant": [
+     {
+      "ref": "CP-51709",
+      "kind": "jira",
+      "title": "Agreement Acceptance Status Lookup",
+      "relation": "parent epic",
+      "why": "Actual parent of CP-50908 and CP-50909 (seen in both issues' PARENT field) and 'relates to' CP-50894; not in the PO list, so its scope and any stated approach are unknown and directly govern this AAD."
+     },
+     {
+      "ref": "CP-50894",
+      "kind": "jira",
+      "title": "Phase 2 Fast Follow: Legal & Compliance Reporting",
+      "relation": "parent epic",
+      "why": "The epic for on-demand Legal/Compliance visibility; names the branch feature-CP-50894-amb-agreement-phase-2 and LD flag ambassador-upgrade-agreements-enabled, which the design must account for (BRD Q12)."
+     },
+     {
+      "ref": "CP-50909",
+      "kind": "jira",
+      "title": "Retrieve Acceptance Status Across the Full Ambassador Base",
+      "relation": "related ticket",
+      "why": "States the aggregate reporting acceptance criteria this AAD designs for: filter by agreement and version, on demand, record-level fields (ambassador ID, name, status, version)."
+     },
+     {
+      "ref": "CP-50908",
+      "kind": "jira",
+      "title": "Phase 2: Look Up an Individual Ambassador's Acceptance Status",
+      "relation": "related ticket",
+      "why": "Individual lookup, out of scope in the BRD but sharing the same data and hosting surface; its criteria (version accepted and when, clear not-accepted indication) constrain the data model."
+     },
+     {
+      "ref": "CP-51264",
+      "kind": "jira",
+      "title": "SPIKE - Phase 2: Look Up an Individual Ambassador's Acceptance Status",
+      "relation": "spike",
+      "why": "Done spike under CP-50894 that CP-50909 depends on; a completed spike on exactly this lookup is the most likely source of an existing technical approach — but its description is only a clone of the stories, so any findings must be sought in comments/linked pages."
+     },
+     {
+      "ref": "CP-50891",
+      "kind": "jira",
+      "title": "Acceptance Evidence & Audit Logging",
+      "relation": "related ticket",
+      "why": "Delivered the evidence record (identity, action, timestamp, IP, device) at full base scale; it is the source data store this report reads (BRD Q13)."
+     },
+     {
+      "ref": "CP-50889",
+      "kind": "jira",
+      "title": "Mandatory Agreement Acceptance Experience",
+      "relation": "related ticket",
+      "why": "Delivered the capture path and names the concrete systems in the chain: Auth0 actions, api-gateway, customer-service-v2, Contentful, Kafka topics, and DATA-3141/3197/3198 schema changes — the existing-functionality view for this AAD."
+     },
+     {
+      "ref": "CP-50893",
+      "kind": "jira",
+      "title": "Future Agreement Versioning & Re-Acceptance",
+      "relation": "related ticket",
+      "why": "Owns agreement versions and re-acceptance triggering; the report's 'latest agreement and version in force' depends on how versions are modelled here."
+     },
+     {
+      "ref": "CP-50892",
+      "kind": "jira",
+      "title": "Prevent Arc Login Acceptance on Behalf of Ambassadors",
+      "relation": "related ticket",
+      "why": "Constrains what counts as a genuine acceptance in the record, so it defines which events the report may count."
+     },
+     {
+      "ref": "CP-50890",
+      "kind": "jira",
+      "title": "QA | Site Access Enforcement Until Acceptance",
+      "relation": "related ticket",
+      "why": "Enforcement context for the 'not accepted' population (forced logout, support path); affects interpretation of coverage counts."
+     },
+     {
+      "ref": "CP-50416",
+      "kind": "jira",
+      "title": "[Research] BA Agreement & P&P Consent Capture",
+      "relation": "research epic",
+      "why": "Scopes the population to US Ambassadors only and records the 30-day written opt-out provision — both open questions (BRD Q8, Q9) that the report's counts must resolve."
+     },
+     {
+      "ref": "CP-51485",
+      "kind": "jira",
+      "title": "Decommission reports-service-v3",
+      "relation": "constraint",
+      "why": "States reporting-service now serves Virtual Office reports and reports-service-v3 is being shut down, with the LD flag enable-reporting-service archived; a hard hosting constraint (BRD Q5)."
+     },
+     {
+      "ref": "CP-51441",
+      "kind": "jira",
+      "title": "Migration work under CP-51485 (remove reports-service-v3-client from website-backoffice-v3)",
+      "relation": "related ticket",
+      "why": "Named in CP-51485 scope row 1 as the repointing onto reportingServiceApi in website-backoffice-v3; shows the live reporting client pattern a new report should follow."
+     },
+     {
+      "ref": "PLAN-818",
+      "kind": "jira",
+      "title": "Ambassador Agreement Compliance",
+      "relation": "parent project",
+      "why": "Programme parent for phase 1; its link list enumerates the infra, Auth0, Contentful and DATA tickets that constitute the existing acceptance architecture."
+     },
+     {
+      "ref": "PLAN-577",
+      "kind": "jira",
+      "title": "Shopping Experience: Misc Tasks & Bug Fixes (2026 Q4)",
+      "relation": "parent project",
+      "why": "Actual parent of CP-50894 (the BRD recorded PLAN-358, Q3); corrects the delivery context and quarter for BRD Q15."
+     },
+     {
+      "ref": "DATA-3141",
+      "kind": "jira",
+      "title": "Create and Alter Tables for Customer Agreement re-accept on login",
+      "relation": "data model",
+      "why": "CP-50889 is depended on by it; it defines the tables holding acceptance rows, the data source for every count in this report."
+     },
+     {
+      "ref": "DATA-3142",
+      "kind": "jira",
+      "title": "[PROD] Get current values of CustomerAgreementType",
+      "relation": "data model",
+      "why": "Agreement type reference data — the dimension the report filters and segments by (agreement and version)."
+     },
+     {
+      "ref": "DV-5907",
+      "kind": "jira",
+      "title": "[PROD] Promote Kafka topics for Agreement Acceptance on Post Login to Production",
+      "relation": "integration",
+      "why": "Names the messaging path carrying acceptance events, relevant to data freshness (BRD Q11) and to the data flow section."
+     },
+     {
+      "ref": "CP-51347",
+      "kind": "jira",
+      "title": "Ambassador Agreement Minor Adjustments",
+      "relation": "related ticket",
+      "why": "Released gate-copy and Help Center link changes; out of scope but confirms the Auth0 gate is the live acceptance surface."
+     },
+     {
+      "ref": "CP-51265",
+      "kind": "jira",
+      "title": "US Amb Agreements - D2A Users should not be made to double sign",
+      "relation": "related ticket",
+      "why": "Linked from PLAN-818; a population/edge case (D2A users) that may create a distinct acceptance state in the counts."
+     },
+     {
+      "ref": "CP-51058",
+      "kind": "jira",
+      "title": "Arizona agreements applied to non-AZ customer",
+      "relation": "related ticket",
+      "why": "PLAN-818 is depended on by it; indicates per-state agreement variants, which would change what 'latest agreement and version' means in the report."
+     },
+     {
+      "ref": "PLAN-358",
+      "kind": "jira",
+      "title": "Shopping Experience: Misc Tasks & Bug Fixes (2026 Q3)",
+      "relation": "other",
+      "why": "Cited by the BRD as the delivery vehicle, but CP-50894 has since moved to PLAN-577; kept to record and resolve that discrepancy."
+     }
+    ],
+    "done": false
+   },
+   {
+    "queries": [
+     {
+      "purpose": "Find the referenced Confluence BRD \"Ambassador Data Tracking Improvements (Clickwrap)\" cited as Source by CP-50889/50891/50893 — the accepted business source this AAD must trace to (BRD Q14)",
+      "args": [
+       "confluence",
+       "search",
+       "text ~ \"Ambassador Data Tracking\" OR title ~ \"Clickwrap\"",
+       "--limit",
+       "25"
+      ]
+     },
+     {
+      "purpose": "Find existing Architecture Approach Documents in the AR space touching agreements, consent, Auth0 or reporting — conventions this design must follow",
+      "args": [
+       "confluence",
+       "search",
+       "space = AR AND (text ~ \"agreement acceptance\" OR text ~ \"clickwrap\" OR text ~ \"reporting-service\" OR text ~ \"customer portal\")",
+       "--limit",
+       "25"
+      ]
+     },
+     {
+      "purpose": "Find lightweight Decision Records and spike summaries in SD for this feature area (CP-50894 / CP-51264 / agreements / reporting host choice)",
+      "args": [
+       "confluence",
+       "search",
+       "space = SD AND (text ~ \"CP-51264\" OR text ~ \"CP-50894\" OR text ~ \"CP-50909\" OR text ~ \"agreement acceptance\")",
+       "--limit",
+       "25"
+      ]
+     },
+     {
+      "purpose": "Identify architecture/decision material naming the candidate hosting surfaces (cs-portal / Customer Portal, website-backoffice-v3 Virtual Office, reporting-service) per architect note A1 and BRD Q5",
+      "args": [
+       "confluence",
+       "search",
+       "(space = AR OR space = SD) AND (title ~ \"reporting-service\" OR title ~ \"Customer Portal\" OR title ~ \"cs-portal\" OR title ~ \"Virtual Office reports\")",
+       "--limit",
+       "25"
+      ]
+     },
+     {
+      "purpose": "Find any Confluence page keyed to the phase-1 delivery tickets that documents the acceptance data model or Kafka/customer-service-v2 flow the report will read (BRD Q13)",
+      "args": [
+       "confluence",
+       "search",
+       "text ~ \"CustomerAgreement\" OR text ~ \"customerflow.auth0.agreement.accepted\"",
+       "--limit",
+       "25"
+      ]
+     },
+     {
+      "purpose": "Fetch CP-51265 (D2A double-sign) — it constrains which acceptance records exist per customer path and may create acceptance-state edge cases the report must represent",
+      "args": [
+       "jira",
+       "issue",
+       "get",
+       "CP-51265",
+       "-o",
+       "json"
+      ]
+     },
+     {
+      "purpose": "Fetch CP-51058 (Arizona agreements applied to non-AZ customer) — market/state-scoped agreement variants affect how coverage counts are segmented",
+      "args": [
+       "jira",
+       "issue",
+       "get",
+       "CP-51058",
+       "-o",
+       "json"
+      ]
+     }
+    ],
+    "relevant": [
+     {
+      "ref": "CP-51709",
+      "kind": "jira",
+      "title": "Agreement Acceptance Status Lookup",
+      "relation": "parent epic",
+      "why": "Actual parent of both reporting stories CP-50908 and CP-50909 (confirmed in both issue gets); To Do under PLAN-577, so it is the live scope owner for this AAD."
+     },
+     {
+      "ref": "CP-50894",
+      "kind": "jira",
+      "title": "Phase 2 Fast Follow: Legal & Compliance Reporting",
+      "relation": "parent epic",
+      "why": "States the business intent (on-demand visibility by ambassador and agreement version), the branch feature-CP-50894-amb-agreement-phase-2 and the LD flag ambassador-upgrade-agreements-enabled — answers BRD Q12 material."
+     },
+     {
+      "ref": "CP-50909",
+      "kind": "jira",
+      "title": "Retrieve Acceptance Status Across the Full Ambassador Base",
+      "relation": "related ticket",
+      "why": "Primary functional source: acceptance criteria require on-demand retrieval filterable by agreement and version, with ambassador ID, name, status and version accepted — maps to BRD requirements 1-6 and candidate 8."
+     },
+     {
+      "ref": "CP-50908",
+      "kind": "jira",
+      "title": "Phase 2: Look Up an Individual Ambassador's Acceptance Status",
+      "relation": "related ticket",
+      "why": "Individual lookup story under the same epic; BRD Q3 conflict about whether it is in scope. Its criteria define the per-ambassador history view the design may need to accommodate."
+     },
+     {
+      "ref": "CP-51264",
+      "kind": "jira",
+      "title": "SPIKE - Phase 2: Look Up an Individual Ambassador's Acceptance Status",
+      "relation": "spike",
+      "why": "Done spike cloned from CP-50908 and depended on by CP-50909; its body currently shows only the copied story text, so any recorded findings likely live in a Confluence spike summary or comments — the key technical precedent for this design."
+     },
+     {
+      "ref": "CP-50889",
+      "kind": "jira",
+      "title": "Mandatory Agreement Acceptance Experience",
+      "relation": "related ticket",
+      "why": "Delivered phase-1 capture flow (Auth0 form, Contentful content, customer-service-v2, api-gateway) whose link list enumerates the existing systems the report reads from."
+     },
+     {
+      "ref": "CP-50891",
+      "kind": "jira",
+      "title": "Acceptance Evidence & Audit Logging",
+      "relation": "related ticket",
+      "why": "Defines the evidence record the report queries (identity, action, timestamp, IP, device) and its tamper-evident/scale constraints — directly underpins BRD Q13."
+     },
+     {
+      "ref": "CP-50893",
+      "kind": "jira",
+      "title": "Future Agreement Versioning & Re-Acceptance",
+      "relation": "related ticket",
+      "why": "Delivers versioning and re-acceptance, the mechanism behind 'latest agreement and version in force' that the report must reflect."
+     },
+     {
+      "ref": "CP-50890",
+      "kind": "jira",
+      "title": "QA | Site Access Enforcement Until Acceptance",
+      "relation": "related ticket",
+      "why": "Enforcement context (forced logout, blocked site access) that explains why acceptance coverage numbers change over time; out of scope but affects data interpretation."
+     },
+     {
+      "ref": "CP-50892",
+      "kind": "jira",
+      "title": "Prevent Arc Login Acceptance on Behalf of Ambassadors",
+      "relation": "related ticket",
+      "why": "ARC ghosted-in acceptance is excluded from the record, a data-integrity constraint the report's counts inherit."
+     },
+     {
+      "ref": "CP-50416",
+      "kind": "jira",
+      "title": "[Research] BA Agreement & P&P Consent Capture",
+      "relation": "related ticket",
+      "why": "Research epic fixing population scope (all US Ambassadors, VIP/Retail excluded) and the 30-day written opt-out provision — BRD Q8 and Q9, both of which the report's state model must resolve."
+     },
+     {
+      "ref": "CP-51485",
+      "kind": "jira",
+      "title": "Decommission reports-service-v3",
+      "relation": "constraint",
+      "why": "Confirms reporting-service now serves Virtual Office reports and reports-service-v3 is being disabled and deleted; any hosting decision must target reporting-service, not v3 (BRD Q5)."
+     },
+     {
+      "ref": "CP-51441",
+      "kind": "jira",
+      "title": "website-backoffice-v3: remove @pwwgen/reports-service-v3-client",
+      "relation": "related ticket",
+      "why": "Shows the live reporting call pattern (reportingServiceApi, /api/v1/report-builder/..., withReportsHandler, server-side authorization via validateCustomerDownline) — the convention a new report endpoint should follow."
+     },
+     {
+      "ref": "DATA-3141",
+      "kind": "jira",
+      "title": "Create and Alter Tables for Customer Agreement re-accept on login",
+      "relation": "spec",
+      "why": "Names the data model the report reads: CustomerAgreementType and CustomerAgreement tables in ThatOtherGuy, promoted through TEST/STAGE/PROD."
+     },
+     {
+      "ref": "DATA-3142",
+      "kind": "jira",
+      "title": "[PROD] Get current values of CustomerAgreementType",
+      "relation": "spec",
+      "why": "Agreement-type reference data used to configure the Contentful model — the dimension the report filters and segments by."
+     },
+     {
+      "ref": "DV-5907",
+      "kind": "jira",
+      "title": "[PROD] Promote Kafka topics for Agreement Acceptance on Post Login to Production",
+      "relation": "spec",
+      "why": "Documents the only Kafka path in the capture design: api-gateway produces customerflow.auth0.agreement.accepted.v1, customer-service-v2 consumes with a DLT — the integration topology the AAD must depict."
+     },
+     {
+      "ref": "PLAN-818",
+      "kind": "jira",
+      "title": "Ambassador Agreement Compliance",
+      "relation": "parent project",
+      "why": "Programme parent stating the compliance/litigation-exposure objective and linking every infrastructure ticket (Auth0, API gateway auth, Contentful tokens, DB promotions) for phase 1."
+     },
+     {
+      "ref": "PLAN-577",
+      "kind": "jira",
+      "title": "Shopping Experience: Misc Tasks & Bug Fixes (2026 Q4)",
+      "relation": "parent project",
+      "why": "Current quarter container for both CP-50894 and CP-51709 — the delivery window context (BRD Q15); supersedes PLAN-358 (Q3)."
+     },
+     {
+      "ref": "CP-51347",
+      "kind": "jira",
+      "title": "Ambassador Agreement Minor Adjustments",
+      "relation": "related ticket",
+      "why": "Released gate copy and Help Center link changes; explicitly out of scope for this design but shows the gate is still evolving."
+     },
+     {
+      "ref": "CP-51265",
+      "kind": "jira",
+      "title": "US Amb Agreements - D2A Users should not be made to double sign",
+      "relation": "related ticket",
+      "why": "Linked from PLAN-818; a de-duplication rule across enrollment and post-login acceptance that likely affects how the report counts acceptance per ambassador. Not yet fetched."
+     },
+     {
+      "ref": "CP-51058",
+      "kind": "jira",
+      "title": "Arizona agreements applied to non-AZ customer",
+      "relation": "related ticket",
+      "why": "PLAN-818 depends on it; state-scoped agreement variants imply the report's agreement/version dimension may need a market or state facet. Not yet fetched."
+     },
+     {
+      "ref": "PLAN-358",
+      "kind": "jira",
+      "title": "Shopping Experience: Misc Tasks & Bug Fixes (2026 Q3)",
+      "relation": "other",
+      "why": "Prior-quarter container cited in the BRD sources; superseded by PLAN-577 for this work, retained only to correct the BRD's reference."
+     }
+    ],
+    "done": false
+   },
+   {
+    "queries": [],
+    "relevant": [
+     {
+      "ref": "CP-51709",
+      "kind": "jira",
+      "title": "Agreement Acceptance Status Lookup",
+      "relation": "parent epic",
+      "why": "Actual parent of both reporting stories CP-50908 and CP-50909 (verified in both issue fetches); status To Do under PLAN-577 Q4, relates to CP-50894. This is the immediate scope owner for the AAD."
+     },
+     {
+      "ref": "CP-50894",
+      "kind": "jira",
+      "title": "Phase 2 Fast Follow: Legal & Compliance Reporting",
+      "relation": "parent epic",
+      "why": "In Progress; states the business purpose (on-demand visibility by ambassador and by agreement version), the branch feature-CP-50894-amb-agreement-phase-2 and the LD flag ambassador-upgrade-agreements-enabled — answers BRD Q12 and sets the rollout gate for the design."
+     },
+     {
+      "ref": "CP-50909",
+      "kind": "jira",
+      "title": "Retrieve Acceptance Status Across the Full Ambassador Base",
+      "relation": "related ticket",
+      "why": "The story this AAD designs for: acceptance criteria require on-demand retrieval filterable by agreement and version, returning at minimum ambassador ID, name, status and version accepted — record-level output, which constrains the API/query and export design."
+     },
+     {
+      "ref": "CP-50908",
+      "kind": "jira",
+      "title": "Phase 2: Look Up an Individual Ambassador's Acceptance Status",
+      "relation": "related ticket",
+      "why": "Sibling story under the same epic CP-51709; individual lookup by Customer ID or name with per-agreement version and timestamp. Shares the same data source and host surface, so the AAD must state whether the design covers it (BRD Q3)."
+     },
+     {
+      "ref": "CP-51264",
+      "kind": "jira",
+      "title": "SPIKE - Phase 2: Look Up an Individual Ambassador's Acceptance Status",
+      "relation": "spike",
+      "why": "Done spike cloned from CP-50908 and depended on by CP-50909; the only completed technical investigation for this feature. Its findings (documented on Confluence page 5454659585) are the primary design input."
+     },
+     {
+      "ref": "5454659585",
+      "kind": "confluence",
+      "title": "CP-51264 Customer Agreements Status Lookup and Progress",
+      "relation": "spike",
+      "why": "Confluence write-up of the CP-51264 spike found in the SD space search; the spike's conclusions on where and how acceptance status is queried are the core technical basis for this AAD."
+     },
+     {
+      "ref": "5302779911",
+      "kind": "confluence",
+      "title": "Architecture Approach - Brand Ambassador Agreement Gate on Post-Login",
+      "relation": "existing AAD",
+      "why": "The phase-1 AAD for the same programme, in the Solution Engineering space (surfaced by the CustomerAgreement search). Defines the systems, data model and conventions this reporting design must follow and trace to."
+     },
+     {
+      "ref": "5329387522",
+      "kind": "confluence",
+      "title": "Decision Record: Sync HTTP for Contentful agreement provisioning and Kafka for clickwrap acceptance",
+      "relation": "decision record",
+      "why": "Standing integration decision for the acceptance pipeline (matches DV-5907, which states acceptance events are the only Kafka path). Any read path this AAD proposes must respect this convention or justify a departure."
+     },
+     {
+      "ref": "5289967628",
+      "kind": "confluence",
+      "title": "T&C Post-Login Gate - Architecture Proposals",
+      "relation": "decision record",
+      "why": "Parent page for Proposals A-D on the post-login gate; records the alternatives considered and the chosen approach that produced the acceptance record this report reads."
+     },
+     {
+      "ref": "5318967303",
+      "kind": "confluence",
+      "title": "Proposal D - Auth0 Forms + Contentful-Driven Agreements (Webhook + CDN Fetch)",
+      "relation": "decision record",
+      "why": "The proposal variant that names Contentful-driven agreement versioning; explains how agreement types/versions are defined, which the report must filter and label by (BRD requirements 2 and 4)."
+     },
+     {
+      "ref": "5289672706",
+      "kind": "confluence",
+      "title": "Proposal A - Auth0 Forms + Contentful Webhook (Full Design)",
+      "relation": "decision record",
+      "why": "Full design of the accepted-family approach; describes the end-to-end acceptance capture flow the reporting design sits downstream of."
+     },
+     {
+      "ref": "5289443332",
+      "kind": "confluence",
+      "title": "Proposal C - Monoreact Page + Contentful Webhook",
+      "relation": "decision record",
+      "why": "Rejected alternative hosting the gate in monoreact; its recorded tradeoffs inform the surface choice for the report (architect note A1 proposes Customer Portal)."
+     },
+     {
+      "ref": "5289836547",
+      "kind": "confluence",
+      "title": "Proposal B - Auth0 Forms + Manual Terraform Versioning (POC)",
+      "relation": "decision record",
+      "why": "Rejected alternative; records the versioning tradeoff that determines how agreement versions are identified in the data the report aggregates."
+     },
+     {
+      "ref": "5433360403",
+      "kind": "confluence",
+      "title": "Release: PLAN-818 Ambassador Data Tracking Improvements",
+      "relation": "other",
+      "why": "Release record for the delivered phase-1 work; documents what actually shipped into prod, i.e. the existing functionality section and the real state of the acceptance data."
+     },
+     {
+      "ref": "5432049666",
+      "kind": "confluence",
+      "title": "How to add new Login Agreement Consent Forms in Contentful",
+      "relation": "spec",
+      "why": "Operational spec for how agreement types and versions are created in Contentful; needed to explain how the report resolves 'latest agreements and current versions' (BRD requirement 2)."
+     },
+     {
+      "ref": "CP-50891",
+      "kind": "jira",
+      "title": "Acceptance Evidence & Audit Logging",
+      "relation": "related ticket",
+      "why": "Done epic that captures and stores the evidence record (identity, action, timestamp, IP, device) this report reads. Its tamper-evidence and scale constraints bound what the read path may do (BRD Q13)."
+     },
+     {
+      "ref": "CP-50889",
+      "kind": "jira",
+      "title": "Mandatory Agreement Acceptance Experience",
+      "relation": "related ticket",
+      "why": "Done epic delivering the capture flow; its link list names every component in scope — Auth0 forms, api-gateway, customer-service-v2, Contentful, Kafka topics, DB schema — i.e. the System Overview for existing functionality."
+     },
+     {
+      "ref": "DATA-3141",
+      "kind": "jira",
+      "title": "Create and Alter Tables for Customer Agreement re-accept on login",
+      "relation": "spec",
+      "why": "Names the actual tables the report queries: CustomerAgreementType and CustomerAgreement in ThatOtherGuy, promoted through TEST/STAGE/PROD. The data model for the Data Identification section."
+     },
+     {
+      "ref": "DATA-3142",
+      "kind": "jira",
+      "title": "[PROD] Get current values of CustomerAgreementType",
+      "relation": "spec",
+      "why": "Establishes CustomerAgreementType as the reference data listing current agreement types in prod, used to configure the Contentful model — the dimension the report filters and segments by."
+     },
+     {
+      "ref": "DV-5907",
+      "kind": "jira",
+      "title": "[PROD] Promote Kafka topics for Agreement Acceptance on Post Login to Production",
+      "relation": "spec",
+      "why": "Documents the production integration: topic customerflow.auth0.agreement.accepted.v1 (+ .dlt), api-gateway produces, customer-service-v2 consumes with least-privilege MSK IAM. Defines where acceptance data lands and the DLT failure path the report's coverage figures must account for."
+     },
+     {
+      "ref": "CP-51485",
+      "kind": "jira",
+      "title": "Decommission reports-service-v3",
+      "relation": "constraint",
+      "why": "Hard hosting constraint: reporting-service now serves Virtual Office reports and reports-service-v3 is being disabled then deleted. Any reporting host decision must target reporting-service, not v3."
+     },
+     {
+      "ref": "CP-51441",
+      "kind": "jira",
+      "title": "website-backoffice-v3: remove @pwwgen/reports-service-v3-client",
+      "relation": "constraint",
+      "why": "Names the live reporting stack and its conventions: reportingServiceApi, /api/v1/report-builder/... routes, withReportsHandler, and app-side authorization (validateCustomerDownline) because reporting-service cannot know the authenticated caller — a security convention this AAD's access control must follow."
+     },
+     {
+      "ref": "5490999297",
+      "kind": "confluence",
+      "title": "Implementation Plan: website-customer-portal Alive",
+      "relation": "other",
+      "why": "Current plan for the website-customer-portal surface the architect proposes hosting the report on (A1); states the repo's live status and direction, needed before naming it as the host."
+     },
+     {
+      "ref": "4834295809",
+      "kind": "confluence",
+      "title": "Decision Record: customer-portal disable SSR",
+      "relation": "decision record",
+      "why": "Standing customer-portal decision that constrains how a new report page in that app renders and fetches data."
+     },
+     {
+      "ref": "4772069402",
+      "kind": "confluence",
+      "title": "Decision Record: customer-portal renovation",
+      "relation": "decision record",
+      "why": "Records the direction of travel for customer-portal; determines whether adding a new report surface there follows or departs from the agreed plan (architect note A1)."
+     },
+     {
+      "ref": "4834066514",
+      "kind": "confluence",
+      "title": "Decision Record: customer-portal webpack builds",
+      "relation": "decision record",
+      "why": "Build-tooling convention for customer-portal; affects delivery/deployment steps if the report is hosted there."
+     },
+     {
+      "ref": "4757061657",
+      "kind": "confluence",
+      "title": "Reporting Service Client Migration",
+      "relation": "spec",
+      "why": "Describes the reporting-service client integration pattern used across websites — the convention a new acceptance report endpoint should follow if hosted on reporting-service."
+     },
+     {
+      "ref": "4877025299",
+      "kind": "confluence",
+      "title": "Reports Service v3 to Reporting Service Migration Status",
+      "relation": "other",
+      "why": "Shows which reports already run on reporting-service and what remains, confirming reporting-service as the live reporting path referenced by CP-51485."
+     },
+     {
+      "ref": "5193105409",
+      "kind": "confluence",
+      "title": "Architecture Approach - Legacy Node Service Migration to Java Springboot focusing on customer-service",
+      "relation": "existing AAD",
+      "why": "AAD covering customer-service, the consumer of the acceptance Kafka topic (DV-5907) and likely owner of the acceptance data API; sets the service's target technology, a convention any new endpoint must respect."
+     },
+     {
+      "ref": "PLAN-818",
+      "kind": "jira",
+      "title": "Ambassador Agreement Compliance",
+      "relation": "parent project",
+      "why": "Parent initiative (Done) stating the compliance driver; its link list is the full inventory of infrastructure changes (Auth0, api-gateway basic auth, Contentful tokens, DB promotions) that make up the existing system."
+     },
+     {
+      "ref": "PLAN-577",
+      "kind": "jira",
+      "title": "Shopping Experience: Misc Tasks & Bug Fixes (2026 Q4)",
+      "relation": "parent project",
+      "why": "Current parent project of both CP-51709 and CP-50894, placing this work in Q4 — relevant to delivery timing (BRD Q15)."
+     },
+     {
+      "ref": "CP-50416",
+      "kind": "jira",
+      "title": "[Research] BA Agreement & P&P Consent Capture",
+      "relation": "related ticket",
+      "why": "Research epic fixing the population scope (all US Ambassadors, VIP/Retail excluded) and the 30-day written opt-out provision — both directly shape how the report counts and states acceptance (BRD Q8, Q9)."
+     },
+     {
+      "ref": "CP-51265",
+      "kind": "jira",
+      "title": "US Amb Agreements - D2A Users should not be made to double sign",
+      "relation": "related ticket",
+      "why": "Shows D2A enrollment writes different CustomerAgreementTypeIds than the login gate (16206509-11 vs 16206534-36), so counting distinct acceptance types is non-trivial — a concrete data-model edge case the report logic must handle."
+     },
+     {
+      "ref": "CP-51058",
+      "kind": "jira",
+      "title": "Arizona agreements applied to non-AZ customer",
+      "relation": "related ticket",
+      "why": "Linked to PLAN-818 as a dependency; indicates agreement types vary by jurisdiction, which affects how 'latest agreement and version' and coverage denominators are defined per population."
+     },
+     {
+      "ref": "CP-50893",
+      "kind": "jira",
+      "title": "Future Agreement Versioning & Re-Acceptance",
+      "relation": "related ticket",
+      "why": "Done epic defining how new versions are published and re-acceptance triggered — the versioning semantics the report's version filter and coverage calculation depend on."
+     },
+     {
+      "ref": "CP-50890",
+      "kind": "jira",
+      "title": "QA | Site Access Enforcement Until Acceptance",
+      "relation": "related ticket",
+      "why": "Done epic describing enforcement, including the one-time forced logout and the Customer Support exception path; explains why non-accepted ambassadors still exist in the data and how their state arises."
+     },
+     {
+      "ref": "CP-50892",
+      "kind": "jira",
+      "title": "Prevent Arc Login Acceptance on Behalf of Ambassadors",
+      "relation": "related ticket",
+      "why": "Done epic guaranteeing acceptance records are genuine ambassador actions; an integrity property the report relies on and should state when presenting evidence to Legal."
+     },
+     {
+      "ref": "CP-51347",
+      "kind": "jira",
+      "title": "Ambassador Agreement Minor Adjustments",
+      "relation": "related ticket",
+      "why": "Released changes to the gate copy and Help Center link; out of scope for this design but confirms the gate is live in prod and is the current shape of the capture experience."
+     },
+     {
+      "ref": "PLAN-358",
+      "kind": "jira",
+      "title": "Shopping Experience: Misc Tasks & Bug Fixes (2026 Q3)",
+      "relation": "other",
+      "why": "Prior-quarter parent project cited by the BRD; superseded by PLAN-577 for this work, kept only to reconcile the BRD's source table with current Jira placement."
+     }
+    ],
+    "done": true
+   }
+  ],
+  "report": {
+   "path": "aad/aad.md",
+   "missingSections": [
+    "Penetration Testing Plan — scope proposed but marked for definition with Security Engineering; no source defines it",
+    "Dynamic Application Security Testing (DAST) — no source names a tool or coverage; recorded as Q11",
+    "Impact Analysis / Known Cost — no source states any cost or estimate",
+    "Maintainers — service-side owner not stated in any source (only the portal owner, Kraken Up, is sourced)",
+    "Document Revision / Document Acceptance — author and representatives left for the architect; no approval marked"
+   ],
+   "untracedRequirements": [
+    "BRD requirement 8 (candidate, record-level list with ambassador ID, name, status, version) — carried as FR8 but not designed; conflicts with the PO's 'just the numbers' scope statement [B1 §Proposed Solution, R3 Acceptance Criteria]. Pending Q3."
+   ],
+   "blockingQuestions": [
+    "Q1 — Does this AAD cover the per-customer agreement view as well as the aggregate report? Architect notes say the report should sit next to customer-specific agreements [A1] and the spike covers both [R6], but the BRD leaves individual lookup in CP-50908 [B1 §Out of Scope, R4].",
+    "Q2 — Data source for the aggregate figures: direct retrieval from ThatOtherGuy/PlexusSync, the BI Platform, or a materialized summary [R6]. Determines freshness, PROD load, owning team, and most of the delivery plan.",
+    "Q3 — Is the record-level list (BRD requirement 8 / FR8) in scope? It changes the data classification of the whole feature from aggregate metrics to personal data [B1 §Requirements 8, R3].",
+    "Q4 — What access control gates the report: which Okta group or role, administered by whom? No source states it [B1 §Requirements 7, Q5].",
+    "Q7 — What counting rule applies given the D2A duplicate agreement-type defect [R33] and Arizona-scoped agreements applied to non-AZ customers [R34]? Both distort the counts.",
+    "Q13 — Which population is the denominator: US Ambassadors only, as scoped for the acceptance project, or also VIP and Retail [R32, B1 Q8]?"
+   ],
+   "decisionsNeeded": [
+    "Hosting surface: confirm website-customer-portal as the host for both pages, as the architect notes [A1] and the spike [R6] point to, against its known state (Angular 21 / Node 22, SSR disabled, 16 open Snyk criticals under CP-51568) [R23, R24].",
+    "Aggregate data source: direct retrieval (real-time, added PROD load the Data team wants to avoid) versus BI Platform (no PROD load, daily freshness, another team's resources) versus a materialized summary not proposed by any source [R6].",
+    "Owning service for the aggregate query: customer-service-v2, which owns the agreement domain SQL per the recorded convention [R8 Approach 4, R10], versus customer-service (the portal's current downstream, but the service being migrated away from [R29]) versus the BI Platform.",
+    "Transport path: whether customer-portal calls the aggregate endpoint through a new api-gateway route or reaches the service directly — the portal's recorded downstreams do not include api-gateway [R23].",
+    "Feature flag: reuse ambassador-upgrade-agreements-enabled [R2] or create a new flag for the reporting surface.",
+    "Scope of FR8 (record-level list) and, with it, the data classification, retention, and export controls of the feature.",
+    "How an ambassador who exercised the 30-day written opt-out is counted — not accepted, or a distinct state not modelled today [R32]."
+   ],
+   "conflicts": [
+    "Scope conflict: architect notes ask for the report to sit next to customer-specific agreements, implying the per-customer view is part of this work [A1]; the BRD excludes individual lookup as CP-50908's scope [B1 §Out of Scope, R4]. Drafted as in-scope-for-placement with the delivery question raised as Q1, not resolved.",
+    "Freshness versus load: BRD requirement 6 asks for data on an as-needed basis [B1 §Requirements 6]; the BI Platform option only refreshes once a day [R6 Business Intelligence Platform], while the direct-retrieval option meets it but adds PROD database load the Data team wants to avoid [R6 Direct Retrieval].",
+    "Platform direction versus host choice: the customer-portal host [A1, R6, R23] sits outside the reporting-service path that now serves all Virtual Office reports [R21, R28]; no decision record covers where a Legal-facing compliance report belongs. Recorded as a departure to confirm, not asserted as convention-compliant.",
+    "Service-ownership convention: adding reporting reads to customer-service (Node) would contradict the migration direction in the legacy-migration AAD [R29 §Service Selection]; the design therefore proposes customer-service-v2, following the domain-ownership rule in the decision record [R8 Approach 4]. Pending Q6.",
+    "Data-accuracy conflicts with counting: CP-51265 records duplicate CustomerAgreementTypeIDs for D2A enrollees [R33] and CP-51058 (Won't Do) records Arizona agreements applied to non-AZ customers [R34]; naive counts and state filters would be wrong. Raised as Q7 and as NFR 'Data accuracy caveats'.",
+    "Backlog overlap carried from the BRD: CP-50909 and CP-50908 already cover this need under CP-51709/CP-50894 [R1, R2, R3, R4]; which is the system of record is unresolved (Q17)."
+   ],
+   "ignoredInstructions": [
+    "The BRD's Sources appendix states the appendix 'can be removed before the BRD is circulated' — a note about that document, not acted on here.",
+    "The shared memory file describes a proposal-and-approval workflow for memory updates; no memory update was proposed or written, since the AAD is not accepted and none was requested.",
+    "Prompt-embedded operational instructions in several sources (release plans, DevOps task lists, deployment orders in R14, R20, R21) describe work to perform; none were executed — they are recorded as facts only.",
+    "Confluence page R14 lists rollback and communication actions ('Notify the DevOps team…'); not acted on, reported as existing-process facts.",
+    "No Jira or Confluence read commands were run: discovery material was supplied inline and confirmed by the architect, so no live search was performed. An unsearched space is not evidence that no related design exists."
+   ],
+   "changes": [
+    "Created aad/aad.md as a first draft with all template sections in order, plus Open Questions and Sources appendices.",
+    "Overview and System Overview built from the delivered PLAN-818 architecture [R7, R10, R14, R16, R17] plus the architect's hosting direction [A1] and the spike's finding that aggregate progress has no reusable basis [R6].",
+    "Design presents the spike's two data-source options as an explicit tradeoff rather than choosing [R6], adds a third (materialized summary) clearly labelled as unsupported by any source, and a second tradeoff on which service owns the aggregate query [R8, R29].",
+    "High-Level Architecture Mermaid flowchart plus a change table covering every system in the System Overview; two Mermaid sequence diagrams (aggregate report and per-customer lookup), both with failure branches.",
+    "Functional requirements traced one-to-one to BRD requirements 1-7, with BRD requirement 8 carried as candidate FR8 and flagged undesigned.",
+    "Non-functional requirements drawn from the recorded conventions: PROD-load constraint [R6], no coupling to the login path [R7], Istio/Spring Boot/api-contracts conventions [R29], no new dependency on reports-service-v3 [R21].",
+    "Security threat model records seven risks with mitigations, including the customer-portal Snyk criticals [R23] and the risk of misleading figures relied on in litigation [R16].",
+    "Compliance section records the 30-day written opt-out as an unmodelled third state [R32] and the US-Ambassador population scope question [R32, B1 Q8].",
+    "Data Identification labels every proposed field and response shape as proposed; no schema change is claimed as required.",
+    "Eighteen open questions recorded, six marked blocking; all BRD open questions still relevant to the design were carried forward rather than answered."
+   ]
+  },
+  "memoryChanges": [
+   "scope: New AAD accepted: Ambassador Agreement Acceptance Reporting (`aad/aad.md`) — adds an aggregate agreement-acceptance reporting surface for Legal/Compliance on top of the existing PLAN-818 acceptance record.",
+   "system: website-customer-portal named as the proposed host for the aggregate Agreement Progress page and the per-customer agreements section (`aad/aad.md` §System Overview, §Design).",
+   "system: Systems entering scope: customer-service-v2 (proposed owner of the aggregate query), customer-service (reused unchanged), api-gateway, ThatOtherGuy database, PlexusSync, Okta, LaunchDarkly, Contentful NextJS space; BI Platform conditional on the data-source option (`aad/aad.md` §System Overview, §High-Level Architecture).",
+   "interface: Proposed new read-only aggregate coverage endpoint on customer-service-v2, published in api-contracts, with a proposed response shape (agreementTypeId, version, requiredCount, acceptedCount, notAcceptedCount, coveragePercent, asOf) (`aad/aad.md` §Design, §Data models).",
+   "decision: Reporting will not use reports-service-v3, which is being decommissioned under CP-51485/CP-51441 (`aad/aad.md` §Problem statement, §Non-Functional Requirements).",
+   "decision: No schema change and no write path: the design reads the existing CustomerAgreement, CustomerAgreementType, and CustomerAgreementRequirement tables read-only (`aad/aad.md` §Data flow, §Data models).",
+   "convention: Conventions carried into this design: api-gateway authenticates and forwards while the domain service owns the SQL; new Java work follows the Spring Boot layered/api-contracts/Istio/Micrometer conventions of the legacy-migration AAD; LaunchDarkly gates new surfaces; Dynatrace is the monitoring standard (`aad/aad.md` §Non-Functional Requirements, §Design, §Monitoring and Observability).",
+   "data: Known data defects that distort acceptance counting are recorded as constraints: D2A duplicate agreement-type acceptance sets (CP-51265) and Arizona-scoped agreements applied to non-AZ customers (CP-51058) (`aad/aad.md` §Non-Functional Requirements, Q7).",
+   "dependency: Dependencies recorded: accepted BRD `brd/brd.md`; CP-51264 spike (page 5454659585); terms-gate AAD (page 5302779911) and its decision records; PLAN-818 release plan; customer-portal Alive plan (page 5490999297) and CP-51568 Snyk remediation; legacy Node→Java migration AAD (page 5193105409) (`aad/aad.md` §References).",
+   "decision: Two data-source options remain open and unchosen — direct retrieval from ThatOtherGuy/PlexusSync versus the BI Platform, with a third materialized-summary option recorded; the choice blocks the design (`aad/aad.md` Q2)."
+  ]
+ }
+}
