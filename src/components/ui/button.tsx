@@ -16,15 +16,16 @@ const buttonVariants = cva(
       variant: {
         /*
          * Plain utilities rather than the ink-surface utility, so a className bg-* / shadow-*
-         * replaces them. Disabled: a flat well pill with muted text instead of a faded ink pill,
-         * which read as enabled in dark mode.
+         * replaces them. Disabled (default and secondary alike): a ghost, a hairline ring on
+         * transparent with muted text, so it cannot pass for an enabled secondary well pill
+         * next to it. A faded ink pill read as enabled in dark mode.
          */
         default:
-          "bg-ink bg-(image:--ink-gradient) text-ink-foreground shadow-(--ink-shadow) hover:brightness-[1.18] dark:hover:brightness-[0.94] aria-expanded:brightness-[1.18] disabled:bg-well disabled:bg-none disabled:text-muted-foreground disabled:opacity-100 disabled:shadow-none",
+          "bg-ink bg-(image:--ink-gradient) text-ink-foreground shadow-(--ink-shadow) hover:brightness-[1.18] dark:hover:brightness-[0.94] aria-expanded:brightness-[1.18] disabled:bg-transparent disabled:bg-none disabled:text-muted-foreground/80 disabled:opacity-100 disabled:shadow-[inset_0_0_0_1px_var(--rule)]",
         outline:
           "border-circle-border bg-transparent text-foreground hover:bg-foreground/[0.04] hover:text-foreground aria-expanded:bg-foreground/[0.04] dark:hover:bg-foreground/[0.06]",
         secondary:
-          "rounded-[16px] bg-well text-heading hover:bg-well-hover aria-expanded:bg-well-hover",
+          "rounded-[16px] bg-well font-normal text-heading hover:bg-well-hover aria-expanded:bg-well-hover disabled:bg-transparent disabled:text-muted-foreground/80 disabled:opacity-100 disabled:shadow-[inset_0_0_0_1px_var(--rule)]",
         ghost:
           "text-foreground hover:bg-foreground/[0.05] hover:text-foreground aria-expanded:bg-foreground/[0.05] dark:hover:bg-foreground/[0.07]",
         destructive:

@@ -46,7 +46,7 @@ function Field({ q, value, set, disabled }: { q: SchemaQuestion; value: unknown;
       control = (
         <div className="flex items-center gap-2">
           <Switch id={id} checked={value === true} onCheckedChange={(c) => set(c)} disabled={disabled} aria-describedby={descId} />
-          <span className="text-[13px] text-muted-foreground">{value === true ? "on" : "off"}</span>
+          <span className="text-sm text-muted-foreground">{value === true ? "on" : "off"}</span>
         </div>
       );
       break;
@@ -93,7 +93,7 @@ function Field({ q, value, set, disabled }: { q: SchemaQuestion; value: unknown;
           placeholder="One item per line"
           disabled={disabled}
           aria-describedby={descId}
-          className="font-mono text-[13px]"
+          className="font-mono text-sm"
         />
       );
       break;
@@ -123,23 +123,23 @@ function Field({ q, value, set, disabled }: { q: SchemaQuestion; value: unknown;
 
   const labelFor = q.control === "cards" || q.control === "choice" || q.control === "chips" ? undefined : id;
   return (
-    <div className="grid gap-1.5 @lg:grid-cols-[10rem_1fr] @lg:gap-4">
-      <div className="pt-1.5">
+    <div className="grid gap-2 @lg:grid-cols-[11rem_1fr] @lg:gap-5">
+      <div className="@lg:pt-2.5">
         {labelFor ? (
-          <label id={labelId} htmlFor={labelFor} className="block text-[13px] font-medium">
+          <label id={labelId} htmlFor={labelFor} className="block text-sm font-medium text-heading">
             {q.label}
           </label>
         ) : (
-          <span id={labelId} className="block text-[13px] font-medium">
+          <span id={labelId} className="block text-sm font-medium text-heading">
             {q.label}
           </span>
         )}
-        <span className="font-mono text-[11px] text-muted-foreground">{typeLabel(q)}</span>
+        <span className="font-mono text-[11.5px] text-muted-foreground">{typeLabel(q)}</span>
       </div>
-      <div className="min-w-0 space-y-1">
+      <div className="min-w-0 space-y-1.5">
         {control}
         {q.description ? (
-          <p id={descId} className="text-xs text-muted-foreground">
+          <p id={descId} className="text-[13px] text-muted-foreground">
             {q.description}
           </p>
         ) : null}
@@ -151,10 +151,10 @@ function Field({ q, value, set, disabled }: { q: SchemaQuestion; value: unknown;
 export function SchemaForm({ schema, kind, values, onChange, omit, disabled, className }: SchemaFormProps) {
   const questions = schemaQuestions(schema, { kind, omit });
   if (questions.length === 0) {
-    return <p className={cn("text-[13px] text-muted-foreground", className)}>This question declares no fields; answering it just releases the run.</p>;
+    return <p className={cn("text-sm text-muted-foreground", className)}>This question declares no fields; answering it just releases the run.</p>;
   }
   return (
-    <div className={cn("space-y-4", className)}>
+    <div className={cn("space-y-5", className)}>
       {questions.map((q) => (
         <Field key={q.key} q={q} value={values[q.key]} set={(v) => onChange({ ...values, [q.key]: v })} disabled={disabled} />
       ))}

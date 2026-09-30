@@ -43,8 +43,8 @@ function AgentStepCard({ step, selected, onSelect }: { step: StepState; selected
         onClick={onSelect}
         aria-pressed={selected}
         className={cn(
-          "flex w-full min-w-0 flex-col gap-2 rounded-xl border bg-card px-3 py-2.5 text-left transition-colors outline-none hover:border-foreground/20 focus-visible:ring-2 focus-visible:ring-ring",
-          selected ? "border-primary/50 ring-1 ring-primary/30" : "border-border",
+          "flex w-full min-w-0 flex-col gap-2 rounded-[16px] bg-field px-3.5 py-3 text-left transition-shadow outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+          selected ? "shadow-[0_0_0_1.5px_var(--ring),0_8px_20px_-14px_rgb(27_111_252/0.5)]" : "shadow-[0_0_0_1px_var(--rule)] hover:shadow-[0_0_0_1px_var(--circle-border),0_8px_20px_-16px_rgb(0_0_0/0.3)]",
         )}
       >
         <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
@@ -55,11 +55,11 @@ function AgentStepCard({ step, selected, onSelect }: { step: StepState; selected
           <span className="text-xs text-muted-foreground">{step.phase}</span>
           <span className="flex-1" />
           {running ? <StatusPill tone="running" pulse size="sm" label="Working" /> : step.status === "failed" ? <StatusPill tone="danger" size="sm" label="Failed" /> : null}
-          <span className="font-mono text-[11px] text-muted-foreground tabular-nums">
+          <span className="font-mono text-xs text-muted-foreground tabular-nums">
             {running ? <Elapsed since={step.startedAt} /> : step.endedAt ? <Duration ms={step.endedAt - step.startedAt} /> : null}
           </span>
         </div>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs text-muted-foreground">
           {step.route?.model ? <span>{step.route.model}</span> : null}
           {step.route?.effort ? <span>effort {step.route.effort}</span> : null}
           {step.usage ? <span className="tabular-nums">{formatTokens(step.usage.input + step.usage.output)}</span> : null}
@@ -75,7 +75,7 @@ function AgentStepCard({ step, selected, onSelect }: { step: StepState; selected
         {out.files?.length ? (
           <ul className="flex flex-wrap gap-1">
             {out.files.map((f) => (
-              <li key={f.path} className="inline-flex h-5 max-w-full items-center gap-1 rounded-md bg-muted px-1.5 font-mono text-[11px] text-muted-foreground">
+              <li key={f.path} className="inline-flex h-6 max-w-full items-center gap-1 rounded-full bg-well px-2 font-mono text-xs text-muted-foreground">
                 <span className="truncate">{f.path}</span>
               </li>
             ))}
@@ -91,7 +91,7 @@ export function AgentLogPanel({ run, seq, onSelect, projectId, paneRef }: { run:
   return (
     <div className="space-y-5">
       <section aria-label="Agent steps" className="space-y-2">
-        <h3 className="text-[13px] font-medium">
+        <h3 className="text-[15px] font-medium text-heading">
           Agent steps <span className="font-normal text-muted-foreground tabular-nums">· {agents.length}</span>
         </h3>
         {agents.length ? (
@@ -101,10 +101,10 @@ export function AgentLogPanel({ run, seq, onSelect, projectId, paneRef }: { run:
             ))}
           </ol>
         ) : (
-          <p className="rounded-xl border border-dashed border-border px-3 py-4 text-center text-[13px] text-muted-foreground">No agent step has started yet.</p>
+          <p className="rounded-[16px] border border-dashed border-circle-border px-3 py-4 text-center text-[13px] text-muted-foreground">No agent step has started yet.</p>
         )}
       </section>
-      <section ref={paneRef} aria-label="Selected step" className="scroll-mt-20 space-y-2 rounded-2xl border border-border p-4">
+      <section ref={paneRef} aria-label="Selected step" className="scroll-mt-20 space-y-2 rounded-[20px] bg-field p-4 shadow-[0_0_0_1px_var(--rule)]">
         {seq !== undefined ? <StepPane run={run} seq={seq} projectId={projectId} /> : <p className="text-[13px] text-muted-foreground">Pick a step in the run ledger to inspect it.</p>}
       </section>
     </div>
@@ -124,12 +124,12 @@ function AddTaskNote({ projectId, task }: { projectId: string; task: DeliveryTas
     add.mutate({ stage: "implementation", text: named ? t : `${prefix}${t}` }, { onSuccess: () => setText("") });
   };
   return (
-    <section aria-label="Add a note" className="space-y-2 rounded-xl border border-border p-3">
-      <label htmlFor={id} className="flex flex-wrap items-baseline gap-x-2 text-xs font-medium">
+    <section aria-label="Add a note" className="space-y-2 rounded-[16px] bg-well p-3.5">
+      <label htmlFor={id} className="flex flex-wrap items-baseline gap-x-2 text-[13px] font-medium text-heading">
         Add a note about {task.id}
         <span className="font-normal text-muted-foreground">Saved as an Implementation note that starts with {task.id}; the next dev-task run for this task receives it.</span>
       </label>
-      <div className="flex min-w-0 items-start gap-2 rounded-lg border border-input bg-transparent pl-3 focus-within:ring-2 focus-within:ring-ring">
+      <div className="flex min-w-0 items-start gap-2 rounded-[14px] border border-input bg-field pl-3.5 focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/25">
         <span aria-hidden className="shrink-0 pt-2 font-mono text-[13px] text-muted-foreground">
           {prefix.trim()}
         </span>
@@ -150,8 +150,8 @@ function AddTaskNote({ projectId, task }: { projectId: string; task: DeliveryTas
         />
       </div>
       <div className="flex items-center justify-end gap-2">
-        <span className="text-[11px] text-muted-foreground">Ctrl+Enter to add</span>
-        <Button size="sm" className="rounded-full" disabled={!text.trim() || add.isPending} onClick={submit}>
+        <span className="text-xs text-muted-foreground">Ctrl+Enter to add</span>
+        <Button size="sm" disabled={!text.trim() || add.isPending} onClick={submit}>
           {add.isPending ? <Spinner aria-hidden /> : null}
           Add note
         </Button>
@@ -176,26 +176,26 @@ export function TaskNotesPanel({ projectId, task, bundle }: { projectId: string;
     <div className="space-y-5">
       {bundle.project.done ? null : <AddTaskNote projectId={projectId} task={task} />}
       {empty ? (
-        <p className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-border px-3 py-5 text-center text-[13px] text-muted-foreground">
+        <p className="flex items-center justify-center gap-2 rounded-[16px] border border-dashed border-circle-border px-3 py-5 text-center text-[13px] text-muted-foreground">
           <MessageSquareText aria-hidden className="size-4 shrink-0" />
           No notes on this task yet. Review feedback, QA bugs and notes that mention {task.id} collect here.
         </p>
       ) : null}
       {task.lastFeedback ? (
-        <section aria-label="Latest feedback" className="space-y-1.5 rounded-xl bg-status-attention-bg px-4 py-3">
-          <h3 className="text-xs font-medium text-status-attention-fg">Latest rework feedback{task.reworkFrom === "qa" ? " (from QA)" : ""}</h3>
+        <section aria-label="Latest feedback" className="space-y-1.5 rounded-[16px] bg-status-attention-bg px-4 py-3">
+          <h3 className="text-[13px] font-medium text-status-attention-fg">Latest rework feedback{task.reworkFrom === "qa" ? " (from QA)" : ""}</h3>
           <p className="text-[13px] leading-relaxed whitespace-pre-wrap">{task.lastFeedback}</p>
         </section>
       ) : null}
 
       {reviews.length || task.qa.bugs.length ? (
         <section aria-label="Decisions" className="space-y-2">
-          <h3 className="text-[13px] font-medium">Decisions</h3>
+          <h3 className="text-[15px] font-medium text-heading">Decisions</h3>
           <ul className="space-y-1.5">
             {reviews.map(({ who, d }) => {
               const meta = decisionMeta(d.decision);
               return (
-                <li key={d.id} className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl border border-border px-3 py-2 text-[13px]">
+                <li key={d.id} className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-[14px] bg-well px-3.5 py-2.5 text-[13px]">
                   <span className="font-medium">{who}</span>
                   <StatusPill {...meta} size="sm" />
                   <span className="text-muted-foreground">
@@ -206,7 +206,7 @@ export function TaskNotesPanel({ projectId, task, bundle }: { projectId: string;
               );
             })}
             {task.qa.bugs.map((b) => (
-              <li key={b} className="rounded-xl border border-status-danger-fg/30 bg-status-danger-bg px-3 py-2 text-[13px] text-status-danger-fg">
+              <li key={b} className="rounded-[14px] bg-status-danger-bg px-3.5 py-2.5 text-[13px] text-status-danger-fg">
                 Bug: {b}
               </li>
             ))}
@@ -216,12 +216,12 @@ export function TaskNotesPanel({ projectId, task, bundle }: { projectId: string;
 
       {notes.length ? (
         <section aria-label="Developer notes" className="space-y-2">
-          <h3 className="text-[13px] font-medium">Notes that mention {task.id}</h3>
+          <h3 className="text-[15px] font-medium text-heading">Notes that mention {task.id}</h3>
           <ul className="space-y-1.5">
             {notes.map((n) => (
-              <li key={n.id} className="rounded-xl border border-border px-3 py-2 text-[13px]">
+              <li key={n.id} className="rounded-[14px] bg-well px-3.5 py-2.5 text-[13px]">
                 <p className="leading-relaxed">{n.text}</p>
-                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                <p className="mt-0.5 text-xs text-muted-foreground">
                   {actorText(n.by)} · <RelativeTime at={n.at} />
                 </p>
               </li>
@@ -232,16 +232,16 @@ export function TaskNotesPanel({ projectId, task, bundle }: { projectId: string;
 
       {activity.length ? (
         <section aria-label="Task activity" className="space-y-2">
-          <h3 className="text-[13px] font-medium">Activity</h3>
+          <h3 className="text-[15px] font-medium text-heading">Activity</h3>
           <ol className="space-y-0.5">
             {activity.map((a) => (
               <li key={a.id} className="flex flex-wrap items-baseline gap-x-2 px-1 py-1 text-[13px]">
                 <span className="min-w-0 flex-1">{a.text}</span>
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-xs text-muted-foreground">
                   {actorText(a.actor)} · <RelativeTime at={a.at} />
                 </span>
                 {a.runId ? (
-                  <Link href={`/runs/${a.runId}`} className="inline-flex items-center gap-0.5 font-mono text-[11px] text-primary hover:underline">
+                  <Link href={`/runs/${a.runId}`} className="inline-flex items-center gap-0.5 font-mono text-xs text-primary hover:underline">
                     {a.runId}
                     <ArrowUpRight aria-hidden className="size-3" />
                   </Link>

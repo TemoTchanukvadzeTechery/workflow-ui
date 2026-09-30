@@ -7,10 +7,10 @@
  * next: <project>" so nobody acts on another project's request by accident. J/K moves, Enter
  * opens the item where it lives. On narrow screens the detail opens full width with a back button.
  */
-import { CircleCheck, SearchX, X } from "lucide-react";
+import { CircleCheck, FolderKanban, Layers3, SearchX, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { CardSkeleton, EmptyState, ErrorState, PageHeader, SectionCard } from "@/components/common";
+import { CardSkeleton, EmptyState, ErrorState, PageHeader, SectionCard, SegmentedControl, ToolbarGroup } from "@/components/common";
 import { INBOX_GROUPS, inboxGroupMeta, itemGroup, orderByGroup, type InboxGroup } from "@/components/inbox/bits";
 import { InboxDetail } from "@/components/inbox/InboxDetail";
 import { inboxRowDomId, InboxList } from "@/components/inbox/InboxList";
@@ -18,7 +18,6 @@ import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useHotkey } from "@/hooks/use-hotkey";
 import { useInbox } from "@/lib/api/queries";
 import { STAGES, stageDef, type InboxItem, type StageId } from "@/lib/delivery/types";
@@ -135,11 +134,10 @@ export function InboxView() {
   return (
     <div className="@container flex min-w-0 flex-col gap-5">
       <PageHeader
-        kicker="Across projects"
         title="Inbox"
-        description="Runs paused for a person, gates and epics waiting for approval, work that is ready to start, and things worth knowing."
+        description="Runs paused for a person, gates and epics waiting for approval, work that is ready to start, and things worth knowing, across projects."
         actions={
-          <p className="hidden items-center gap-1.5 text-xs text-muted-foreground @3xl:flex">
+          <p className="hidden items-center gap-1.5 text-[13px] text-muted-foreground @3xl:flex">
             <Kbd>J</Kbd>
             <Kbd>K</Kbd>
             <span>to move</span>
@@ -150,49 +148,50 @@ export function InboxView() {
         }
       >
         <div className="flex flex-wrap items-center gap-2" role="search" aria-label="Filter the inbox">
-          <ToggleGroup
-            type="single"
-            variant="outline"
-            value={filters.group}
-            onValueChange={(v) => v && setFilters({ ...filters, group: v as Filters["group"] })}
+          <SegmentedControl
             aria-label="Group"
-            className="flex-wrap bg-card"
-          >
-            {GROUP_OPTIONS.map((o) => (
-              <ToggleGroupItem key={o.value} value={o.value} className="h-9 gap-1.5 px-3 text-[13px]" aria-label={`${o.label}: ${q.data ? groupCount(o.value) : 0}`}>
-                {o.label}
-                {q.data ? <span className="text-[11px] text-muted-foreground tabular-nums">{groupCount(o.value)}</span> : null}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-          <Select value={filters.project} onValueChange={(v) => setFilters({ ...filters, project: v })}>
-            <SelectTrigger aria-label="Project" className="h-9 max-w-full rounded-full bg-card sm:max-w-64">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All projects</SelectItem>
-              {projects.map(([id, name]) => (
-                <SelectItem key={id} value={id}>
-                  {name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={filters.stage} onValueChange={(v) => setFilters({ ...filters, stage: v as Filters["stage"] })}>
-            <SelectTrigger aria-label="Stage" className="h-9 rounded-full bg-card">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All stages</SelectItem>
-              {STAGES.map((s) => (
-                <SelectItem key={s.id} value={s.id}>
-                  {s.n}. {s.title}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            value={filters.group}
+            onValueChange={(v) => setFilters({ ...filters, group: v })}
+            items={GROUP_OPTIONS.map((o) => ({
+              value: o.value,
+              label: o.label,
+              count: q.data ? groupCount(o.value) : undefined,
+              countTone: o.value === "blocking_run" && q.data && groupCount(o.value) > 0 ? "attention" : undefined,
+              ariaLabel: `${o.label}: ${q.data ? groupCount(o.value) : 0}`,
+            }))}
+          />
+          <ToolbarGroup aria-label="Project and stage">
+            <Select value={filters.project} onValueChange={(v) => setFilters({ ...filters, project: v })}>
+              <SelectTrigger aria-label="Project" size="sm" className="max-w-56 sm:max-w-64">
+                <FolderKanban aria-hidden className="size-4 text-heading" strokeWidth={1.75} />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All projects</SelectItem>
+                {projects.map(([id, name]) => (
+                  <SelectItem key={id} value={id}>
+                    {name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filters.stage} onValueChange={(v) => setFilters({ ...filters, stage: v as Filters["stage"] })}>
+              <SelectTrigger aria-label="Stage" size="sm">
+                <Layers3 aria-hidden className="size-4 text-heading" strokeWidth={1.75} />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All stages</SelectItem>
+                {STAGES.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.n}. {s.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </ToolbarGroup>
           {filtered ? (
-            <Button variant="ghost" size="sm" className="h-9 rounded-full text-muted-foreground" onClick={() => setFilters(NO_FILTERS)}>
+            <Button variant="ghost" className="h-11 text-muted-foreground" onClick={() => setFilters(NO_FILTERS)}>
               <X aria-hidden />
               Clear
             </Button>
@@ -221,29 +220,29 @@ export function InboxView() {
             title="Nothing matches these filters"
             body={`${plural(all.length, "item")} waiting elsewhere.`}
             action={
-              <Button variant="outline" className="rounded-full" onClick={() => setFilters(NO_FILTERS)}>
+              <Button variant="secondary" onClick={() => setFilters(NO_FILTERS)}>
                 Clear filters
               </Button>
             }
           />
         </SectionCard>
       ) : (
-        <div className="grid min-w-0 items-start gap-4 @4xl:grid-cols-[minmax(300px,380px)_minmax(0,1fr)]">
+        <div className="grid min-w-0 items-start gap-4 @4xl:grid-cols-[minmax(320px,400px)_minmax(0,1fr)]">
           <nav
             aria-label="Inbox items"
             className={cn(
-              "card-surface min-w-0 rounded-2xl p-2 @4xl:sticky @4xl:top-16 @4xl:max-h-[calc(100vh-5.5rem)] @4xl:overflow-y-auto",
+              "card-surface min-w-0 rounded-[28px] p-2.5 @4xl:sticky @4xl:top-4 @4xl:max-h-[calc(100vh-2rem)] @4xl:overflow-y-auto",
               detailOpen ? "hidden @4xl:block" : "block",
             )}
           >
-            <p className="px-3 pt-2 text-xs text-muted-foreground" aria-live="polite">
+            <p className="px-3 pt-2.5 text-[13px] text-muted-foreground" aria-live="polite">
               {filtered ? `${items.length} of ${plural(all.length, "item")}` : plural(all.length, "item")}
             </p>
             <InboxList items={items} selectedId={selected?.id} onSelect={(i) => select(i, { open: true })} />
           </nav>
           <div ref={detailRef} className={cn("min-w-0 scroll-mt-16 space-y-3", detailOpen ? "block" : "hidden @4xl:block")}>
             {notice ? (
-              <p role="status" className="flex items-center gap-2 rounded-xl bg-status-success-bg px-3 py-2 text-[13px] text-status-success-fg">
+              <p role="status" className="flex items-center gap-2 rounded-[16px] bg-status-success-bg px-4 py-2.5 text-sm text-status-success-fg">
                 <CircleCheck aria-hidden className="size-4 shrink-0" />
                 <span className="min-w-0">{notice}</span>
               </p>
@@ -258,12 +257,12 @@ export function InboxView() {
 
 function InboxSkeleton() {
   return (
-    <div className="grid gap-4 @4xl:grid-cols-[minmax(300px,380px)_minmax(0,1fr)]" aria-busy="true" aria-label="Loading the inbox">
-      <div className="card-surface flex flex-col gap-3 rounded-2xl p-4" aria-hidden>
+    <div className="grid gap-4 @4xl:grid-cols-[minmax(320px,400px)_minmax(0,1fr)]" aria-busy="true" aria-label="Loading the inbox">
+      <div className="card-surface flex flex-col gap-4 rounded-[28px] p-5" aria-hidden>
         <Skeleton className="h-3 w-28" />
         {Array.from({ length: 6 }, (_, i) => (
           <div key={i} className="flex gap-3">
-            <Skeleton className="size-7 rounded-full" />
+            <Skeleton className="size-9 rounded-full" />
             <div className="flex-1 space-y-1.5">
               <Skeleton className="h-3 w-2/3" />
               <Skeleton className="h-3 w-full" />

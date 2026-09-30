@@ -36,8 +36,8 @@ export function WorkflowBadge({ workflow, className }: { workflow: string; class
     <span
       title={real ? "Real weft workflow (po-workspace)" : "Mock workflow shaped like a future weft workflow"}
       className={cn(
-        "inline-flex h-[18px] shrink-0 items-center rounded-full px-1.5 text-[10px] font-semibold tracking-[0.06em] uppercase",
-        real ? "bg-primary-soft text-primary" : "bg-muted text-muted-foreground",
+        "inline-flex h-6 shrink-0 items-center rounded-full px-2 text-xs font-medium capitalize",
+        real ? "bg-status-running-bg text-status-running-fg" : "bg-status-neutral-bg text-status-neutral-fg",
         className,
       )}
     >
@@ -68,7 +68,7 @@ export function WorkflowName({ workflow, href, badges = "all", className }: { wo
  * links to the project, the stage page and the task. `wrap` lets it break onto more lines.
  */
 export function RunContext({ entry, className, showProject = true, wrap, stacked }: { entry: RunIndexEntry | undefined; className?: string; showProject?: boolean; wrap?: boolean; stacked?: boolean }) {
-  if (!entry) return <span className={cn("text-xs text-muted-foreground", className)}>Not linked to a project</span>;
+  if (!entry) return <span className={cn("text-[13px] text-muted-foreground", className)}>Not linked to a project</span>;
   const def = stageDef(entry.stage);
   const link = "underline-offset-2 hover:underline focus-visible:rounded focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none";
   const sep = <ChevronRight aria-hidden className="size-3 shrink-0 text-muted-foreground/70" />;

@@ -51,13 +51,13 @@ function AcChecklist({ task, live, activeAc, onToggleAc, onJump }: { task: Deliv
   return (
     <section aria-label="Acceptance criteria checklist" className="min-w-0 space-y-2">
       <div className="flex items-baseline justify-between gap-2">
-        <h3 className="kicker">Acceptance criteria</h3>
-        <span className="text-xs text-muted-foreground tabular-nums">
+        <h3 className="text-[15px] font-medium text-heading">Acceptance criteria</h3>
+        <span className="text-[13px] text-muted-foreground tabular-nums">
           {met}/{task.acceptanceCriteria.length} met
         </span>
       </div>
       {task.acceptanceCriteria.length === 0 ? (
-        <p className="rounded-lg border border-dashed px-3 py-4 text-center text-xs text-muted-foreground">This task has no acceptance criteria.</p>
+        <p className="rounded-[16px] border border-dashed border-circle-border px-3 py-4 text-center text-[13px] text-muted-foreground">This task has no acceptance criteria.</p>
       ) : (
         <ol className="space-y-1.5">
           {task.acceptanceCriteria.map((ac) => {
@@ -66,26 +66,26 @@ function AcChecklist({ task, live, activeAc, onToggleAc, onJump }: { task: Deliv
             const on = activeAc === ac.id;
             const uniqueItems = s.items.filter((it, i, a) => a.findIndex((x) => x.e.id === it.e.id) === i);
             return (
-              <li key={ac.id} className={cn("rounded-lg border bg-card", on && "border-primary ring-1 ring-primary")}>
+              <li key={ac.id} className={cn("rounded-[14px] bg-field shadow-[0_0_0_1px_var(--rule)]", on && "shadow-[0_0_0_2px_var(--ring)]")}>
                 <button
                   type="button"
                   onClick={() => onToggleAc(ac.id)}
                   aria-pressed={on}
                   title={on ? "Show all evidence" : `Show only evidence for ${ac.id}`}
-                  className="flex w-full items-start gap-2 rounded-lg px-2.5 pt-2 pb-1 text-left hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                  className="flex w-full items-start gap-2 rounded-[14px] px-3 pt-2.5 pb-1 text-left hover:bg-foreground/[0.03] focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
                 >
                   <Icon aria-hidden className={cn("mt-0.5 size-4 shrink-0", s.cls)} strokeWidth={2.25} />
                   <span className="min-w-0 flex-1">
                     <span className="flex flex-wrap items-center gap-x-1.5">
-                      <span className="font-mono text-[11px] font-medium">{ac.id}</span>
-                      <span className={cn("text-[11px] font-medium", s.cls)}>{s.label}</span>
+                      <span className="font-mono text-xs font-medium">{ac.id}</span>
+                      <span className={cn("text-xs font-medium", s.cls)}>{s.label}</span>
                     </span>
                     <span className="block text-xs leading-snug text-foreground">{ac.text}</span>
                   </span>
                 </button>
                 <div className="flex flex-wrap items-center gap-1 px-2.5 pb-2 pl-8">
                   {uniqueItems.length === 0 ? (
-                    <span className="text-[11px] text-muted-foreground">No evidence recorded</span>
+                    <span className="text-xs text-muted-foreground">No evidence recorded</span>
                   ) : (
                     uniqueItems.map(({ e, result, detail }) => (
                       <button
@@ -94,7 +94,7 @@ function AcChecklist({ task, live, activeAc, onToggleAc, onJump }: { task: Deliv
                         onClick={() => onJump(e.id)}
                         title={`${e.title}${detail ? ` · ${detail}` : ""}`}
                         aria-label={`Open ${e.id} (${result}): ${e.title}`}
-                        className="inline-flex h-5 items-center gap-1 rounded-md bg-muted px-1.5 font-mono text-[10.5px] text-foreground hover:bg-primary-soft hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                        className="inline-flex h-6 items-center gap-1 rounded-full bg-well px-2 font-mono text-xs text-heading hover:bg-primary-soft hover:text-primary focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
                       >
                         <span aria-hidden className={cn("size-1.5 rounded-full", result === "pass" ? "bg-status-success-fg" : result === "fail" ? "bg-status-danger-fg" : "bg-status-attention-fg")} />
                         {e.id}
@@ -202,26 +202,26 @@ export function EvidenceGallery({ task, evidence, focusEvidenceId, hideChecklist
       <div className={cn("grid min-w-0 gap-4", !hideChecklist && "@3xl/gallery:grid-cols-[minmax(0,1fr)_280px]")}>
         <div className="min-w-0 space-y-3">
           {activeAc ? (
-            <div className="flex flex-wrap items-center gap-2 rounded-lg bg-primary-soft px-3 py-1.5 text-xs text-primary">
+            <div className="flex flex-wrap items-center gap-2 rounded-[14px] bg-status-running-bg py-1.5 pr-1.5 pl-3.5 text-[13px] text-status-running-fg">
               <Filter aria-hidden className="size-3.5" />
               <span>
                 Showing evidence for <span className="font-mono font-medium">{activeAc}</span> ({visible.length})
               </span>
-              <Button type="button" variant="ghost" size="xs" className="ml-auto h-6 rounded-full text-primary hover:text-primary" onClick={() => setActiveAc(null)}>
+              <Button type="button" variant="ghost" size="xs" className="ml-auto h-6 text-primary hover:text-primary" onClick={() => setActiveAc(null)}>
                 <X aria-hidden />
                 Clear
               </Button>
             </div>
           ) : null}
           <Tabs value={tab} onValueChange={(v) => setTab(v as EvidenceTab)} className="min-w-0 gap-3">
-            <div className="-mx-1 overflow-x-auto px-1 pb-1">
-              <TabsList variant="line" className="h-auto flex-nowrap justify-start gap-1" aria-label="Evidence type">
+            <div className="-mx-1 overflow-x-auto px-1 pb-1 [scrollbar-width:none]">
+              <TabsList className="flex-nowrap justify-start" aria-label="Evidence type">
                 {EVIDENCE_TABS.map((t) => {
                   const n = byTab(t.id).length;
                   return (
-                    <TabsTrigger key={t.id} value={t.id} className="h-8 flex-none rounded-full px-3 text-[13px] data-active:bg-muted">
+                    <TabsTrigger key={t.id} value={t.id} className="flex-none">
                       {t.label}
-                      <span className={cn("rounded-full px-1.5 font-mono text-[10.5px] tabular-nums", n ? "bg-background text-foreground" : "text-muted-foreground")}>{n}</span>
+                      <span className="text-xs font-normal text-muted-foreground tabular-nums">{n}</span>
                     </TabsTrigger>
                   );
                 })}

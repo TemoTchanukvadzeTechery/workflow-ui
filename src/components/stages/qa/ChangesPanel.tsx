@@ -34,7 +34,7 @@ function ReviewControls({ projectId, change, readOnly }: { projectId: string; ch
     return (
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <StatusPill tone={change.consistent ? "success" : "danger"} icon={change.consistent ? CircleCheck : CircleX} size="sm" label={change.consistent ? "Consistent with requirements" : "Not consistent"} />
-        <span className="text-xs text-muted-foreground">
+        <span className="text-[13px] text-muted-foreground">
           {change.by ? actorText(change.by) : "someone"}
           {change.at ? (
             <>
@@ -45,14 +45,14 @@ function ReviewControls({ projectId, change, readOnly }: { projectId: string; ch
           {change.comment ? <>: &ldquo;{change.comment}&rdquo;</> : null}
         </span>
         {!readOnly ? (
-          <Button type="button" variant="ghost" size="xs" className="rounded-full" onClick={() => setEditing(true)}>
+          <Button type="button" variant="ghost" size="xs" onClick={() => setEditing(true)}>
             Change
           </Button>
         ) : null}
       </div>
     );
   }
-  if (readOnly) return <p className="text-xs text-muted-foreground">Not reviewed.</p>;
+  if (readOnly) return <p className="text-[13px] text-muted-foreground">Not reviewed.</p>;
 
   const save = () => {
     if (choice === null || needsComment) return;
@@ -60,12 +60,12 @@ function ReviewControls({ projectId, change, readOnly }: { projectId: string; ch
   };
 
   return (
-    <div className="space-y-2 rounded-lg bg-muted/60 p-2.5">
-      <div className="flex flex-wrap items-center gap-2">
-        <span id={groupId} className="text-xs font-medium">
+    <div className="space-y-3 rounded-[16px] bg-well p-3.5">
+      <div className="flex flex-wrap items-center gap-2.5">
+        <span id={groupId} className="text-[13px] font-medium text-heading">
           Consistent with requirements?
         </span>
-        <div role="group" aria-label={`Is ${change.label} consistent with the requirements?`} className="inline-flex rounded-full bg-background p-0.5">
+        <div role="group" aria-label={`Is ${change.label} consistent with the requirements?`} className="inline-flex h-9 items-center gap-1 rounded-[12px] bg-raised p-[3px] shadow-(--raised-shadow)">
           {[
             { v: true, label: "Yes", icon: CircleCheck, on: "bg-status-success-bg text-status-success-fg" },
             { v: false, label: "No", icon: CircleX, on: "bg-status-danger-bg text-status-danger-fg" },
@@ -75,7 +75,7 @@ function ReviewControls({ projectId, change, readOnly }: { projectId: string; ch
               type="button"
               aria-pressed={choice === o.v}
               onClick={() => setChoice(o.v)}
-              className={cn("inline-flex h-7 items-center gap-1 rounded-full px-3 text-xs font-medium transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none", choice === o.v ? o.on : "text-muted-foreground hover:text-foreground")}
+              className={cn("inline-flex h-full items-center gap-1 rounded-[9px] px-3 text-[13px] font-medium transition-colors duration-150 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none", choice === o.v ? o.on : "text-muted-foreground hover:text-heading")}
             >
               <o.icon aria-hidden className="size-3.5" />
               {o.label}
@@ -84,17 +84,17 @@ function ReviewControls({ projectId, change, readOnly }: { projectId: string; ch
         </div>
       </div>
       <div className="space-y-1">
-        <label htmlFor={commentId} className="text-xs text-muted-foreground">
+        <label htmlFor={commentId} className="text-[13px] text-muted-foreground">
           Comment {choice === false ? <span className="font-medium text-foreground">required: what does not match?</span> : "optional"}
         </label>
-        <Textarea id={commentId} rows={2} value={comment} onChange={(e) => setComment(e.target.value)} className="bg-background text-[13px]" aria-invalid={needsComment && comment.length > 0} />
+        <Textarea id={commentId} rows={2} value={comment} onChange={(e) => setComment(e.target.value)} className="text-sm" aria-invalid={needsComment && comment.length > 0} />
       </div>
       <div className="flex items-center gap-2">
-        <Button type="button" size="sm" className="h-7 rounded-full" onClick={save} disabled={choice === null || needsComment || review.isPending}>
+        <Button type="button" size="sm" onClick={save} disabled={choice === null || needsComment || review.isPending}>
           {review.isPending ? "Saving…" : "Save review"}
         </Button>
         {editing ? (
-          <Button type="button" variant="ghost" size="sm" className="h-7 rounded-full" onClick={() => setEditing(false)}>
+          <Button type="button" variant="ghost" size="sm" onClick={() => setEditing(false)}>
             Cancel
           </Button>
         ) : null}
@@ -108,7 +108,7 @@ function Disclosure({ label, children, defaultOpen = false }: { label: ReactNode
   const id = useId();
   return (
     <div>
-      <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-controls={id} className="inline-flex items-center gap-1 rounded text-xs font-medium text-primary hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
+      <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-controls={id} className="inline-flex items-center gap-1 rounded text-[13px] font-medium text-primary hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none">
         <ChevronDown aria-hidden className={cn("size-3.5 transition-transform duration-150", !open && "-rotate-90")} />
         {label}
       </button>
@@ -125,19 +125,19 @@ function CodeDetails({ projectId, bundle, change }: { projectId: string; bundle:
   const tasks = bundle.tasks.filter((t) => t.repo === change.label && t.status !== "cancelled");
   if (tasks.length === 0) return null;
   return (
-    <ul className="divide-y rounded-lg border">
+    <ul className="divide-y divide-rule rounded-[14px] shadow-[0_0_0_1px_var(--rule)]">
       {tasks.map((t) => (
-        <li key={t.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 text-[13px]">
+        <li key={t.id} className="flex min-h-11 flex-wrap items-center gap-x-3 gap-y-1 px-3.5 py-2 text-sm">
           <Link href={taskHref(projectId, t.id)} className="font-mono text-xs font-medium text-primary hover:underline">
             {taskKey(t)}
           </Link>
           <span className="min-w-0 flex-1 truncate">{t.title}</span>
           {t.diffStats ? (
-            <span className="font-mono text-[11px] tabular-nums">
+            <span className="font-mono text-xs tabular-nums">
               <span className="text-status-success-fg">+{t.diffStats.adds}</span> <span className="text-status-danger-fg">−{t.diffStats.dels}</span> <span className="text-muted-foreground">in {t.diffStats.files} files</span>
             </span>
           ) : null}
-          <Link href={taskHref(projectId, t.id)} className="text-xs text-primary hover:underline" aria-label={`View the diff of ${taskKey(t)}`}>
+          <Link href={taskHref(projectId, t.id)} className="text-[13px] text-primary hover:underline" aria-label={`View the diff of ${taskKey(t)}`}>
             View diff
           </Link>
         </li>
@@ -157,23 +157,23 @@ function MemoryUpdate({ runId, doc }: { runId: string; doc?: DocumentArtifact })
   const changes = doc?.memory?.changes ?? [];
 
   return (
-    <div className="space-y-2 rounded-lg border px-3 py-2.5">
+    <div className="space-y-2.5 rounded-[14px] px-3.5 py-3 shadow-[0_0_0_1px_var(--rule)]">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-[13px] font-medium">From the {label ?? "run"}</span>
-        <Link href={`/runs/${runId}`} className="font-mono text-[11px] text-primary hover:underline">
+        <span className="text-sm font-medium text-heading">From the {label ?? "run"}</span>
+        <Link href={`/runs/${runId}`} className="font-mono text-xs text-primary hover:underline">
           {run.data?.workflow ?? "run"} · {runId}
         </Link>
         {doc?.memory ? <StatusPill {...memoryStatusMeta(doc.memory.status)} size="sm" /> : null}
-        {doc?.memory?.major ? <span className="text-[11px] text-muted-foreground">major update</span> : null}
-        {decision ? <span className="text-[11px] text-muted-foreground">decision: <span className="font-mono">{decision}</span></span> : null}
+        {doc?.memory?.major ? <span className="text-xs text-muted-foreground">major update</span> : null}
+        {decision ? <span className="text-xs text-muted-foreground">decision: <span className="font-mono">{decision}</span></span> : null}
       </div>
       {changes.length ? (
         <ul className="space-y-1">
           {changes.map((c, i) => {
             const m = /^([a-z-]+):\s*(.*)$/s.exec(c);
             return (
-              <li key={i} className="flex items-start gap-2 text-xs leading-snug">
-                <span className="mt-px inline-flex h-4.5 shrink-0 items-center rounded bg-muted px-1.5 font-mono text-[10.5px] text-muted-foreground">{m ? m[1] : "change"}</span>
+              <li key={i} className="flex items-start gap-2 text-[13px] leading-5">
+                <span className="inline-flex h-5 shrink-0 items-center rounded-full bg-well px-2 font-mono text-[11px] text-muted-foreground">{m ? m[1] : "change"}</span>
                 <span className="min-w-0">{m ? m[2] : c}</span>
               </li>
             );
@@ -184,10 +184,10 @@ function MemoryUpdate({ runId, doc }: { runId: string; doc?: DocumentArtifact })
         <Skeleton className="h-4 w-32" />
       ) : diffRef ? (
         <Disclosure label="Show the memory diff">
-          {diff.isPending ? <Skeleton className="h-24 w-full" /> : diff.data ? <TextDiff diffText={diff.data} maxHeightClass="max-h-80" /> : <p className="text-xs text-muted-foreground">Could not load the diff.</p>}
+          {diff.isPending ? <Skeleton className="h-24 w-full" /> : diff.data ? <TextDiff diffText={diff.data} maxHeightClass="max-h-80" /> : <p className="text-[13px] text-muted-foreground">Could not load the diff.</p>}
         </Disclosure>
       ) : (
-        <p className="text-xs text-muted-foreground">No diff was attached to this memory update.</p>
+        <p className="text-[13px] text-muted-foreground">No diff was attached to this memory update.</p>
       )}
     </div>
   );
@@ -208,7 +208,7 @@ function DocDetails({ projectId, bundle, change }: { projectId: string; bundle: 
   const doc = bundle.documents.find((d) => d.path === change.label);
   if (!doc) return null;
   return (
-    <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+    <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-muted-foreground">
       <Link href={`/projects/${projectId}/docs/${doc.id}`} className="font-medium text-primary hover:underline">
         Open {doc.title}
       </Link>
@@ -265,8 +265,8 @@ export function ChangesPanel({ projectId, bundle, readOnly }: { projectId: strin
   }
   return (
     <div className="space-y-4">
-      <p className="text-[13px] text-muted-foreground">
-        <span className="font-medium text-foreground tabular-nums">
+      <p className="px-1 text-sm text-muted-foreground">
+        <span className="font-medium text-heading tabular-nums">
           {reviewed}/{all.length}
         </span>{" "}
         changes reviewed. {hasMemory ? "Confirm that the code, the memory updates and the documents match the original requirements." : "Confirm that the code and the documents match the original requirements; there are no memory updates to review."}
@@ -282,27 +282,40 @@ export function ChangesPanel({ projectId, bundle, readOnly }: { projectId: strin
             key={g.kind}
             density="dense"
             title={
-              <span className="inline-flex items-center gap-2">
-                <Icon aria-hidden className="size-4 text-muted-foreground" />
+              <span className="inline-flex items-center gap-2.5">
+                <span className="inline-flex size-8 items-center justify-center rounded-full bg-well text-heading">
+                  <Icon aria-hidden className="size-4" />
+                </span>
                 {g.title}
               </span>
             }
             description={g.description}
-            actions={rows.length ? <span className="text-xs text-muted-foreground tabular-nums">{rows.filter((r) => r.consistent !== undefined).length}/{rows.length} reviewed</span> : <span className="text-xs text-muted-foreground">Nothing to review</span>}
+            actions={
+              rows.length ? (
+                <span className="chip-float text-[13px]">
+                  <span className="font-medium tabular-nums">
+                    {rows.filter((r) => r.consistent !== undefined).length}/{rows.length}
+                  </span>
+                  <span className="text-muted-foreground">reviewed</span>
+                </span>
+              ) : (
+                <span className="text-[13px] text-muted-foreground">Nothing to review</span>
+              )
+            }
           >
             {rows.length === 0 ? (
-              <p className="rounded-xl border border-dashed px-3 py-3 text-[13px] text-muted-foreground">{noMemoryReason(bundle)}</p>
+              <p className="rounded-[16px] border border-dashed border-circle-border px-4 py-3.5 text-sm text-muted-foreground">{noMemoryReason(bundle)}</p>
             ) : (
               <ul className="space-y-3">
                 {rows.map((c) => (
-                  <li key={c.id} className={cn("space-y-2.5 rounded-xl border p-3", c.consistent === false && "border-status-danger-fg/30")}>
+                  <li key={c.id} className={cn("space-y-3 rounded-[20px] bg-field p-4 shadow-[0_0_0_1px_var(--rule)]", c.consistent === false && "shadow-[0_0_0_1.5px_color-mix(in_srgb,var(--status-danger-fg)_40%,transparent)]")}>
                     <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
                       <div className="min-w-0">
-                        <p className="font-mono text-[13px] font-medium break-all">{c.label}</p>
-                        <p className="text-xs text-muted-foreground">{c.summary}</p>
+                        <p className="font-mono text-[13px] font-medium break-all text-heading">{c.label}</p>
+                        <p className="text-[13px] text-muted-foreground">{c.summary}</p>
                       </div>
                       {c.kind === "code" && c.files !== undefined ? (
-                        <span className="shrink-0 font-mono text-xs tabular-nums">
+                        <span className="shrink-0 font-mono text-[13px] tabular-nums">
                           <span className="text-status-success-fg">+{c.adds ?? 0}</span> <span className="text-status-danger-fg">−{c.dels ?? 0}</span>{" "}
                           <span className="text-muted-foreground">
                             · {c.files} {c.files === 1 ? "file" : "files"}

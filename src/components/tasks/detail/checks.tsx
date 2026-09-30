@@ -74,13 +74,13 @@ function Detail({ d }: { d: CheckEvidence }) {
     const ex = d.output ? excerpt(d.output) : null;
     return (
       <div className="space-y-1">
-        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <TerminalSquare aria-hidden className="size-3.5" />
           Output
           <MonoChip className={cn(d.exitCode === 0 ? "text-status-success-fg" : "text-status-danger-fg")}>exit {d.exitCode}</MonoChip>
           {ex?.cut ? <span>last 20 lines, {ex.cut} earlier lines hidden</span> : null}
         </div>
-        {ex ? <pre className="relative max-h-64 overflow-auto rounded-lg bg-muted/60 px-3 py-2 font-mono text-[12px] leading-relaxed whitespace-pre-wrap text-foreground">{ex.text}</pre> : null}
+        {ex ? <pre className="relative max-h-64 overflow-auto rounded-[12px] bg-well px-3 py-2 font-mono text-[12px] leading-relaxed whitespace-pre-wrap text-foreground">{ex.text}</pre> : null}
       </div>
     );
   }
@@ -123,10 +123,10 @@ function CheckRow({ entry }: { entry: CheckEntry }) {
   const { check } = entry;
   const pass = check.status === "pass";
   return (
-    <li className="space-y-2 border-b border-border px-4 py-3 last:border-b-0">
+    <li className="space-y-2 border-b border-rule px-4 py-3 last:border-b-0">
       <div className="flex flex-wrap items-center gap-2">
         <StatusPill tone={pass ? "success" : "danger"} icon={pass ? CircleCheck : CircleX} size="sm" label={pass ? "Pass" : "Fail"} />
-        <span className="font-mono text-[13px] font-medium">{check.name}</span>
+        <span className="font-mono text-[13px] font-medium text-heading">{check.name}</span>
         {entry.retry ? <MonoChip>retry</MonoChip> : null}
         {check.required ? <MonoChip>required</MonoChip> : <MonoChip>optional</MonoChip>}
         {check.disposition !== "executed" ? <MonoChip className="text-status-attention-fg">{check.disposition}</MonoChip> : null}
@@ -166,11 +166,11 @@ export function ChecksPanel({ run }: { run: RunDetail }) {
             key={i}
             open={isOpen}
             onOpenChange={(o) => setToggled((s) => ({ ...s, [i]: o }))}
-            className="overflow-hidden rounded-xl border border-border bg-card"
+            className="overflow-hidden rounded-[16px] bg-field shadow-[0_0_0_1px_var(--rule)]"
           >
-            <CollapsibleTrigger className="flex w-full items-center gap-2 bg-muted/40 px-4 py-2 text-left text-[13px] outline-none hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset">
+            <CollapsibleTrigger className="flex min-h-11 w-full items-center gap-2 px-4 py-2 text-left text-sm outline-none hover:bg-foreground/[0.03] focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset">
               {isOpen ? <ChevronDown aria-hidden className="size-4 text-muted-foreground" /> : <ChevronRight aria-hidden className="size-4 text-muted-foreground" />}
-              <span className="font-medium">{cycleLabel(i, run.workflow)}</span>
+              <span className="font-medium text-heading">{cycleLabel(i, run.workflow)}</span>
               <span className={cn("font-mono text-xs tabular-nums", passed === total ? "text-status-success-fg" : "text-status-danger-fg")}>
                 {passed}/{total} passed
               </span>
@@ -222,16 +222,16 @@ export function CriteriaPanel({ task, runs, evidence, onOpenEvidence }: { task: 
       <p className="text-[13px] text-muted-foreground">
         {qaDone ? `${met} of ${task.acceptanceCriteria.length} met, per QA's evidence.` : "Dev checks name the criteria they cover; QA certifies each one with evidence in Stage 4."}
       </p>
-      <ol className="overflow-hidden rounded-xl border border-border bg-card">
+      <ol className="overflow-hidden rounded-[16px] bg-field shadow-[0_0_0_1px_var(--rule)]">
         {task.acceptanceCriteria.map((ac) => {
           const tests = testLines(runs, ac.id);
           const ev = (ac.evidenceIds ?? []).map((id) => evidence.find((e) => e.id === id)).filter((e): e is Evidence => !!e);
           const state = ac.met ? "met" : qaDone && ev.length ? "unmet" : "pending";
           return (
-            <li key={ac.id} className="space-y-2 border-b border-border px-4 py-3 last:border-b-0">
+            <li key={ac.id} className="space-y-2 border-b border-rule px-4 py-3 last:border-b-0">
               <div className="flex flex-wrap items-start gap-x-3 gap-y-1.5">
                 <span className="w-10 shrink-0 font-mono text-xs leading-5 text-muted-foreground">{ac.id}</span>
-                <span className="min-w-0 flex-1 text-[13px] leading-5">{ac.text}</span>
+                <span className="min-w-0 flex-1 text-sm leading-5 text-heading">{ac.text}</span>
                 {state === "met" ? (
                   <StatusPill tone="success" icon={CircleCheck} size="sm" label="Met" />
                 ) : state === "unmet" ? (
@@ -243,7 +243,7 @@ export function CriteriaPanel({ task, runs, evidence, onOpenEvidence }: { task: 
               {tests.length ? (
                 <ul className="space-y-0.5 pl-[3.25rem]">
                   {tests.map((t) => (
-                    <li key={`${t.check}|${t.line}`} className="flex min-w-0 items-start gap-1.5 font-mono text-[11.5px]">
+                    <li key={`${t.check}|${t.line}`} className="flex min-w-0 items-start gap-1.5 font-mono text-xs">
                       {t.pass ? <CircleCheck aria-label="passed" className="mt-0.5 size-3 shrink-0 text-status-success-fg" /> : <CircleX aria-label="failed" className="mt-0.5 size-3 shrink-0 text-status-danger-fg" />}
                       <span className="shrink-0 text-muted-foreground">check:{t.check}</span>
                       <span className="min-w-0 truncate" title={t.line}>
@@ -255,7 +255,7 @@ export function CriteriaPanel({ task, runs, evidence, onOpenEvidence }: { task: 
               ) : null}
               {ev.length ? (
                 <div className="flex flex-wrap items-center gap-1.5 pl-[3.25rem]">
-                  <span className="text-[11px] text-muted-foreground">Evidence</span>
+                  <span className="text-xs text-muted-foreground">Evidence</span>
                   {ev.map((e) => (
                     <button
                       key={e.id}
@@ -263,8 +263,8 @@ export function CriteriaPanel({ task, runs, evidence, onOpenEvidence }: { task: 
                       onClick={() => onOpenEvidence?.(e.id)}
                       title={e.title}
                       className={cn(
-                        "inline-flex h-5 items-center gap-1 rounded-md border px-1.5 font-mono text-[11px] hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
-                        e.supersededBy ? "border-dashed text-muted-foreground" : e.result === "fail" ? "border-status-danger-fg/40 text-status-danger-fg" : "border-border text-foreground",
+                        "inline-flex h-6 items-center gap-1 rounded-full border px-2 font-mono text-xs hover:bg-foreground/[0.04] focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
+                        e.supersededBy ? "border-dashed border-circle-border text-muted-foreground" : e.result === "fail" ? "border-status-danger-fg/40 text-status-danger-fg" : "border-circle-border text-heading",
                       )}
                     >
                       {e.id}

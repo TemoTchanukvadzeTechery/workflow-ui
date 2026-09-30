@@ -29,7 +29,7 @@ function VerdictAndRetest({ projectId, bundle, task, readOnly }: { projectId: st
   const retest = !readOnly && canRetest(task);
   if (!blocked && !review && !retest) return null;
   return (
-    <section aria-label="QA verdict" className={cn("space-y-2 rounded-xl px-3 py-2.5 text-[13px]", blocked ? "bg-status-attention-bg" : "bg-muted")}>
+    <section aria-label="QA verdict" className={cn("space-y-2.5 rounded-[16px] px-4 py-3 text-sm", blocked ? "bg-status-attention-bg" : "bg-well")}>
       {blocked ? (
         <p>
           <span className="font-medium text-status-attention-fg">Blocked: {blocked.text}</span>
@@ -48,11 +48,11 @@ function VerdictAndRetest({ projectId, bundle, task, readOnly }: { projectId: st
       ) : null}
       {retest ? (
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-          <Button type="button" size="sm" variant="outline" className="h-7 rounded-full bg-card" onClick={() => startQa.mutate({ taskIds: [task.id] })} disabled={startQa.isPending}>
+          <Button type="button" size="sm" variant="secondary" className="bg-raised shadow-(--raised-shadow)" onClick={() => startQa.mutate({ taskIds: [task.id] })} disabled={startQa.isPending}>
             <RefreshCw aria-hidden className={cn(startQa.isPending && "animate-spin motion-reduce:animate-none")} />
             {startQa.isPending ? "Starting…" : "Re-test"}
           </Button>
-          <span className="text-xs text-muted-foreground">
+          <span className="text-[13px] text-muted-foreground">
             {blocked ? "Once the blocker is resolved, run" : "Runs"} qa-verify again on {taskKey(task)}: new evidence supersedes this run&rsquo;s and QA reviews it again.
           </span>
         </div>
@@ -76,14 +76,14 @@ export function ReviewSheet({ projectId, bundle, target, onClose }: { projectId:
       <SheetContent side="right" className="gap-0 p-0 data-[side=right]:w-full data-[side=right]:sm:max-w-3xl data-[side=right]:lg:max-w-5xl">
         {task ? (
           <>
-            <SheetHeader className="gap-1.5 border-b px-4 pt-4 pb-3 pr-12 sm:px-5">
+            <SheetHeader className="gap-2 border-b border-rule px-5 pt-5 pb-4 pr-14 sm:px-6">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-mono text-xs font-medium">{taskKey(task)}</span>
-                <span className="font-mono text-[11px] text-muted-foreground">{task.id}</span>
+                <span className="font-mono text-xs text-muted-foreground">{task.id}</span>
                 <StatusPill {...qaStatusMeta(task.qa.status)} size="sm" />
               </div>
-              <SheetTitle className="text-base leading-snug font-medium">{task.title}</SheetTitle>
-              <SheetDescription className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+              <SheetTitle className="text-[22px] leading-7 font-normal tracking-[-0.02em] text-heading">{task.title}</SheetTitle>
+              <SheetDescription className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px]">
                 <span className="font-mono">{task.repo}</span>
                 <Link href={taskHref(projectId, task.id, pending)} className="inline-flex items-center gap-1 text-primary hover:underline">
                   Open task page
@@ -94,7 +94,7 @@ export function ReviewSheet({ projectId, bundle, target, onClose }: { projectId:
                 <Button
                   type="button"
                   size="sm"
-                  className="mt-1 w-fit rounded-full"
+                  className="mt-1 w-fit"
                   onClick={() => document.getElementById(requestDomId(pending.runId, pending.requestId))?.scrollIntoView({ behavior: "smooth", block: "start" })}
                 >
                   <ArrowDown aria-hidden />
@@ -102,12 +102,12 @@ export function ReviewSheet({ projectId, bundle, target, onClose }: { projectId:
                 </Button>
               ) : null}
             </SheetHeader>
-            <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 py-4 sm:px-5">
+            <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-5 sm:px-6">
               {pending && !readOnly ? null : <VerdictAndRetest projectId={projectId} bundle={bundle} task={task} readOnly={readOnly} />}
               <EvidenceGallery projectId={projectId} task={task} evidence={bundle.evidence} focusEvidenceId={target?.evidenceId} />
               {pending && !readOnly ? (
                 <section aria-label="QA verdict" className="space-y-2">
-                  <h3 className="kicker">Your verdict</h3>
+                  <h3 className="text-[15px] font-medium text-heading">Your verdict</h3>
                   <HumanRequestCard runId={pending.runId} request={pending.entry} workflow="qa-verify" projectId={projectId} onAnswered={onClose} />
                 </section>
               ) : null}

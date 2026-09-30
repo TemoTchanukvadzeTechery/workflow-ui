@@ -201,7 +201,9 @@
   --track-edge: inset 0 0 0 1px rgb(0 0 0 / 0.04);
   /* What the lighter stripe mixes toward. */
   --stripe-mix: #ffffff;
-  --prompt-band: linear-gradient(180deg, rgb(211 227 246 / 0.78), rgb(199 220 243 / 0.96));
+  --prompt-band:
+    radial-gradient(38% 140% at 55% 0%, rgb(120 168 245 / 0.32), rgb(120 168 245 / 0) 70%),
+    linear-gradient(180deg, rgb(207 224 245 / 0.8), rgb(196 217 242 / 0.96));
   --prompt-glow: 0 -14px 36px -18px rgb(27 111 252 / 0.45), 0 18px 36px -22px rgb(27 111 252 / 0.4);
   --brand-mark: linear-gradient(135deg, #ffb547, #f26a1b);
 
@@ -310,7 +312,9 @@
   --track: rgb(255 255 255 / 0.07);
   --track-edge: inset 0 0 0 1px rgb(255 255 255 / 0.04);
   --stripe-mix: #16171a;
-  --prompt-band: linear-gradient(180deg, rgb(30 44 70 / 0.8), rgb(24 36 58 / 0.96));
+  --prompt-band:
+    radial-gradient(38% 140% at 55% 0%, rgb(59 130 255 / 0.22), rgb(59 130 255 / 0) 70%),
+    linear-gradient(180deg, rgb(30 44 70 / 0.8), rgb(24 36 58 / 0.96));
   --prompt-glow: 0 -14px 36px -18px rgb(59 130 255 / 0.4), 0 18px 36px -22px rgb(0 0 0 / 0.6);
 
   /* 0.5 leaves muted text at 2.4:1 on the dark muted surface; 0.7 keeps it legible. */
@@ -403,27 +407,28 @@
 }
 
 /*
- * Striped fill (STYLE 5): 135deg stripes of a color and its 55% tint. Set the color with --c,
+ * Striped fill (STYLE 5): fine 135deg hatching of a color and its 62% tint, a 4px period (about
+ * 5.5px apart along the bar, like the reference Gross Volume bars). Set the color with --c,
  * e.g. `stripes [--c:var(--status-success-solid)]`; it falls back to currentColor.
  */
 @utility stripes {
   background-color: var(--c, currentColor);
   background-image: repeating-linear-gradient(
     135deg,
-    var(--c, currentColor) 0 5px,
-    color-mix(in srgb, var(--c, currentColor) 55%, var(--stripe-mix)) 5px 8px
+    var(--c, currentColor) 0 2.5px,
+    color-mix(in srgb, var(--c, currentColor) 62%, var(--stripe-mix)) 2.5px 4px
   );
 }
 
 /*
- * Partial / in-progress segments: the same stripes, lighter (about 60%), over whatever
+ * Partial / in-progress segments: the same 4px stripes, lighter (about 60%), over whatever
  * background the element has (usually the soft tone). Uses --c, else currentColor.
  */
 @utility hatch {
   background-image: repeating-linear-gradient(
     135deg,
-    color-mix(in srgb, var(--c, currentColor) 60%, transparent) 0 5px,
-    color-mix(in srgb, var(--c, currentColor) 22%, transparent) 5px 8px
+    color-mix(in srgb, var(--c, currentColor) 60%, transparent) 0 2.5px,
+    color-mix(in srgb, var(--c, currentColor) 22%, transparent) 2.5px 4px
   );
 }
 
@@ -440,6 +445,37 @@
   box-shadow: var(--track-edge);
 }
 
+/*
+ * One row that never wraps (segmented controls, tab lists): it scrolls sideways with no
+ * scrollbar, and fades out at an edge that has more content. useScrollFade() (components/common)
+ * sets data-overflow ("start", "end" or "both") and the fade lengths --fade-start / --fade-end
+ * (0-24px, as much as is hidden past that edge). Not named scroll-fade-x: shadcn/tailwind.css
+ * owns the scroll-fade-* utilities (scroll-timeline fades that, in browsers without
+ * animation-timeline, fade both edges of every list, even one that fits).
+ */
+@utility row-scroll-x {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-padding-inline: 28px;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  &[data-overflow] {
+    --scroll-fade: linear-gradient(
+      90deg,
+      transparent,
+      #000 var(--fade-start, 24px),
+      #000 calc(100% - var(--fade-end, 24px)),
+      transparent
+    );
+    -webkit-mask-image: var(--scroll-fade);
+    mask-image: var(--scroll-fade);
+  }
+}
+
 /* Toolbar groups, segmented-control tracks, secondary buttons. */
 @utility well {
   background-color: var(--well);
@@ -453,7 +489,12 @@
   color: var(--heading);
 }
 
-/* The primary button and the active nav item: an ink pill. */
+/*
+ * The active nav item (and anything else drawn as the ink pill). Pair it with
+ * `text-ink-foreground` when the element also has a base text-* class: the order of a custom
+ * utility against a built-in one is not guaranteed. Button's default variant uses plain
+ * utilities (bg-ink, bg-(image:--ink-gradient), shadow-(--ink-shadow)) so className overrides work.
+ */
 @utility ink-surface {
   background-color: var(--ink);
   background-image: var(--ink-gradient);
@@ -594,11 +635,19 @@
     0 10px 24px -14px rgb(27 111 252 / 0.45);
 }
 
-/* Funnel bars (STYLE 5): blue gradient with 45deg white stripes; the active bar is solid. */
+/*
+ * Funnel bars (STYLE 5): blue gradient under thin white stripes leaning like "/" (the same way
+ * as the striped bars); the active bar is solid.
+ */
 @utility funnel-bar {
   background-image:
-    repeating-linear-gradient(45deg, rgb(255 255 255 / 0.75) 0 2px, transparent 2px 9px),
+    repeating-linear-gradient(135deg, rgb(255 255 255 / 0.8) 0 2px, transparent 2px 9px),
     linear-gradient(180deg, #1d5bf0 0%, rgb(66 128 245 / 0.7) 55%, rgb(191 227 255 / 0.2) 100%);
+  @variant dark {
+    background-image:
+      repeating-linear-gradient(135deg, rgb(255 255 255 / 0.3) 0 2px, transparent 2px 9px),
+      linear-gradient(180deg, #2f6bff 0%, rgb(47 107 255 / 0.55) 55%, rgb(47 107 255 / 0.08) 100%);
+  }
 }
 @utility funnel-bar-active {
   background-image: linear-gradient(135deg, #1b70fc 0%, #2f5cf0 55%, #3b2fd8 100%);

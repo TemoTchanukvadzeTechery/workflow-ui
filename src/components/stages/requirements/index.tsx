@@ -89,7 +89,7 @@ function RequirementsWorkspace({ projectId, bundle }: { projectId: string; bundl
       <ReviseNotice projectId={projectId} kind="brd" cause={cause} doc={doc} onStartAnother={startAnother} hideStart={runOutput(run)?.accepted === false} />
     ) : null;
   const againButton = !readOnly ? (
-    <Button size="sm" className="rounded-full" onClick={startAnother}>
+    <Button size="sm" onClick={startAnother}>
       <RotateCcw aria-hidden />
       Start another run
     </Button>
@@ -139,7 +139,7 @@ function RequirementsWorkspace({ projectId, bundle }: { projectId: string; bundl
           focus={focusOnRun}
           onAnswered={afterAnswer}
           emptyAction={
-            <Button size="sm" variant="outline" className="rounded-full" onClick={() => go("intake")}>
+            <Button size="sm" variant="secondary" onClick={() => go("intake")}>
               Go to Intake
             </Button>
           }

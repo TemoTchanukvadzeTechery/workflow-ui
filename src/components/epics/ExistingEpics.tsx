@@ -21,7 +21,7 @@ export function ExistingEpics({ projectId, parents, epics, readOnly }: { project
   const upsert = useUpsertEpic(projectId);
   const [busy, setBusy] = useState<string | null>(null);
   if (parents.length === 0) {
-    return <p className="rounded-xl border border-dashed border-border px-3 py-5 text-center text-[13px] text-muted-foreground">Discovery found no parent epic in Jira for this project.</p>;
+    return <p className="rounded-[20px] bg-well/60 px-4 py-8 text-center text-[13px] text-muted-foreground">Discovery found no parent epic in Jira for this project.</p>;
   }
 
   const apply = async (ref: string, targets: Epic[]) => {
@@ -37,31 +37,31 @@ export function ExistingEpics({ projectId, parents, epics, readOnly }: { project
   };
 
   return (
-    <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border">
+    <ul className="divide-y divide-rule border-y border-rule">
       {parents.map((d) => {
         const children = epics.filter((e) => e.parentRef === d.ref);
         const orphans = epics.filter((e) => !e.parentRef);
         return (
-          <li key={d.ref} className="flex flex-col gap-2 px-3 py-2.5 sm:flex-row sm:items-start">
+          <li key={d.ref} className="flex flex-col gap-2.5 px-1 py-3.5 sm:flex-row sm:items-center">
             <div className="min-w-0 flex-1 space-y-1">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="font-mono text-xs">{d.ref}</span>
+                <span className="font-mono text-xs text-heading">{d.ref}</span>
                 <KindBadge kind={d.kind} />
                 <RelationChip relation={d.relation} />
                 {children.length ? (
-                  <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                  <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                     <GitBranch aria-hidden className="size-3" />
                     parent of {children.length} {children.length === 1 ? "epic" : "epics"}
                   </span>
                 ) : null}
               </div>
-              <p className="text-[13px] font-medium">{d.title}</p>
-              {d.why ? <p className="text-xs leading-snug text-muted-foreground">{d.why}</p> : null}
+              <p className="text-sm font-medium text-heading">{d.title}</p>
+              {d.why ? <p className="text-[13px] leading-5 text-muted-foreground">{d.why}</p> : null}
             </div>
             {!readOnly && epics.length > 0 ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="w-fit shrink-0 rounded-full" disabled={busy !== null}>
+                  <Button variant="secondary" className="w-fit shrink-0" disabled={busy !== null}>
                     {busy === d.ref ? "Saving…" : "Use as parent"}
                     <ChevronDown aria-hidden />
                   </Button>

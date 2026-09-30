@@ -1,14 +1,14 @@
 "use client";
 
 /** Search + stage / health / attention / done filters and the table-card toggle for /projects. */
-import { LayoutGrid, Rows3, Search, X } from "lucide-react";
+import { Hand, HeartPulse, Layers3, LayoutGrid, Rows3, Search, X } from "lucide-react";
 import { useId } from "react";
+import { SegmentedControl, ToolbarGroup } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Toggle } from "@/components/ui/toggle";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { STAGES, type Health, type ProjectSummary, type StageId } from "@/lib/delivery/types";
 import { cn } from "@/lib/utils";
 import { healthMeta } from "@/lib/weft/labels";
@@ -59,67 +59,63 @@ export function ProjectFilters({ value, onChange, view, onViewChange, className 
   return (
     <div className={cn("flex flex-wrap items-center gap-2", className)} role="search" aria-label="Filter projects">
       {/* Wide enough for the whole placeholder ("…or next step" was clipped at 16rem). */}
-      <div className="relative w-full sm:w-72">
+      <div className="relative w-full sm:w-80">
         <label htmlFor={searchId} className="sr-only">
           Search projects
         </label>
-        <Search aria-hidden className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          id={searchId}
-          type="search"
-          value={value.q}
-          onChange={(e) => set({ q: e.target.value })}
-          placeholder="Search name, key or next step"
-          className="h-9 rounded-full bg-card pl-9"
-        />
+        <Search aria-hidden className="pointer-events-none absolute top-1/2 left-3.5 size-[18px] -translate-y-1/2 text-muted-foreground" strokeWidth={1.75} />
+        <Input id={searchId} type="search" value={value.q} onChange={(e) => set({ q: e.target.value })} placeholder="Search name, key or next step" className="pl-10" />
       </div>
 
-      <Select value={value.stage} onValueChange={(v) => set({ stage: v as ProjectFilterState["stage"] })}>
-        <SelectTrigger aria-label="Stage" className="h-9 rounded-full bg-card">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All stages</SelectItem>
-          {STAGES.map((s) => (
-            <SelectItem key={s.id} value={s.id}>
-              {s.n}. {s.title}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <Select value={value.health} onValueChange={(v) => set({ health: v as ProjectFilterState["health"] })}>
-        <SelectTrigger aria-label="Health" className="h-9 rounded-full bg-card">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Any health</SelectItem>
-          {HEALTHS.map((h) => (
-            <SelectItem key={h} value={h}>
-              {healthMeta(h).label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <ToolbarGroup aria-label="Stage and health">
+        <Select value={value.stage} onValueChange={(v) => set({ stage: v as ProjectFilterState["stage"] })}>
+          <SelectTrigger aria-label="Stage" size="sm">
+            <Layers3 aria-hidden className="size-4 text-heading" strokeWidth={1.75} />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All stages</SelectItem>
+            {STAGES.map((s) => (
+              <SelectItem key={s.id} value={s.id}>
+                {s.n}. {s.title}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={value.health} onValueChange={(v) => set({ health: v as ProjectFilterState["health"] })}>
+          <SelectTrigger aria-label="Health" size="sm">
+            <HeartPulse aria-hidden className="size-4 text-heading" strokeWidth={1.75} />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Any health</SelectItem>
+            {HEALTHS.map((h) => (
+              <SelectItem key={h} value={h}>
+                {healthMeta(h).label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </ToolbarGroup>
 
       <Toggle
-        variant="outline"
         pressed={value.attention}
         onPressedChange={(attention) => set({ attention })}
-        className="h-9 rounded-full bg-card px-3 text-[13px] data-[state=on]:border-status-attention-fg/40 data-[state=on]:bg-status-attention-bg data-[state=on]:text-status-attention-fg"
+        className="h-11 rounded-[16px] bg-well px-3.5 font-normal text-heading hover:bg-well-hover data-[state=on]:bg-status-attention-bg data-[state=on]:text-status-attention-fg"
       >
+        <Hand aria-hidden strokeWidth={1.75} />
         Needs attention
       </Toggle>
 
-      <div className="flex h-9 items-center gap-2 rounded-full px-2">
+      <div className="flex h-11 items-center gap-2.5 rounded-[16px] bg-well px-3.5">
         <Switch id={doneId} checked={value.includeDone} onCheckedChange={(includeDone) => set({ includeDone })} />
-        <label htmlFor={doneId} className="text-[13px] whitespace-nowrap text-muted-foreground">
+        <label htmlFor={doneId} className="text-sm whitespace-nowrap text-heading">
           Include done
         </label>
       </div>
 
       {isFiltered(value) ? (
-        <Button variant="ghost" size="sm" className="h-9 rounded-full text-muted-foreground" onClick={() => onChange({ ...EMPTY_FILTERS, includeDone: value.includeDone })}>
+        <Button variant="ghost" className="h-11 text-muted-foreground" onClick={() => onChange({ ...EMPTY_FILTERS, includeDone: value.includeDone })}>
           <X aria-hidden />
           Clear
         </Button>
@@ -127,16 +123,16 @@ export function ProjectFilters({ value, onChange, view, onViewChange, className 
 
       <span className="flex-1" />
 
-      <ToggleGroup type="single" variant="outline" value={view} onValueChange={(v) => v && onViewChange(v as ProjectsViewMode)} aria-label="Layout" className="hidden bg-card sm:flex">
-        <ToggleGroupItem value="table" aria-label="Table view" className="h-9 px-3">
-          <Rows3 aria-hidden />
-          <span className="hidden text-[13px] sm:inline">Table</span>
-        </ToggleGroupItem>
-        <ToggleGroupItem value="cards" aria-label="Card view" className="h-9 px-3">
-          <LayoutGrid aria-hidden />
-          <span className="hidden text-[13px] sm:inline">Cards</span>
-        </ToggleGroupItem>
-      </ToggleGroup>
+      <SegmentedControl
+        aria-label="Layout"
+        value={view}
+        onValueChange={onViewChange}
+        className="hidden sm:inline-flex"
+        items={[
+          { value: "table", label: "Table", icon: Rows3 },
+          { value: "cards", label: "Cards", icon: LayoutGrid },
+        ]}
+      />
     </div>
   );
 }

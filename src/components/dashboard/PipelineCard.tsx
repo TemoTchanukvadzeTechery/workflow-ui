@@ -1,171 +1,125 @@
 "use client";
 
 /**
- * Portfolio pipeline: one column per stage with the number of projects in it right now, and a
- * stacked bar of those same projects by the stage's status (needs input, awaiting approval, in
- * progress hatched; not started outlined), so the number and the bar measure one thing. How many
- * projects already passed the stage is a quiet line underneath. Each column opens the project
- * list filtered to that stage. On a narrow card the columns become rows. The legend lists only
- * the statuses on screen.
+ * Portfolio pipeline as the reference's Payments funnel: one column per stage with how many
+ * projects reached it (a cumulative funnel, so it can only fall from left to right). The active
+ * column starts on the stage where most things wait on people; hovering, focusing or arrowing
+ * moves it, and its glass readout says how many projects are there now, awaiting approval and
+ * needing input. Choosing a column opens the project list filtered to that stage. A prompt band
+ * (`footer`) overlaps the bottom of the bars.
  */
-import Link from "next/link";
-import type { CSSProperties } from "react";
-import { SectionCard, StageIcon, toneClasses } from "@/components/common";
-import { STAGES, type DashboardData, type ProjectSummary, type StageId, type StageStatus } from "@/lib/delivery/types";
+import { ArrowUpRight, FolderKanban, Inbox, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import type { ReactNode } from "react";
+import { SectionCard } from "@/components/common";
+import { FunnelColumns, useElementSize, type FunnelColumn } from "@/components/viz";
+import { STAGES, type DashboardData, type ProjectSummary, type StageId } from "@/lib/delivery/types";
 import { plural } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import type { Tone } from "@/lib/weft/labels";
-
-type PartKey = "needsInput" | "inReview" | "inProgress" | "failed" | "notStarted";
-
-interface Part {
-  key: PartKey;
-  label: string;
-  tone: Tone;
-  hatched: boolean;
-  n: number;
-}
-
-const LEGEND: Array<Omit<Part, "n">> = [
-  { key: "needsInput", label: "Needs input", tone: "attention", hatched: true },
-  { key: "inReview", label: "Awaiting approval", tone: "review", hatched: true },
-  { key: "inProgress", label: "In progress", tone: "running", hatched: true },
-  { key: "failed", label: "Failed", tone: "danger", hatched: false },
-  { key: "notStarted", label: "Not started", tone: "neutral", hatched: false },
-];
-
-/** A current stage's status as a bar part (a stage that is current is never locked or approved for long). */
-function partOf(status: StageStatus | undefined): PartKey {
-  switch (status) {
-    case "needs_input":
-      return "needsInput";
-    case "in_review":
-      return "inReview";
-    case "in_progress":
-      return "inProgress";
-    case "failed":
-      return "failed";
-    default:
-      return "notStarted";
-  }
-}
-
-function partsOf(projects: ProjectSummary[], stage: StageId): Part[] {
-  const n: Record<PartKey, number> = { needsInput: 0, inReview: 0, inProgress: 0, failed: 0, notStarted: 0 };
-  for (const p of projects) if (!p.done && p.currentStage === stage) n[partOf(p.stageStatuses[stage])]++;
-  return LEGEND.map((l) => ({ ...l, n: n[l.key] }));
-}
-
-function Swatch({ part, className }: { part: Omit<Part, "n">; className?: string }) {
-  const t = toneClasses(part.tone);
-  if (part.key === "notStarted") return <span aria-hidden className={cn("inline-block rounded-[3px] border border-dashed border-foreground/25", className)} />;
-  return <span aria-hidden className={cn("inline-block rounded-[3px]", part.hatched ? cn("hatch", t.bg, t.text) : t.solid, className)} />;
-}
-
-function Fill({ part, style, className }: { part: Part; style?: CSSProperties; className?: string }) {
-  const t = toneClasses(part.tone);
-  const cls = part.key === "notStarted" ? "border border-dashed border-foreground/25 bg-transparent" : part.hatched ? cn("hatch", t.bg, t.text) : t.solid;
-  return <span aria-hidden title={`${part.label}: ${part.n}`} className={cn("block min-h-0 min-w-0 rounded-lg", cls, className)} style={style} />;
-}
-
-function describe(title: string, here: number, parts: Part[], passed: number): string {
-  const bits = parts.filter((p) => p.n > 0).map((p) => `${p.n} ${p.label.toLowerCase()}`);
-  return `${title}: ${plural(here, "project")} here now${bits.length ? ` (${bits.join(", ")})` : ""}; ${passed} passed this stage. Show the projects here.`;
-}
+import { CardMenu } from "./CardMenu";
 
 export interface PipelineCardProps {
   pipeline: DashboardData["pipeline"];
-  /** Every project; the columns count the ones currently in each stage (not done). */
+  /** Every project; "here now" counts the ones currently in each stage (not done). */
   projects: ProjectSummary[];
-  /** Highlight one column, e.g. the stage filter the user came from. */
-  selected?: StageId;
+  /** Rendered at the bottom of the card, overlapping the bars (the prompt band). */
+  footer?: ReactNode;
+  /** Height of the bar area in px (default 296). */
+  height?: number;
   className?: string;
 }
 
-export function PipelineCard({ pipeline, projects, selected, className }: PipelineCardProps) {
-  const columns = STAGES.map((def) => {
-    const parts = partsOf(projects, def.id);
-    const here = parts.reduce((sum, p) => sum + p.n, 0);
-    const passed = pipeline.find((r) => r.stage === def.id)?.approved ?? 0;
-    return { def, parts, here, passed };
+interface StageFigures {
+  stage: StageId;
+  reached: number;
+  here: number;
+  awaiting: number;
+  needInput: number;
+}
+
+function figures(pipeline: DashboardData["pipeline"], projects: ProjectSummary[]): StageFigures[] {
+  return STAGES.map((def) => {
+    const row = pipeline.find((r) => r.stage === def.id);
+    return {
+      stage: def.id,
+      reached: row?.total ?? 0,
+      here: projects.filter((p) => !p.done && p.currentStage === def.id).length,
+      awaiting: row?.inReview ?? 0,
+      needInput: row?.needsInput ?? 0,
+    };
   });
-  const max = Math.max(1, ...columns.map((c) => c.here));
-  const used = LEGEND.filter((l) => columns.some((c) => c.parts.some((p) => p.key === l.key && p.n > 0)));
+}
+
+/** Integer ticks for a count axis: about three, never fractional. */
+function countTicks(max: number): Array<{ value: number; label: string }> {
+  if (max <= 1) return [];
+  const step = max <= 4 ? 1 : max <= 8 ? 2 : max <= 20 ? 5 : Math.ceil(max / 3 / 10) * 10;
+  const out: Array<{ value: number; label: string }> = [];
+  for (let v = step; v <= max; v += step) out.push({ value: v, label: String(v) });
+  return out;
+}
+
+export function PipelineCard({ pipeline, projects, footer, height = 296, className }: PipelineCardProps) {
+  const router = useRouter();
+  const [boxRef, box] = useElementSize<HTMLDivElement>();
+  // Phones get a shorter funnel, so the card does not fill the whole screen.
+  const narrow = box.width > 0 && box.width < 520;
+  const barHeight = narrow ? Math.min(height, 200) : height;
+  const rows = figures(pipeline, projects);
+  const byStage = new Map(rows.map((r) => [r.stage, r]));
+  // Start on the stage with the most waiting on people (ties: the earliest), else the first.
+  const busiest = rows.reduce<StageFigures | undefined>((best, r) => (r.awaiting + r.needInput > (best ? best.awaiting + best.needInput : 0) ? r : best), undefined);
+  const max = Math.max(1, ...rows.map((r) => r.reached));
+
+  const columns: FunnelColumn[] = rows.map((r) => ({
+    key: r.stage,
+    // Short stage names ("BRD", "Build") where the full titles would truncate.
+    label: (narrow ? STAGES.find((s) => s.id === r.stage)?.short : STAGES.find((s) => s.id === r.stage)?.title) ?? r.stage,
+    value: r.reached,
+    display: String(r.reached),
+    hint: `${plural(r.reached, "project")} reached it; ${r.here} here now, ${r.awaiting} awaiting approval, ${r.needInput} need input`,
+  }));
 
   return (
     <SectionCard
-      kicker="Portfolio"
       title="Pipeline"
-      description="The projects in each stage right now, by status. Pick a stage to see its projects."
-      className={cn("@container", className)}
-      bodyClassName="flex flex-col"
+      cardMenu={
+        <CardMenu
+          label="Pipeline options"
+          items={[
+            { label: "All projects", href: "/projects", icon: FolderKanban },
+            { label: "Open the inbox", href: "/inbox", icon: Inbox },
+            { label: "New project", href: "/projects/new", icon: Plus },
+            { label: "Agent runs", href: "/runs", icon: ArrowUpRight },
+          ]}
+        />
+      }
+      className={cn("overflow-hidden", className)}
+      bodyClassName={cn("flex flex-col justify-end", footer ? "pb-1 sm:pb-1" : undefined)}
     >
-      <ol className="grid flex-1 grid-cols-1 gap-2 @2xl:grid-cols-5 @2xl:gap-3">
-        {columns.map(({ def, parts, here, passed }) => {
-          const visible = parts.filter((p) => p.n > 0);
-          const on = selected === def.id;
-          return (
-            <li key={def.id} className="min-w-0">
-              <Link
-                href={`/projects?stage=${def.id}`}
-                aria-label={describe(def.title, here, parts, passed)}
-                className={cn(
-                  "group flex h-full min-w-0 items-center gap-3 rounded-xl p-3 transition-colors duration-150 hover:bg-muted/70 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none @2xl:flex-col @2xl:items-stretch @2xl:gap-3",
-                  on ? "bg-primary-soft ring-1 ring-primary/40" : "bg-muted/35",
-                )}
-              >
-                {/* Identity: icon beside the title in rows, above it in columns. */}
-                <div className="flex w-36 min-w-0 shrink-0 items-center gap-2 @2xl:w-auto @2xl:flex-col @2xl:items-stretch">
-                  <div className="flex items-center justify-between">
-                    <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-card text-foreground shadow-card">
-                      <StageIcon stage={def.id} />
-                    </span>
-                    <span className="hidden font-mono text-[10.5px] text-muted-foreground tabular-nums @2xl:inline">0{def.n}</span>
-                  </div>
-                  <div className="min-w-0">
-                    <div className="truncate text-[13px] leading-5 font-medium text-foreground">{def.title}</div>
-                    <div className="truncate text-[11px] text-muted-foreground">{def.owner}</div>
-                  </div>
-                </div>
-
-                {/* Count */}
-                <div className="flex w-12 shrink-0 flex-col items-end @2xl:w-auto @2xl:items-start">
-                  <span className="text-[28px] leading-8 font-normal tracking-[-0.03em] text-foreground @2xl:text-[40px] @2xl:leading-[44px]">{here}</span>
-                  <span className="text-[11px] leading-4 whitespace-nowrap text-muted-foreground">here now</span>
-                </div>
-
-                {/* Horizontal bar (rows) */}
-                <div className="flex h-3 min-w-0 flex-1 gap-[2px] @2xl:hidden">
-                  {here === 0 ? <span className="block h-full flex-1 rounded-md border border-dashed border-foreground/15" /> : visible.map((p) => <Fill key={p.key} part={p} style={{ flexGrow: p.n, flexBasis: 0 }} />)}
-                  <span className="block" style={{ flexGrow: max - here, flexBasis: 0 }} />
-                </div>
-
-                {/* Vertical bar (columns): height follows how many projects are in the stage now. */}
-                <div className="hidden min-h-32 flex-1 flex-col justify-end @2xl:flex">
-                  <div className="flex flex-col-reverse gap-[2px]" style={{ height: `${(here / max) * 100}%` }}>
-                    {here === 0 ? <span className="block h-2 rounded-md border border-dashed border-foreground/15" /> : visible.map((p) => <Fill key={p.key} part={p} style={{ flexGrow: p.n, flexBasis: 0 }} className="min-h-2" />)}
-                  </div>
-                </div>
-
-                <p className="hidden space-y-0.5 text-[11px] leading-4 text-muted-foreground @2xl:block">
-                  <span className="block">{here === 0 ? "No project here now" : visible.map((p) => `${p.n} ${p.label.toLowerCase()}`).join(" · ")}</span>
-                  <span className="block">{passed} passed</span>
-                </p>
-              </Link>
-            </li>
-          );
-        })}
-      </ol>
-      {used.length > 0 ? (
-        <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 text-[11px] text-muted-foreground" aria-label="Legend">
-          {used.map((l) => (
-            <li key={l.key} className="inline-flex items-center gap-1.5">
-              <Swatch part={l} className="size-2.5" />
-              {l.label}
-            </li>
-          ))}
-        </ul>
-      ) : null}
+      <div ref={boxRef} className="flex min-h-0 min-w-0 flex-1 flex-col">
+      <FunnelColumns
+        columns={columns}
+        defaultActiveKey={busiest?.stage}
+        max={max}
+        height={barHeight}
+        fill
+        axis={countTicks(max)}
+        ariaLabel="Projects that reached each stage"
+        onSelect={(key) => router.push(`/projects?stage=${key}`)}
+        tooltip={(col) => {
+          const r = byStage.get(col.key as StageId);
+          if (!r) return [];
+          return [
+            { value: r.here, label: "here now", valueFirst: true },
+            { value: r.awaiting, label: "awaiting approval", valueFirst: true },
+            { value: r.needInput, label: r.needInput === 1 ? "needs input" : "need input", valueFirst: true },
+          ];
+        }}
+      />
+      </div>
+      {/* The band sits 4px inside the card's sides and bottom, so it reads as the card's base. */}
+      {footer ? <div className="relative z-30 -mx-4 -mt-8 sm:-mx-6 sm:-mt-14">{footer}</div> : null}
     </SectionCard>
   );
 }

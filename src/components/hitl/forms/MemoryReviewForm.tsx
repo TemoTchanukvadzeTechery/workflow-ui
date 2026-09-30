@@ -28,14 +28,14 @@ function ChangesList({ markdown, section }: { markdown: string; section: "change
   const sections = parseReportSections(markdown);
   const found = sections.find((s) => (section === "changes" ? /^changes$/i.test(s.title) : /affects/i.test(s.title)));
   const items = found?.items ?? [];
-  if (items.length === 0) return <p className="rounded-lg bg-muted/50 px-3 py-4 text-center text-[13px] text-muted-foreground">None.</p>;
+  if (items.length === 0) return <p className="rounded-[16px] bg-well/60 px-4 py-6 text-center text-[13px] text-muted-foreground">None.</p>;
   return (
-    <ul className="space-y-1.5">
+    <ul className="divide-y divide-rule border-y border-rule">
       {items.map((item, i) => {
         const c = section === "changes" ? parseChangeItem(item) : { summary: item };
         return (
-          <li key={i} className="flex flex-col gap-1 rounded-lg border border-border px-3 py-2 @lg:flex-row @lg:items-start @lg:gap-3">
-            {c.kind ? <span className="inline-flex h-5 w-fit shrink-0 items-center rounded-full bg-muted px-2 font-mono text-[11px] text-muted-foreground">{c.kind}</span> : null}
+          <li key={i} className="flex flex-col gap-1.5 px-1 py-3 @lg:flex-row @lg:items-start @lg:gap-3">
+            {c.kind ? <span className="inline-flex h-6 w-fit shrink-0 items-center rounded-full bg-status-neutral-bg px-2.5 font-mono text-[11.5px] text-status-neutral-fg">{c.kind}</span> : null}
             <Markdown source={c.summary} size="sm" className="[&_p]:my-0" />
           </li>
         );
@@ -85,7 +85,7 @@ export function MemoryReviewForm({ request, projectId, onAnswered, stale }: Requ
 
       <Tabs defaultValue="proposed" className="min-w-0 gap-3">
         <div className="pb-1">
-          <TabsList variant="line" className="h-auto w-full flex-wrap justify-start gap-x-1 gap-y-2 group-data-horizontal/tabs:h-auto">
+          <TabsList className="h-auto max-w-full flex-wrap justify-start group-data-horizontal/tabs:h-auto">
             {(
               [
                 ["proposed", "Proposed memory"],
@@ -94,7 +94,7 @@ export function MemoryReviewForm({ request, projectId, onAnswered, stale }: Requ
                 ["affects", `Affects other documents${affectCount !== undefined ? ` · ${affectCount}` : ""}`],
               ] as const
             ).map(([v, label]) => (
-              <TabsTrigger key={v} value={v} className="h-8 flex-none rounded-full px-3 text-[13px] data-active:bg-muted">
+              <TabsTrigger key={v} value={v} className="h-9 flex-none px-3.5">
                 {label}
               </TabsTrigger>
             ))}
@@ -104,7 +104,7 @@ export function MemoryReviewForm({ request, projectId, onAnswered, stale }: Requ
         <TabsContent value="diff">{diff ? <BlobContent blobRef={diff.ref}>{(t) => renderText(t, "text/plain")}</BlobContent> : <p className="text-[13px] text-muted-foreground">No diff attached.</p>}</TabsContent>
         <TabsContent value="proposed">
           {proposal ? (
-            <div className="relative max-h-[60vh] overflow-y-auto rounded-xl border border-border px-4 py-3">
+            <div className="relative max-h-[60vh] overflow-y-auto rounded-[20px] bg-field px-5 py-4 shadow-[0_0_0_1px_var(--rule)]">
               <BlobContent blobRef={proposal.ref}>{(t) => <Markdown source={t} />}</BlobContent>
             </div>
           ) : null}
@@ -144,7 +144,7 @@ export function MemoryReviewForm({ request, projectId, onAnswered, stale }: Requ
               clearError();
               setReplacement(e.target.value);
             }}
-            className="block min-h-[40vh] w-full resize-y rounded-lg border border-input bg-transparent p-3 font-mono text-xs leading-5 outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+            className="block min-h-[40vh] w-full resize-y rounded-[16px] border border-input bg-field p-4 font-mono text-[13px] leading-6 text-foreground outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/25"
           />
         </FormRow>
       ) : null}

@@ -1,10 +1,11 @@
 "use client";
 
-import { ArrowRight, Info, Monitor, Moon, Sun, type LucideIcon } from "lucide-react";
+import { ArrowRight, Info, Monitor, Moon, Sun } from "lucide-react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { useId, useState } from "react";
 import { toast } from "sonner";
+import { SegmentedControl } from "@/components/common/segmented-control";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -30,8 +31,8 @@ export function RingAvatar({ name, size = 44, className }: { name: string; size?
         <span
           className={cn(
             "inline-flex size-full items-center justify-center rounded-full font-semibold tracking-[-0.02em] select-none",
-            "bg-[radial-gradient(120%_120%_at_30%_20%,#FFFFFF,#E7F0FF_55%,#CFE0FB)] text-[#1558D6]",
-            "dark:bg-[radial-gradient(120%_120%_at_30%_20%,#2A3550,#1A2238)] dark:text-[#A9C4F5]",
+            "bg-[radial-gradient(120%_120%_at_30%_20%,#FFFFFF,#E7F0FF_55%,#CFE0FB)] text-status-running-fg",
+            "dark:bg-[radial-gradient(120%_120%_at_30%_20%,#2A3550,#1A2238)]",
           )}
           style={{ fontSize: Math.round(size * 0.3) }}
         >
@@ -44,40 +45,19 @@ export function RingAvatar({ name, size = 44, className }: { name: string; size?
 
 const SPEED_LABEL: Record<DemoSpeed, string> = { instant: "Instant", fast: "Fast", realistic: "Realistic" };
 
-const THEMES: { value: string; label: string; icon: LucideIcon }[] = [
+const THEMES = [
   { value: "light", label: "Light", icon: Sun },
   { value: "dark", label: "Dark", icon: Moon },
   { value: "system", label: "System", icon: Monitor },
-];
+] as const;
+
+type ThemeValue = (typeof THEMES)[number]["value"];
 
 /** Light / Dark / System as a segmented control (a well track, the chosen segment raised). */
 function ThemeSegments() {
   const { theme, setTheme } = useTheme();
-  const current = theme ?? "system";
-  return (
-    <div role="group" aria-label="Theme" className="grid grid-cols-3 gap-1 rounded-[16px] bg-[#EAEAEA] p-1 dark:bg-[#232428]">
-      {THEMES.map((t) => {
-        const on = current === t.value;
-        return (
-          <button
-            key={t.value}
-            type="button"
-            aria-pressed={on}
-            onClick={() => setTheme(t.value)}
-            className={cn(
-              "inline-flex h-9 items-center justify-center gap-1.5 rounded-[12px] text-[13px] outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50",
-              on
-                ? "bg-[#F8F8F8] font-medium text-[#0B0B0B] shadow-[0_1px_2px_rgba(0,0,0,.08),inset_0_1px_0_#fff] dark:bg-[#2C2D31] dark:text-[#F4F4F5] dark:shadow-none"
-                : "text-[#6E6E6E] hover:text-[#1A1A1A] dark:text-[#A1A1AA] dark:hover:text-[#F4F4F5]",
-            )}
-          >
-            <t.icon aria-hidden className="size-3.5" />
-            {t.label}
-          </button>
-        );
-      })}
-    </div>
-  );
+  const current: ThemeValue = theme === "light" || theme === "dark" ? theme : "system";
+  return <SegmentedControl<ThemeValue> aria-label="Theme" size="sm" fullWidth value={current} onValueChange={setTheme} items={THEMES} />;
 }
 
 /**
@@ -119,13 +99,13 @@ export function ActingAs() {
       <PopoverContent
         align="end"
         sideOffset={10}
-        className="w-[min(22rem,calc(100vw-2rem))] gap-4 rounded-[24px] border-0 bg-card p-5 shadow-[0_0_0_1px_rgba(0,0,0,.05),0_24px_60px_-20px_rgba(0,0,0,.28),inset_0_1px_0_rgba(255,255,255,.9)] ring-0 dark:shadow-[0_0_0_1px_rgba(255,255,255,.08),0_24px_60px_-20px_rgba(0,0,0,.7)]"
+        className="w-[min(22rem,calc(100vw-2rem))] gap-4 rounded-[20px] p-5"
       >
         <div className="flex items-center gap-3">
           <RingAvatar name={name} size={48} />
           <div className="min-w-0">
-            <div className="text-[13px] text-[#6E6E6E] dark:text-[#A1A1AA]">Acting as</div>
-            <div className="truncate text-[20px] leading-tight font-medium tracking-[-0.015em] text-[#0B0B0B] dark:text-[#F4F4F5]">{name}</div>
+            <div className="text-[13px] text-muted-foreground">Acting as</div>
+            <div className="truncate text-[20px] leading-tight font-medium tracking-[-0.015em] text-heading">{name}</div>
           </div>
         </div>
 
@@ -147,13 +127,13 @@ export function ActingAs() {
               placeholder={DEFAULT_ACTOR}
               autoComplete="off"
               maxLength={60}
-              className="h-10 rounded-[14px] bg-white text-[15px] md:text-[15px] dark:bg-white/5"
+              className="h-10"
             />
-            <Button type="submit" className="h-10 rounded-[14px] px-4" disabled={!trimmed || trimmed === name}>
+            <Button type="submit" className="h-10 px-4" disabled={!trimmed || trimmed === name}>
               Save
             </Button>
           </div>
-          <p className="flex gap-2 text-[13px] leading-5 text-[#6E6E6E] dark:text-[#A1A1AA]">
+          <p className="flex gap-2 text-[13px] leading-5 text-muted-foreground">
             <Info aria-hidden className="mt-[3px] size-3.5 shrink-0" />
             <span>No roles yet: anyone can approve. Every decision records this name.</span>
           </p>
@@ -167,15 +147,15 @@ export function ActingAs() {
         <Link
           href="/settings"
           onClick={() => setOpen(false)}
-          className="group/set -mx-1 flex items-center gap-3 rounded-[14px] px-3 py-2.5 text-[13px] outline-none transition-colors hover:bg-[#EAEAEA] focus-visible:ring-3 focus-visible:ring-ring/50 dark:hover:bg-white/[.06]"
+          className="group/set -mx-1 flex items-center gap-3 rounded-[14px] px-3 py-2.5 text-[13px] outline-none transition-colors hover:bg-well focus-visible:ring-3 focus-visible:ring-ring/50"
         >
           <span className="min-w-0 flex-1">
-            <span className="block text-[#6E6E6E] dark:text-[#A1A1AA]">Demo speed and data source</span>
-            <span className="mt-0.5 block font-medium text-[#0B0B0B] dark:text-[#F4F4F5]">
+            <span className="block text-muted-foreground">Demo speed and data source</span>
+            <span className="mt-0.5 block font-medium text-heading">
               {settings.data ? `${SPEED_LABEL[settings.data.speed]} · ${settings.data.dataSource === "mock" ? "mock engine" : "weft daemon"}` : "Loading..."}
             </span>
           </span>
-          <span className="inline-flex items-center gap-1 text-[#1558D6] dark:text-[#8CAFEE]">
+          <span className="inline-flex items-center gap-1 text-primary">
             Settings <ArrowRight aria-hidden className="size-3.5 transition-transform group-hover/set:translate-x-0.5" />
           </span>
         </Link>

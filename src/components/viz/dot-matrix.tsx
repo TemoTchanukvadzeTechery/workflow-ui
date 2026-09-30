@@ -1,5 +1,5 @@
+import { FloatingChip } from "@/components/common/floating-chip";
 import { cn } from "@/lib/utils";
-import { VizChip } from "./chips";
 
 export interface DotMatrixProps {
   /** A count per column (per weekday, per stage...). */
@@ -9,11 +9,11 @@ export interface DotMatrixProps {
   /** Chip prefix before the peak's label: "Peak" gives "Peak: Wed". Default "Peak". */
   peakLabel?: string;
   tone: "green" | "blue";
-  /** Tallest column, in rows of dots. Counts that do not fit are scaled down. Default 4. */
+  /** Rows of dots in the peak column; the others scale to it. Default 5. */
   maxRows?: number;
   /** Dots per row in each column; 2 gives the reference's paired columns. Default 2. */
   dotsPerRow?: 1 | 2;
-  /** Dot diameter in px (gaps scale with it). Default 11. Natural width: n * (2 * dot + gap) + (n - 1) * 10/11 * dot. */
+  /** Dot size in px (gaps scale with it). Default 11. Natural width: n * (2 * dot + gap) + (n - 1) * 0.82 * dot. */
   dotSize?: number;
   /** Noun for the accessible name: "3 runs". Default none. */
   unit?: string;
@@ -24,24 +24,27 @@ export interface DotMatrixProps {
 const CHIP_ROOM = 46;
 
 const TONE = {
-  green: { peak: "bg-[#0DAA2C]", rest: "bg-[#9CD6A3] dark:bg-[#0DAA2C]/40", chip: "green" as const },
-  blue: { peak: "bg-[#1976FF]", rest: "bg-[#A1CBF8] dark:bg-[#1976FF]/40", chip: "blue" as const },
+  green: { peak: "bg-chart-green", rest: "bg-chart-green-light", glow: "[--chip-glow:var(--chart-green)]" },
+  blue: { peak: "bg-chart-blue", rest: "bg-chart-blue-light", glow: "[--chip-glow:var(--chart-blue)]" },
 };
 
 /**
- * Dot matrix in the Transactions / Customers style (STYLE.md 5): columns of 11px dots with 3px
- * gaps, the peak column saturated and the rest light, and a floating chip over the peak. One dot
- * per unit while the tallest column fits in `maxRows`; beyond that dots are scaled, and a
- * non-zero column always keeps at least one dot. An empty column shows one faint placeholder.
+ * Dot matrix in the Transactions / Customers style (STYLE.md 5): bottom-aligned columns of 11px
+ * rounded dots with 3px gaps, two dots wide, the peak column saturated and the rest light, and a
+ * floating chip over the peak. Columns are scaled to the peak, which is `maxRows` tall and ends in
+ * a single dot; the others keep their share of it, at least one dot when non-zero, with the odd
+ * dot on the side facing the peak. An empty column shows one faint placeholder.
  */
-export function DotMatrix({ columns, labels, peakLabel = "Peak", tone, maxRows = 4, dotsPerRow = 2, dotSize = 11, unit, ariaLabel, className }: DotMatrixProps) {
+export function DotMatrix({ columns, labels, peakLabel = "Peak", tone, maxRows = 5, dotsPerRow = 2, dotSize = 11, unit, ariaLabel, className }: DotMatrixProps) {
   const DOT = dotSize;
   const GAP = Math.max(2, Math.round((dotSize * 3) / 11));
-  const COL_GAP = Math.round((dotSize * 10) / 11);
-  const capacity = maxRows * dotsPerRow;
+  const COL_GAP = Math.round(dotSize * 0.82);
+  const RADIUS = Math.round(dotSize * 0.36);
+  // The peak fills `maxRows` rows with a single dot on top, as in the reference.
+  const capacity = Math.max(1, maxRows * dotsPerRow - (dotsPerRow - 1));
   const most = Math.max(0, ...columns);
   const peak = most > 0 ? columns.indexOf(most) : -1;
-  const dots = columns.map((c) => (c <= 0 ? 0 : most <= capacity ? c : Math.max(1, Math.round((c / most) * capacity))));
+  const dots = columns.map((c) => (c <= 0 || most <= 0 ? 0 : Math.max(1, Math.round((c / most) * capacity))));
   const colW = dotsPerRow * DOT + (dotsPerRow - 1) * GAP;
   const t = TONE[tone];
 
@@ -57,38 +60,34 @@ export function DotMatrix({ columns, labels, peakLabel = "Peak", tone, maxRows =
   return (
     <div role="img" aria-label={name} className={cn("relative inline-flex max-w-full flex-col", className)} style={{ paddingTop: peak >= 0 ? CHIP_ROOM : 0 }}>
       {peak >= 0 && (
-        <VizChip
-          label={peakLabel}
-          value={labels?.[peak] ?? String(columns[peak])}
-          tone={t.chip}
-          className="absolute top-0 -translate-x-1/2"
-          style={{ left: peak * (colW + COL_GAP) + colW / 2 }}
-        />
+        <span className="absolute top-0 -translate-x-1/2" style={{ left: peak * (colW + COL_GAP) + colW / 2 }}>
+          <FloatingChip label={peakLabel} value={labels?.[peak] ?? String(columns[peak])} className={t.glow} />
+        </span>
       )}
       <div className="flex items-end" style={{ gap: COL_GAP }}>
         {dots.map((d, i) => {
-          const rows = Math.max(1, Math.ceil(d / dotsPerRow));
+          // Split the column's dots over its sub-columns; the odd one leans toward the peak.
+          const base = Math.floor(d / dotsPerRow);
+          const extra = d % dotsPerRow;
+          const leanRight = peak < 0 || i <= peak;
+          const heights = Array.from({ length: dotsPerRow }, (_, k) => base + (extra > 0 && k === (leanRight ? dotsPerRow - 1 : 0) ? 1 : 0));
           return (
-            <div key={i} className="flex flex-col-reverse" style={{ gap: GAP, width: colW }}>
-              {Array.from({ length: rows }, (_, r) => (
-                <div key={r} className="flex" style={{ gap: GAP }}>
-                  {Array.from({ length: dotsPerRow }, (_, k) => {
-                    const idx = r * dotsPerRow + k;
-                    const filled = idx < d;
-                    const ghost = d === 0 && r === 0 && k === 0;
-                    return (
+            <div key={i} className="flex items-end" style={{ gap: GAP, width: colW }}>
+              {heights.map((hk, k) => {
+                const ghost = d === 0 && k === 0;
+                const count = ghost ? 1 : hk;
+                return (
+                  <div key={k} className="flex flex-col" style={{ gap: GAP, width: DOT }}>
+                    {Array.from({ length: count }, (_, r) => (
                       <span
-                        key={k}
-                        className={cn(
-                          "shrink-0 rounded-full transition-colors duration-300",
-                          filled ? (i === peak ? t.peak : t.rest) : ghost ? "bg-[#E4E4E4] dark:bg-white/10" : "bg-transparent",
-                        )}
-                        style={{ width: DOT, height: DOT }}
+                        key={r}
+                        className={cn("shrink-0 transition-colors duration-300", ghost ? "bg-well" : i === peak ? t.peak : t.rest)}
+                        style={{ width: DOT, height: DOT, borderRadius: RADIUS }}
                       />
-                    );
-                  })}
-                </div>
-              ))}
+                    ))}
+                  </div>
+                );
+              })}
             </div>
           );
         })}

@@ -6,9 +6,8 @@
  * Citation chips jump to the Sources table inside the document.
  */
 import { ArrowUpRight } from "lucide-react";
-import Link from "next/link";
 import { useRef, useState, type ReactNode } from "react";
-import { ErrorState, StatusPill } from "@/components/common";
+import { CircleIconButton, ErrorState, StatusPill } from "@/components/common";
 import { DocViewer, versionLabels } from "@/components/docs";
 import { useDoc } from "@/lib/api/queries";
 import type { DocumentArtifact } from "@/lib/delivery/types";
@@ -73,14 +72,13 @@ export function DocVersionViewer({ projectId, doc, title, headerExtra, bodyClass
             {headerExtra}
             {version !== latest && label ? <StatusPill tone="attention" icon={null} label={`Viewing ${label.label}, not the latest`} size="sm" /> : null}
             {showOpenLink ? (
-              <Link
+              <CircleIconButton
+                size="md"
                 href={`/projects/${encodeURIComponent(projectId)}/docs/${encodeURIComponent(doc.id)}${version && version !== latest ? `?v=${version}` : ""}`}
-                className="inline-flex h-7 items-center gap-1 rounded-full px-2 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                aria-label={`Open ${doc.path} full page`}
-              >
-                Full page
-                <ArrowUpRight aria-hidden className="size-3.5" />
-              </Link>
+                icon={ArrowUpRight}
+                label={`Open ${doc.path} full page`}
+                title="Full page"
+              />
             ) : null}
           </>
         }

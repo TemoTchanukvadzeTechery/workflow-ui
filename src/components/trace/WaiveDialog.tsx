@@ -50,12 +50,12 @@ export function WaiveDialog({ projectId, row, onOpenChange }: WaiveDialogProps) 
               <DialogTitle>Waive {row.brRef}</DialogTitle>
               <DialogDescription>The requirement counts as covered at the QA gate. Your name, the time and the reason are recorded and shown to the Product Owner at sign-off.</DialogDescription>
             </DialogHeader>
-            <div className="space-y-2 rounded-xl bg-muted px-3 py-2.5">
+            <div className="space-y-2 rounded-[16px] bg-well px-4 py-3">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-mono text-xs font-medium">{row.brRef}</span>
                 <StatusPill {...traceVerdictMeta(row.verdict)} size="sm" />
               </div>
-              <p className="text-[13px] leading-snug">{row.brText}</p>
+              <p className="text-sm leading-5 text-heading">{row.brText}</p>
             </div>
             <form
               className="space-y-1.5"
@@ -64,7 +64,7 @@ export function WaiveDialog({ projectId, row, onOpenChange }: WaiveDialogProps) 
                 submit();
               }}
             >
-              <label htmlFor={id} className="text-xs font-medium">
+              <label htmlFor={id} className="text-[13px] font-medium text-heading">
                 Why is it acceptable to ship without it? <span className="font-normal text-muted-foreground">required</span>
               </label>
               <Textarea
@@ -78,16 +78,16 @@ export function WaiveDialog({ projectId, row, onOpenChange }: WaiveDialogProps) 
                 placeholder="e.g. Candidate requirement parked behind Q5; Spanish headers ship in a follow-up."
               />
               {touched && missing ? (
-                <p id={errId} className="text-xs text-status-danger-fg">
+                <p id={errId} className="text-[13px] text-status-danger-fg">
                   Add a comment explaining the waiver.
                 </p>
               ) : null}
             </form>
             <DialogFooter>
-              <Button variant="outline" className="rounded-full" onClick={() => close(false)}>
+              <Button variant="secondary" onClick={() => close(false)}>
                 Cancel
               </Button>
-              <Button className="rounded-full" onClick={submit} disabled={waive.isPending}>
+              <Button onClick={submit} disabled={waive.isPending}>
                 {waive.isPending ? "Waiving…" : `Waive ${row.brRef}`}
               </Button>
             </DialogFooter>

@@ -24,7 +24,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
-import { EmptyState, ErrorState, FactCell, FactStrip, Kicker, RelativeTime, StatusPill } from "@/components/common";
+import { EmptyState, ErrorState, FactCell, FactStrip, RelativeTime, StatusPill } from "@/components/common";
 import { Markdown, TextDiff } from "@/components/docs";
 import { AnswerSummary, HumanRequestCard } from "@/components/hitl";
 import { Button } from "@/components/ui/button";
@@ -49,7 +49,7 @@ function PanelSkeleton({ rows = 3 }: { rows?: number }) {
 }
 
 function Card({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cn("card-surface min-w-0 rounded-2xl p-4", className)}>{children}</div>;
+  return <div className={cn("card-surface min-w-0 rounded-[20px] p-5", className)}>{children}</div>;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -90,9 +90,9 @@ function AnsweredRequest({ h, onOpen }: { h: HumanState; onOpen: () => void }) {
   return (
     <Card className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="font-mono text-[11px] text-muted-foreground">human.requested · {h.id}</span>
-        <span className="inline-flex h-5 items-center rounded-md border bg-muted/60 px-1.5 font-mono text-[11px]">{h.kind}</span>
-        {h.key && <span className="inline-flex h-5 items-center rounded-md border bg-muted/60 px-1.5 font-mono text-[11px]">{h.key}</span>}
+        <span className="font-mono text-xs text-muted-foreground">human.requested · {h.id}</span>
+        <span className="inline-flex h-6 items-center rounded-full bg-well px-2 font-mono text-xs">{h.kind}</span>
+        {h.key && <span className="inline-flex h-6 items-center rounded-full bg-well px-2 font-mono text-xs">{h.key}</span>}
         {h.phase && <span className="text-xs text-muted-foreground">{h.phase}</span>}
         <span className="flex-1" />
         {superseded ? (
@@ -101,9 +101,9 @@ function AnsweredRequest({ h, onOpen }: { h: HumanState; onOpen: () => void }) {
           <StatusPill tone="success" icon={Check} label={`Answered by ${h.answeredBy ?? "human"}`} size="sm" />
         )}
       </div>
-      <p className="text-[14px] leading-6 whitespace-pre-wrap text-foreground">{h.question}</p>
+      <p className="text-[15px] leading-6 whitespace-pre-wrap text-heading">{h.question}</p>
       {!superseded && h.answer !== undefined && (
-        <div className="rounded-xl bg-muted/50 p-3">
+        <div className="rounded-[16px] bg-well p-3">
           <AnswerSummary answer={h.answer} reviewEdit={h.reviewEdit} />
         </div>
       )}
@@ -116,7 +116,7 @@ function AnsweredRequest({ h, onOpen }: { h: HumanState; onOpen: () => void }) {
         <span>
           {kind.label} asked <RelativeTime at={h.requestedAt} />
         </span>
-        <Button variant="ghost" size="sm" className="rounded-full" onClick={onOpen}>
+        <Button variant="ghost" size="sm" onClick={onOpen}>
           Open in steps
           <ChevronRight aria-hidden />
         </Button>
@@ -151,12 +151,12 @@ function CheckCard({ c }: { c: CheckState }) {
     <Card className={cn("flex flex-col gap-2", !pass && "ring-1 ring-status-danger-fg/25")}>
       <div className="flex flex-wrap items-center gap-2">
         <StatusPill tone={pass ? "success" : "danger"} icon={pass ? Check : CircleX} label={pass ? "Pass" : "Fail"} size="sm" />
-        <span className="font-mono text-[13px] font-medium">{c.name}</span>
-        <span className="rounded-md border px-1.5 font-mono text-[11px] text-muted-foreground">{c.disposition}</span>
-        {c.required ? <span className="text-[11px] text-muted-foreground">required</span> : <span className="text-[11px] text-muted-foreground">optional</span>}
+        <span className="font-mono text-[13px] font-medium text-heading">{c.name}</span>
+        <span className="inline-flex h-6 items-center rounded-full bg-well px-2 font-mono text-xs text-muted-foreground">{c.disposition}</span>
+        {c.required ? <span className="text-xs text-muted-foreground">required</span> : <span className="text-xs text-muted-foreground">optional</span>}
         <span className="flex-1" />
         {(c.details?.length ?? 0) > 0 && (
-          <Button variant="ghost" size="sm" className="rounded-full" onClick={() => setOpen(!open)} aria-expanded={open}>
+          <Button variant="ghost" size="sm" onClick={() => setOpen(!open)} aria-expanded={open}>
             {open ? "Hide evidence" : `Evidence (${c.details!.length})`}
           </Button>
         )}
@@ -185,8 +185,8 @@ function EvidenceItem({ d }: { d: CheckEvidence }) {
   switch (d.kind) {
     case "command":
       return (
-        <div className="overflow-hidden rounded-xl border">
-          <div className="flex items-center gap-2 border-b bg-muted/40 px-3 py-1 text-[11px] text-muted-foreground">
+        <div className="overflow-hidden rounded-[14px] bg-field shadow-[0_0_0_1px_var(--rule)]">
+          <div className="flex h-9 items-center gap-2 border-b border-rule px-3.5 text-xs text-muted-foreground">
             <Terminal aria-hidden className="size-3" /> command output
             <span className={cn("ml-auto font-mono", d.exitCode === 0 ? "text-status-success-fg" : "text-status-danger-fg")}>exit {d.exitCode}</span>
           </div>
@@ -195,7 +195,7 @@ function EvidenceItem({ d }: { d: CheckEvidence }) {
       );
     case "file":
       return (
-        <p className="flex min-w-0 flex-wrap items-baseline gap-x-2 rounded-xl border px-3 py-2 text-xs">
+        <p className="flex min-w-0 flex-wrap items-baseline gap-x-2 rounded-[14px] bg-well px-3.5 py-2.5 text-[13px]">
           <FileCode2 aria-hidden className="size-3.5 self-center text-muted-foreground" />
           <span className="font-mono break-all text-foreground">
             {d.path}
@@ -206,7 +206,7 @@ function EvidenceItem({ d }: { d: CheckEvidence }) {
       );
     case "metric":
       return (
-        <p className="rounded-xl border px-3 py-2 font-mono text-xs">
+        <p className="rounded-[14px] bg-well px-3.5 py-2.5 font-mono text-xs">
           {d.name}: <span className="text-foreground">{d.actual}</span>
           {d.unit ? ` ${d.unit}` : ""}
           {d.expected !== undefined ? <span className="text-muted-foreground"> (expected {d.expected})</span> : null}
@@ -214,12 +214,12 @@ function EvidenceItem({ d }: { d: CheckEvidence }) {
       );
     case "artifact":
       return (
-        <p className="rounded-xl border px-3 py-2 text-xs">
+        <p className="rounded-[14px] bg-well px-3.5 py-2.5 text-[13px]">
           Artifact <span className="font-mono">{d.label ?? d.ref.slice(0, 12)}</span>
         </p>
       );
     default:
-      return <p className="rounded-xl border px-3 py-2 text-[13px] whitespace-pre-wrap">{d.text}</p>;
+      return <p className="rounded-[14px] bg-well px-3.5 py-2.5 text-sm whitespace-pre-wrap">{d.text}</p>;
   }
 }
 
@@ -249,7 +249,7 @@ export function NotesPanel({ run }: { run: RunDetail }) {
               <Card key={i} className="flex gap-3">
                 <StatusPill tone={m.tone} icon={m.icon} label={m.label} size="sm" className="mt-0.5" />
                 <div className="flex min-w-0 flex-col gap-1">
-                  <p className="text-[14px] leading-6 text-foreground">{n.text}</p>
+                  <p className="text-[15px] leading-6 text-heading">{n.text}</p>
                   {n.evidence && <p className="font-mono text-xs break-words text-muted-foreground">evidence: {n.evidence}</p>}
                 </div>
               </Card>
@@ -259,14 +259,14 @@ export function NotesPanel({ run }: { run: RunDetail }) {
       )}
       {run.logs.length > 0 && (
         <section className="flex flex-col gap-2">
-          <Kicker>Log</Kicker>
-          <pre className="card-surface relative max-h-96 overflow-auto rounded-2xl p-4 font-mono text-xs leading-5 whitespace-pre-wrap">{run.logs.join("\n")}</pre>
+          <h3 className="px-1 text-[15px] font-medium text-heading">Log</h3>
+          <pre className="card-surface relative max-h-96 overflow-auto rounded-[20px] p-5 font-mono text-xs leading-5 whitespace-pre-wrap">{run.logs.join("\n")}</pre>
         </section>
       )}
       {run.drops.length > 0 && (
         <section className="flex flex-col gap-2">
-          <Kicker>Dropped</Kicker>
-          <ul className="card-surface flex flex-col gap-1 rounded-2xl p-4 text-[13px]">
+          <h3 className="px-1 text-[15px] font-medium text-heading">Dropped</h3>
+          <ul className="card-surface flex flex-col gap-1 rounded-[20px] p-5 text-sm">
             {run.drops.map((d, i) => (
               <li key={i}>
                 <span className="font-mono text-xs">{d.key ?? (d.seq !== undefined ? `step ${d.seq}` : "step")}</span> <span className="text-muted-foreground">{d.reason}</span>
@@ -296,22 +296,22 @@ export function ArtifactsPanel({ run, onOpenStep, onOpenChanges }: { run: RunDet
         <Card key={`${a.kind}:${a.id}:${a.ref}`} className="flex flex-col gap-2 py-3">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             {a.kind === "patch" ? <GitCommitHorizontal aria-hidden className="size-4 text-status-success-fg" /> : <FileText aria-hidden className="size-4 text-muted-foreground" />}
-            <span className="min-w-0 truncate font-mono text-[13px] font-medium">{a.gate ? (a.gate.kind === "review" ? `review attachment · ${a.id}` : a.id) : a.id}</span>
-            <span className={cn("inline-flex h-5 items-center rounded-full px-2 text-[11px] font-medium", a.kind === "patch" ? "bg-status-success-bg text-status-success-fg" : "bg-muted text-muted-foreground")}>{a.kind}</span>
-            {a.size !== null && <span className="font-mono text-[11px] text-muted-foreground">{formatBytes(a.size)}</span>}
-            {!a.available && <span className="text-[11px] text-status-attention-fg">not available</span>}
+            <span className="min-w-0 truncate font-mono text-[13px] font-medium text-heading">{a.gate ? (a.gate.kind === "review" ? `review attachment · ${a.id}` : a.id) : a.id}</span>
+            <span className={cn("inline-flex h-5 items-center rounded-full px-2 text-xs font-medium", a.kind === "patch" ? "bg-status-success-bg text-status-success-fg" : "bg-well text-muted-foreground")}>{a.kind}</span>
+            {a.size !== null && <span className="font-mono text-xs text-muted-foreground">{formatBytes(a.size)}</span>}
+            {!a.available && <span className="text-xs text-status-attention-fg">not available</span>}
             <span className="flex-1" />
             {a.kind === "patch" ? (
-              <Button variant="outline" size="sm" className="rounded-full" onClick={onOpenChanges}>
+              <Button variant="secondary" size="sm" onClick={onOpenChanges}>
                 View changes
               </Button>
             ) : (
               <>
-                <Button variant="outline" size="sm" className="rounded-full" onClick={() => setPreview(a)} disabled={!a.available}>
+                <Button variant="secondary" size="sm" onClick={() => setPreview(a)} disabled={!a.available}>
                   <Eye aria-hidden />
                   Preview
                 </Button>
-                <Button asChild variant="ghost" size="sm" className="rounded-full">
+                <Button asChild variant="ghost" size="sm">
                   <a href={`/api/weft/blobs/${a.ref}?as=text`} target="_blank" rel="noreferrer">
                     <ExternalLink aria-hidden />
                     Open
@@ -322,14 +322,14 @@ export function ArtifactsPanel({ run, onOpenStep, onOpenChanges }: { run: RunDet
           </div>
           {a.gate && <p className="line-clamp-2 text-[13px] text-muted-foreground">{a.gate.question}</p>}
           {a.files && a.files.length > 0 && (
-            <p className="line-clamp-2 font-mono text-[11px] break-all text-muted-foreground">
+            <p className="line-clamp-2 font-mono text-xs break-all text-muted-foreground">
               {plural(a.files.length, "file")}: {a.files.join(", ")}
             </p>
           )}
-          {!a.files && a.preview && <p className="line-clamp-2 font-mono text-[11px] text-muted-foreground">{a.preview}</p>}
+          {!a.files && a.preview && <p className="line-clamp-2 font-mono text-xs text-muted-foreground">{a.preview}</p>}
           <div className="flex flex-wrap items-center gap-x-3 text-xs text-muted-foreground">
             {a.producedBy && (
-              <button type="button" onClick={() => onOpenStep(a.producedBy!.seq)} className="inline-flex items-center gap-1 rounded underline-offset-2 hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none">
+              <button type="button" onClick={() => onOpenStep(a.producedBy!.seq)} className="inline-flex items-center gap-1 rounded underline-offset-2 hover:text-foreground hover:underline focus-visible:ring-3 focus-visible:ring-ring/50/50 focus-visible:outline-none">
                 from step {a.producedBy.seq} · <span className="font-mono">{a.producedBy.label}</span>
                 <ArrowUpRight aria-hidden className="size-3" />
               </button>
@@ -357,7 +357,7 @@ function ArtifactDialog({ artifact, onClose }: { artifact: ArtifactEntry | null;
             {artifact?.gate ? artifact.gate.question : "Blob"} {artifact?.size ? `· ${formatBytes(artifact.size)}` : ""}
           </DialogDescription>
         </DialogHeader>
-        <div className="relative min-h-0 flex-1 overflow-auto rounded-xl border p-3">
+        <div className="relative min-h-0 flex-1 overflow-auto rounded-[16px] bg-field p-4 shadow-[0_0_0_1px_var(--rule)]">
           {q.isPending ? (
             <Skeleton className="h-40 w-full" />
           ) : q.error ? (
@@ -372,7 +372,7 @@ function ArtifactDialog({ artifact, onClose }: { artifact: ArtifactEntry | null;
         </div>
         {artifact && (
           <div className="flex justify-end">
-            <Button asChild variant="outline" size="sm" className="rounded-full">
+            <Button asChild variant="secondary" size="sm">
               <a href={`/api/weft/blobs/${artifact.ref}?as=text`} target="_blank" rel="noreferrer">
                 <ExternalLink aria-hidden />
                 Open raw
@@ -397,7 +397,7 @@ export function ChangesPanel({ run }: { run: RunDetail }) {
   return (
     <div className="flex max-w-5xl flex-col gap-4">
       {run.patches.violations.length > 0 && (
-        <div role="alert" className="rounded-2xl border border-status-danger-fg/25 bg-status-danger-bg/60 px-4 py-3 text-[13px] text-status-danger-fg">
+        <div role="alert" className="rounded-[20px] bg-status-danger-bg px-5 py-3.5 text-sm text-status-danger-fg">
           Write-scope violations:{" "}
           {run.patches.violations.map((v) => (
             <span key={v.key} className="font-mono">
@@ -422,7 +422,7 @@ function PatchCard({ runId, patchKey, merged, discarded }: { runId: string; patc
     <Card className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2">
         <GitCommitHorizontal aria-hidden className="size-4 text-muted-foreground" />
-        <span className="font-mono text-[13px] font-medium">{patchKey}</span>
+        <span className="font-mono text-[13px] font-medium text-heading">{patchKey}</span>
         {merged && <StatusPill tone="success" icon={Check} label="Merged" size="sm" />}
         {discarded && <StatusPill tone="neutral" label="Discarded" size="sm" />}
         {!merged && !discarded && <StatusPill tone="review" label="Captured" size="sm" />}
@@ -441,10 +441,10 @@ function PatchCard({ runId, patchKey, merged, discarded }: { runId: string; patc
         <p className="text-[13px] text-muted-foreground">Patch not found.</p>
       ) : (
         <>
-          <ul className="flex flex-col divide-y rounded-xl border text-xs">
+          <ul className="flex flex-col divide-y divide-rule rounded-[14px] text-[13px] shadow-[0_0_0_1px_var(--rule)]">
             {patch.stats.map((s) => (
-              <li key={s.path} className="flex min-w-0 items-center gap-2 px-3 py-1.5">
-                <span className={cn("w-16 shrink-0 text-[11px]", s.status === "added" ? "text-status-success-fg" : s.status === "deleted" ? "text-status-danger-fg" : "text-muted-foreground")}>{s.status}</span>
+              <li key={s.path} className="flex min-h-10 min-w-0 items-center gap-2 px-3.5 py-2">
+                <span className={cn("w-16 shrink-0 text-xs", s.status === "added" ? "text-status-success-fg" : s.status === "deleted" ? "text-status-danger-fg" : "text-muted-foreground")}>{s.status}</span>
                 <span className="min-w-0 flex-1 truncate font-mono" title={s.path}>
                   {s.path}
                 </span>
@@ -492,7 +492,7 @@ export function IoPanel({ run }: { run: RunDetail }) {
         <FactCell label="Working dir" value={run.cwd} mono />
         {run.baseRef && <FactCell label="Base ref" value={run.baseRef.slice(0, 12)} mono />}
         {run.parentRunId && <FactCell label="Parent run" value={run.parentRunId} mono />}
-        <FactCell label="Journal records" value={run.records} mono />
+        <FactCell label="Journal records" value={run.records} numeric />
         {(run.replay.salvaged > 0 || run.replay.diverged > 0) && <FactCell label="Replay" value={`${run.replay.salvaged} salvaged · ${run.replay.diverged} diverged`} mono />}
       </FactStrip>
       <div className="grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-2">

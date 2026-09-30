@@ -120,7 +120,7 @@ function ArchitectureWorkspace({ projectId, bundle }: { projectId: string; bundl
       <ReviseNotice projectId={projectId} kind="aad" cause={cause} doc={aad} onStartAnother={startAnother} hideStart={runOutput(run)?.accepted === false} />
     ) : null;
   const againButton = !readOnly ? (
-    <Button size="sm" className="rounded-full" onClick={startAnother}>
+    <Button size="sm" onClick={startAnother}>
       <RotateCcw aria-hidden />
       Start another run
     </Button>
@@ -176,7 +176,7 @@ function ArchitectureWorkspace({ projectId, bundle }: { projectId: string; bundl
           onAnswered={afterAnswer}
           brdPath={brd?.path}
           emptyAction={
-            <Button size="sm" variant="outline" className="rounded-full" onClick={() => go("brief")}>
+            <Button size="sm" variant="secondary" onClick={() => go("brief")}>
               Go to BRD &amp; notes
             </Button>
           }

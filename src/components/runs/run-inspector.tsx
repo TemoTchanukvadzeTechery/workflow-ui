@@ -7,13 +7,12 @@
  */
 import { SearchX } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef, useState, type KeyboardEvent } from "react";
-import { CardSkeleton, CountBadge, EmptyState, ErrorState, SectionCard } from "@/components/common";
+import { useEffect, useRef, useState } from "react";
+import { CardSkeleton, EmptyState, ErrorState, SectionCard, SegmentedControl } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApiError } from "@/lib/api/client";
 import { useRun, useRunArtifacts, useRunReport } from "@/lib/api/queries";
-import { cn } from "@/lib/utils";
 import type { RunDetail } from "@/lib/weft/types";
 import { defaultSeq, findEntry, pendingHumans } from "./ledger-model";
 import { RunHeader } from "./run-header";
@@ -56,7 +55,7 @@ export function RunInspector({ runId, tab, seq, onNavigate }: RunInspectorProps)
             title={`No run ${runId}`}
             body="weft has no journal for this run id. It may belong to data that was reset."
             action={
-              <Button asChild variant="outline" size="sm" className="rounded-full">
+              <Button asChild variant="secondary" size="sm">
                 <Link href="/runs">All runs</Link>
               </Button>
             }
@@ -116,57 +115,42 @@ function Loaded({ run, tab, seq, onNavigate }: { run: RunDetail; tab?: RunTab; s
     });
   };
 
-  const onTabKey = (e: KeyboardEvent<HTMLDivElement>) => {
-    const i = visible.indexOf(active);
-    if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
-      e.preventDefault();
-      const next = visible[(i + (e.key === "ArrowRight" ? 1 : visible.length - 1)) % visible.length]!;
-      onNavigate({ tab: next, seq });
-      requestAnimationFrame(() => document.getElementById(`run-tab-${next}`)?.focus());
-    }
-  };
-
   return (
-    <div className="flex min-w-0 flex-col gap-5">
+    <div className="flex min-w-0 flex-col gap-6">
       <RunHeader run={run} entry={entry} onOpenRequest={(h) => select(h.seq)} />
 
-      <div role="tablist" aria-label="Run views" onKeyDown={onTabKey} className="-mx-1 flex gap-1 overflow-x-auto border-b px-1 [scrollbar-width:none]">
-        {visible.map((t) => (
-          <button
-            key={t}
-            id={`run-tab-${t}`}
-            type="button"
-            role="tab"
-            aria-selected={active === t}
-            aria-controls={`run-panel-${t}`}
-            tabIndex={active === t ? 0 : -1}
-            onClick={() => onNavigate({ tab: t, seq: t === "steps" ? seq : undefined })}
-            className={cn(
-              "relative inline-flex h-10 shrink-0 items-center gap-1.5 px-3 text-[13px] font-medium whitespace-nowrap transition-colors focus-visible:rounded-md focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none",
-              active === t ? "text-foreground after:absolute after:inset-x-2 after:-bottom-px after:h-0.5 after:rounded-full after:bg-primary" : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {TAB_LABEL[t]}
-            {t === "requests" && pendingHumans(run).length > 0 ? (
-              <CountBadge n={pendingHumans(run).length} tone="attention" label={`${pendingHumans(run).length} waiting`} />
-            ) : counts[t] ? (
-              <CountBadge n={counts[t]!} />
-            ) : null}
-          </button>
-        ))}
+      <div className="-mx-1 overflow-x-auto px-1 pb-1 [scrollbar-width:none]">
+        <SegmentedControl<RunTab>
+          role="tablist"
+          aria-label="Run views"
+          value={active}
+          onValueChange={(t) => onNavigate({ tab: t, seq: t === "steps" ? seq : undefined })}
+          items={visible.map((t) => {
+            const waiting = t === "requests" ? pendingHumans(run).length : 0;
+            return {
+              value: t,
+              id: `run-tab-${t}`,
+              controls: `run-panel-${t}`,
+              label: TAB_LABEL[t],
+              count: waiting || counts[t] || undefined,
+              countTone: waiting ? ("attention" as const) : undefined,
+              ariaLabel: waiting ? `${TAB_LABEL[t]}, ${waiting} waiting` : undefined,
+            };
+          })}
+        />
       </div>
 
       <div role="tabpanel" id={`run-panel-${active}`} aria-labelledby={`run-tab-${active}`} className="min-w-0">
         {active === "steps" ? (
           <div className="@container min-w-0">
             <div className="grid min-w-0 grid-cols-1 gap-4 @3xl:grid-cols-[352px_minmax(0,1fr)]">
-              <SectionCard flush className="@3xl:sticky @3xl:top-16 @3xl:self-start">
+              <SectionCard flush density="dense" className="@3xl:sticky @3xl:top-16 @3xl:self-start">
                 <div ref={ledgerRef} className="relative max-h-[50vh] overflow-y-auto overscroll-contain @3xl:max-h-[calc(100vh-6rem)]">
                   <RunLedger run={run} selectedSeq={selected} onSelect={select} showGates={gatesOn} onShowGatesChange={setShowGates} />
                 </div>
               </SectionCard>
               <div ref={paneRef} className="scroll-mt-16">
-                <SectionCard density="dense" bodyClassName="pt-4">
+                <SectionCard density="dense" bodyClassName="pt-5 sm:px-6 sm:pb-6">
                   {selected === undefined ? (
                     <EmptyState size="sm" title="This run has not opened a step yet." body="Steps appear here as the workflow schedules them." />
                   ) : (

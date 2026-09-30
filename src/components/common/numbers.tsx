@@ -20,10 +20,13 @@ export interface TokensProps {
   className?: string;
 }
 
-/** "46,099 tok", mono tabular figures. */
+/**
+ * "46,099 tok", tabular figures in the text face. Not mono: Geist Mono gives "," a full cell, so
+ * "46,099" would read "46, 099" (STYLE.md 2 keeps mono for ids, paths, JSON, diffs and logs).
+ */
 export function Tokens({ n, compact, className }: TokensProps) {
   return (
-    <span className={cn("font-mono tabular-nums", className)} title={compact ? formatTokens(n) : undefined}>
+    <span className={cn("tabular-nums", className)} title={compact ? formatTokens(n) : undefined}>
       {formatTokens(n, { compact })}
     </span>
   );
@@ -36,7 +39,7 @@ export interface DurationProps {
   className?: string;
 }
 
-/** A fixed duration. For a live, ticking one use <Elapsed since={...} />. */
+/** A fixed duration, tabular figures ("clock" too: mono would space the colons out). For a live, ticking one use <Elapsed since={...} />. */
 export function Duration({ ms, style = "human", className }: DurationProps) {
-  return <span className={cn("tabular-nums", style === "clock" && "font-mono", className)}>{formatDuration(ms, style)}</span>;
+  return <span className={cn("tabular-nums", className)}>{formatDuration(ms, style)}</span>;
 }

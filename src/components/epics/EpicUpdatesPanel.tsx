@@ -25,18 +25,18 @@ import { EpicSheet, type RefOption } from "./EpicSheet";
 function ChipRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="grid gap-1 @lg:grid-cols-[8.5rem_1fr] @lg:items-start @lg:gap-3">
-      <span className="text-xs text-muted-foreground @lg:pt-0.5">{label}</span>
+      <span className="text-[13px] text-muted-foreground @lg:pt-0.5">{label}</span>
       <div className="min-w-0">{children}</div>
     </div>
   );
 }
 
 function PlainChips({ items, mono, empty = "—" }: { items: string[]; mono?: boolean; empty?: string }) {
-  if (items.length === 0) return <span className="text-xs text-muted-foreground">{empty}</span>;
+  if (items.length === 0) return <span className="text-[13px] text-muted-foreground">{empty}</span>;
   return (
     <ul className="flex flex-wrap gap-1">
       {items.map((s) => (
-        <li key={s} className={cn("inline-flex min-h-5 max-w-full items-center rounded-md bg-muted px-1.5 py-0.5 text-[11px] leading-tight break-words", mono && "font-mono")}>
+        <li key={s} className={cn("inline-flex min-h-6 max-w-full items-center rounded-full bg-well px-2.5 py-0.5 text-xs leading-tight break-words text-heading", mono && "font-mono text-[11.5px]")}>
           {s}
         </li>
       ))}
@@ -56,8 +56,8 @@ function EpicUpdateCard({ epic, brTexts, frTexts, onEdit, readOnly, reviewed }: 
     setOpen(changed && !reviewed);
   }
   return (
-    <li className="@container rounded-xl border border-border">
-      <div className="flex items-start gap-2 p-3">
+    <li className="@container rounded-[20px] bg-field shadow-[0_0_0_1px_var(--rule),0_1px_2px_rgb(0_0_0/0.03)]">
+      <div className="flex items-start gap-2 p-4">
         <div className="min-w-0 flex-1 space-y-1.5">
           <div className="flex flex-wrap items-center gap-1.5">
             <EpicKey epic={epic} />
@@ -66,16 +66,16 @@ function EpicUpdateCard({ epic, brTexts, frTexts, onEdit, readOnly, reviewed }: 
             <BlockedBy ids={epic.blockedBy} />
             <ParentChip parent={epic.parentRef} />
           </div>
-          <p className="text-[14px] leading-snug font-medium">{epic.title}</p>
-          {epic.objective ? <p className="text-xs leading-snug text-muted-foreground">{epic.objective}</p> : null}
+          <p className="text-[15px] leading-6 font-medium text-heading">{epic.title}</p>
+          {epic.objective ? <p className="text-[13px] leading-5 text-muted-foreground">{epic.objective}</p> : null}
         </div>
         {!readOnly ? (
-          <Button variant="ghost" size="icon-sm" aria-label={`Edit epic ${epic.title}`} onClick={onEdit}>
+          <Button variant="ghost" size="icon-sm" className="rounded-full" aria-label={`Edit epic ${epic.title}`} onClick={onEdit}>
             <Pencil aria-hidden />
           </Button>
         ) : null}
       </div>
-      <div className="space-y-2 border-t border-border px-3 py-2.5">
+      <div className="space-y-2.5 border-t border-rule px-4 py-3">
         <ChipRow label="BRD requirements">
           <RefChips refs={epic.brdRequirementRefs} texts={brTexts} />
         </ChipRow>
@@ -90,17 +90,17 @@ function EpicUpdateCard({ epic, brTexts, frTexts, onEdit, readOnly, reviewed }: 
         </ChipRow>
       </div>
       {blocks.length > 0 ? (
-        <Collapsible open={open} onOpenChange={setOpen} className="border-t border-border">
+        <Collapsible open={open} onOpenChange={setOpen} className="border-t border-rule">
           <CollapsibleTrigger asChild>
             <button
               type="button"
-              className="flex w-full items-center gap-1.5 px-3 py-2 text-left text-xs font-medium text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+              className="flex min-h-10 w-full items-center gap-1.5 rounded-b-[20px] px-4 py-2 text-left text-[13px] font-medium text-muted-foreground hover:text-heading focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
             >
               <ChevronDown aria-hidden className={cn("size-3.5 transition-transform duration-150", !open && "-rotate-90")} />
               {open ? "Hide" : "Show"} what changed ({blocks.reduce((n, b) => n + b.changes.length, 0)} {blocks.reduce((n, b) => n + b.changes.length, 0) === 1 ? "field" : "fields"})
             </button>
           </CollapsibleTrigger>
-          <CollapsibleContent className="px-3 pb-3">
+          <CollapsibleContent className="px-4 pb-4">
             <EpicDiff epic={epic} stage="architecture" />
           </CollapsibleContent>
         </Collapsible>
@@ -144,7 +144,7 @@ export function EpicUpdatesPanel({ projectId, bundle, readOnly }: { projectId: s
   const parents = (brd?.dependencies ?? []).filter((d) => /parent epic/i.test(d.relation)).map((d) => ({ ref: d.ref, title: d.title }));
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <MockJiraBanner />
       <SectionCard
         density="dense"
@@ -153,12 +153,12 @@ export function EpicUpdatesPanel({ projectId, bundle, readOnly }: { projectId: s
         actions={
           !readOnly ? (
             <div className="flex flex-wrap gap-2">
-              <Button size="sm" variant="outline" className="rounded-full" onClick={() => setSheet({ open: true })}>
-                <Plus aria-hidden />
+              <Button variant="secondary" onClick={() => setSheet({ open: true })}>
                 Add epic
+                <Plus aria-hidden />
               </Button>
               {!acceptedAt && epics.length > 3 ? (
-                <Button size="sm" className="rounded-full" disabled={accept.isPending} onClick={() => accept.mutate("architecture")}>
+                <Button disabled={accept.isPending} onClick={() => accept.mutate("architecture")}>
                   <ListChecks aria-hidden />
                   Accept epic updates
                 </Button>
@@ -167,7 +167,7 @@ export function EpicUpdatesPanel({ projectId, bundle, readOnly }: { projectId: s
           ) : null
         }
       >
-        <div className="space-y-3">
+        <div className="space-y-4">
           {acceptedAt ? (
             <Notice tone="success" icon={ListChecks} role="status">
               Epic updates accepted{accepter ? ` by ${actorText(accepter.actor)}` : ""} <TimeAgo at={acceptedAt} />.
@@ -177,7 +177,7 @@ export function EpicUpdatesPanel({ projectId, bundle, readOnly }: { projectId: s
           {epics.length === 0 ? (
             <EmptyState size="sm" icon={SquareStack} title="No epics" body="The project has no epics. Add one per system or feature area." />
           ) : (
-            <ul className="space-y-2" aria-label="Epics">
+            <ul className="space-y-3" aria-label="Epics">
               {sorted.map((e) => (
                 <EpicUpdateCard key={e.id} epic={e} brTexts={brTexts} frTexts={frTexts} readOnly={readOnly} reviewed={!!acceptedAt} onEdit={() => setSheet({ open: true, epic: e })} />
               ))}
@@ -185,18 +185,18 @@ export function EpicUpdatesPanel({ projectId, bundle, readOnly }: { projectId: s
           )}
 
           {!readOnly ? (
-            <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3">
-              <Button className="rounded-full" disabled={(!!acceptedAt && drafts.length === 0) || accept.isPending} onClick={() => accept.mutate("architecture")}>
+            <div className="flex flex-wrap items-center gap-2 border-t border-rule pt-4">
+              <Button disabled={(!!acceptedAt && drafts.length === 0) || accept.isPending} onClick={() => accept.mutate("architecture")}>
                 <ListChecks aria-hidden />
                 {accept.isPending ? "Accepting…" : acceptedAt && drafts.length === 0 ? "Epic updates accepted" : "Accept epic updates"}
               </Button>
               {toSync.length > 0 ? (
-                <Button variant={acceptedAt ? "default" : "outline"} className="rounded-full" disabled={sync.isPending} onClick={() => sync.mutate()}>
+                <Button variant={acceptedAt ? "default" : "secondary"} disabled={sync.isPending} onClick={() => sync.mutate()}>
                   <CloudUpload aria-hidden />
                   {sync.isPending ? "Creating…" : `Create ${toSync.length} in Jira`}
                 </Button>
               ) : null}
-              <span className="text-xs text-muted-foreground">
+              <span className="text-[13px] text-muted-foreground">
                 {!acceptedAt ? `Accepts the AAD's changes on every epic${drafts.length ? ` and ${drafts.length} new ${drafts.length === 1 ? "epic" : "epics"}` : ""}.` : toSync.length ? `New epics get keys from ${bundle.project.jiraProject} (mock).` : ""}
               </span>
             </div>

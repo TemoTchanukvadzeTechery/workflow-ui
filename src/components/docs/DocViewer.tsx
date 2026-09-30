@@ -1,8 +1,8 @@
 "use client";
 
 /**
- * A BRD/AAD/plan document: TOC from h2/h3 on the left, rendered markdown, and a mode switch for
- * Preview / Edit (monospace textarea, when editable) / Diff (against the previous version, or
+ * A BRD/AAD/plan document on a reference card: TOC from h2/h3 on the left, rendered markdown, and a
+ * segmented mode switch for Preview / Edit (monospace textarea, when editable) / Diff (against the previous version, or
  * `compareText`). The version menu lists DocVersions by their stored number, the same one the
  * stage header, overview and activity use: "v1 review:1", "v2 Edited by Dana in review",
  * "v3 review:2".
@@ -14,7 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useBlobText } from "@/lib/api/queries";
 import type { DocVersion } from "@/lib/delivery/types";
 import { cn } from "@/lib/utils";
-import { PillChoice } from "../hitl/controls";
+import { SegmentedControl } from "@/components/common";
 import { Markdown } from "./Markdown";
 import { TextDiff } from "./TextDiff";
 import { extractHeadings } from "./toc";
@@ -49,6 +49,11 @@ export interface DocViewerProps {
   defaultMode?: DocViewerMode;
   /** Mode of the viewer, controlled. */
   mode?: DocViewerMode;
+  /**
+   * card (default): a reference card of its own; panel: a white 20px-radius panel for use inside
+   * another card (request forms).
+   */
+  variant?: "card" | "panel";
   onModeChange?: (mode: DocViewerMode) => void;
 }
 
@@ -92,6 +97,7 @@ export function DocViewer({
   defaultMode = "preview",
   mode: modeProp,
   onModeChange,
+  variant = "card",
 }: DocViewerProps) {
   const [modeState, setModeState] = useState<DocViewerMode>(defaultMode);
   const mode = modeProp ?? modeState;
@@ -150,20 +156,25 @@ export function DocViewer({
   ];
 
   return (
-    <section className={cn("@container min-w-0 rounded-2xl bg-card shadow-[0_1px_2px_rgba(0,0,0,.04)] dark:border dark:border-border", className)} aria-label={typeof title === "string" ? title : path}>
+    <section
+      className={cn("@container min-w-0", variant === "panel" ? "rounded-[20px] bg-field shadow-[0_0_0_1px_var(--rule),0_1px_2px_rgb(0_0_0/0.03)]" : "card-surface rounded-2xl", className)}
+      aria-label={typeof title === "string" ? title : path}
+    >
       {/* The title keeps at least ~16rem; when the header is narrower the controls wrap below it instead of squeezing it. */}
-      <header className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-border px-4 py-3">
-        <div className="flex min-w-0 flex-[1_1_16rem] items-start gap-3">
-          <FileText aria-hidden className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+      <header className="flex flex-wrap items-center gap-x-3 gap-y-3 border-b border-rule px-5 py-4">
+        <div className="flex min-w-0 flex-[1_1_16rem] items-center gap-3">
+          <span aria-hidden className="circle-btn size-10 text-muted-foreground">
+            <FileText className="size-[18px]" strokeWidth={1.75} />
+          </span>
           <div className="min-w-0 flex-1">
-            {title ? <h3 className="line-clamp-2 text-[15px] font-medium break-words">{title}</h3> : null}
-            {path ? <p className="font-mono text-[11px] break-words text-muted-foreground">{path}</p> : null}
+            {title ? <h3 className="line-clamp-2 text-[18px] leading-6 font-medium tracking-[-0.015em] break-words text-heading">{title}</h3> : null}
+            {path ? <p className="mt-0.5 font-mono text-xs break-words text-muted-foreground">{path}</p> : null}
           </div>
         </div>
         {headerExtra}
         {labels.length > 0 && onVersionChange ? (
           <Select value={current !== undefined ? String(current) : undefined} onValueChange={(v) => onVersionChange(Number(v))}>
-            <SelectTrigger size="sm" className="rounded-full" aria-label="Version">
+            <SelectTrigger size="sm" aria-label="Version">
               <SelectValue placeholder="Version" />
             </SelectTrigger>
             <SelectContent align="end">
@@ -176,16 +187,16 @@ export function DocViewer({
             </SelectContent>
           </Select>
         ) : labels.length > 0 ? (
-          <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium">{labels.find((l) => l.n === current)?.label ?? labels[labels.length - 1]?.label}</span>
+          <span className="inline-flex h-7 items-center rounded-full bg-well px-3 text-xs font-medium text-heading">{labels.find((l) => l.n === current)?.label ?? labels[labels.length - 1]?.label}</span>
         ) : null}
-        {modes.length > 1 ? <PillChoice size="sm" value={mode} onChange={setMode} options={modes} ariaLabel="View mode" /> : null}
+        {modes.length > 1 ? <SegmentedControl size="sm" value={mode} onValueChange={setMode} items={modes} aria-label="View mode" /> : null}
       </header>
 
       <div className={cn("flex min-w-0", toc && headings.length > 1 && mode === "preview" ? "gap-6" : "")}>
         {toc && headings.length > 1 && mode === "preview" ? (
           // Never taller than the body: capped at the body's own max height when the body scrolls inside the viewer, else at the viewport; sticky, with its own scroll.
-          <nav aria-label="Contents" className={cn("sticky top-14 hidden w-48 shrink-0 self-start overflow-y-auto overscroll-contain py-4 pl-4 @2xl:block", bodyClassName ?? "max-h-[calc(100vh-8rem)]")}>
-            <p className="mb-2 text-[10.5px] font-medium tracking-[0.12em] text-muted-foreground uppercase">Contents</p>
+          <nav aria-label="Contents" className={cn("sticky top-14 hidden w-52 shrink-0 self-start overflow-y-auto overscroll-contain py-5 pl-4 @2xl:block", bodyClassName ?? "max-h-[calc(100vh-8rem)]")}>
+            <p className="kicker mb-2.5 px-2.5">Contents</p>
             <ul className="space-y-0.5 text-[13px]">
               {headings.map((h) => (
                 <li key={h.id}>
@@ -194,9 +205,9 @@ export function DocViewer({
                     onClick={() => jump(h.id)}
                     aria-current={activeId === h.id ? "location" : undefined}
                     className={cn(
-                      "block w-full truncate rounded-md px-2 py-1 text-left transition-colors duration-150 hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
-                      h.depth === 3 ? "pl-5 text-muted-foreground" : "text-foreground/80",
-                      activeId === h.id && "bg-muted font-medium text-foreground",
+                      "block w-full truncate rounded-[10px] px-2.5 py-1.5 text-left transition-[color,background-color,box-shadow] duration-150 hover:bg-well hover:text-heading focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
+                      h.depth === 3 ? "pl-5 text-muted-foreground" : "text-foreground/85",
+                      activeId === h.id && "bg-raised font-medium text-heading shadow-(--raised-shadow)",
                     )}
                     title={h.text}
                   >
@@ -208,7 +219,7 @@ export function DocViewer({
           </nav>
         ) : null}
 
-        <div ref={bodyRef} className={cn("relative min-w-0 flex-1 px-4 py-4 @xl:px-6", bodyClassName && `overflow-y-auto ${bodyClassName}`)}>
+        <div ref={bodyRef} className={cn("relative min-w-0 flex-1 px-5 py-5 @xl:px-8 @xl:py-6", bodyClassName && `overflow-y-auto ${bodyClassName}`)}>
           {loading ? (
             <div className="space-y-3" aria-busy="true" aria-label="Loading document">
               <Skeleton className="h-7 w-2/3" />
@@ -222,14 +233,14 @@ export function DocViewer({
               spellCheck={false}
               value={shown}
               onChange={(e) => onChange?.(e.target.value)}
-              className="block min-h-[60vh] w-full resize-y rounded-lg border border-input bg-transparent p-3 font-mono text-xs leading-5 outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="block min-h-[60vh] w-full resize-y rounded-[16px] border border-input bg-field p-4 font-mono text-[13px] leading-6 text-foreground outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/25"
             />
           ) : mode === "diff" && canDiff ? (
             baseline === undefined ? (
               <Skeleton className="h-40 w-full" />
             ) : (
               <div className="space-y-2">
-                <p className="text-xs text-muted-foreground">
+                <p className="text-[13px] text-muted-foreground">
                   Changes from <span className="font-medium text-foreground">{baselineLabel}</span> to{" "}
                   <span className="font-medium text-foreground">{editable && value !== undefined && value !== text ? "your edits" : (labels.find((l) => l.n === current)?.label ?? "this version")}</span>
                 </p>
@@ -239,7 +250,7 @@ export function DocViewer({
           ) : shown.trim() ? (
             <Markdown source={shown} onCitationClick={onCitationClick} />
           ) : (
-            <p className="py-8 text-center text-sm text-muted-foreground">This document is empty.</p>
+            <p className="py-10 text-center text-sm text-muted-foreground">This document is empty.</p>
           )}
         </div>
       </div>

@@ -40,9 +40,9 @@ export function GenericRequestForm({ request, projectId, compact, onAnswered }: 
 
   return (
     <div className="space-y-4">
-      {request.detail ? <p className="rounded-lg bg-muted/50 px-3 py-2 text-[13px] whitespace-pre-wrap text-muted-foreground">{request.detail}</p> : null}
+      {request.detail ? <p className="rounded-[16px] bg-well/60 px-4 py-3 text-sm whitespace-pre-wrap text-muted-foreground">{request.detail}</p> : null}
       {request.ui ? (
-        <div className="rounded-lg border border-dashed border-border px-3 py-2 text-xs text-muted-foreground">
+        <div className="rounded-[16px] bg-well/60 px-4 py-3 text-[13px] text-muted-foreground">
           Workflow-provided view · <span className="font-mono">{request.ui.asset.id}</span> · revision {request.ui.asset.revision}. Custom views are not rendered here; use the standard form below.
         </div>
       ) : null}
@@ -60,6 +60,7 @@ export function GenericRequestForm({ request, projectId, compact, onAnswered }: 
           compareText={edited !== undefined ? fileText.data : undefined}
           compareLabel="the file as proposed"
           toc={!compact}
+          variant="panel"
           bodyClassName="max-h-[60vh]"
         />
       ) : null}

@@ -36,11 +36,11 @@ export function RunLedger({ run, selectedSeq, onSelect, showGates, onShowGatesCh
 
   return (
     <nav aria-label="Run steps" className={cn("flex min-w-0 flex-col", className)}>
-      <div className={cn("flex items-center justify-between gap-2 px-3", compact ? "pt-2 pb-1.5" : "pt-3 pb-2")}>
-        <span className="kicker truncate">{title ?? `Run tree · ${plural(run.steps.length, "step")} recorded`}</span>
+      <div className={cn("flex items-center justify-between gap-2 px-4", compact ? "pt-3.5 pb-2" : "pt-4 pb-2.5")}>
+        <span className="truncate text-[15px] font-medium text-heading">{title ?? `Run tree · ${plural(run.steps.length, "step")} recorded`}</span>
       </div>
       {groups.length === 0 ? (
-        <p className="px-3 pb-3 text-[13px] text-muted-foreground">This run has not opened a step yet.</p>
+        <p className="px-4 pb-4 text-sm text-muted-foreground">This run has not opened a step yet.</p>
       ) : (
         <div className="flex flex-col gap-1 pb-2">
           {groups.map((g) => (
@@ -49,12 +49,12 @@ export function RunLedger({ run, selectedSeq, onSelect, showGates, onShowGatesCh
         </div>
       )}
       {gateCount > 0 && (
-        <div className="border-t px-2 py-2">
+        <div className="border-t border-rule px-2 py-2">
           <button
             type="button"
             onClick={() => setGates(!gatesOn)}
             aria-pressed={gatesOn}
-            className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
+            className="flex min-h-9 w-full items-center gap-2 rounded-[12px] px-2.5 py-1.5 text-left text-[13px] text-muted-foreground transition-colors hover:bg-foreground/[0.04] hover:text-heading focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
           >
             <ShieldCheck aria-hidden className="size-3.5 shrink-0" />
             <span className="min-w-0 flex-1 truncate">
@@ -94,10 +94,10 @@ function LedgerGroupBlock({ group, selectedSeq, onSelect, compact }: { group: Le
         id={id}
         onClick={() => setOpen(!expanded)}
         aria-expanded={expanded}
-        className="group/phase mx-1 flex items-center gap-2 rounded-md px-2 pt-2 pb-1 text-left focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
+        className="group/phase mx-1 flex items-center gap-2 rounded-[10px] px-3 pt-3 pb-1.5 text-left focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
       >
-        <span className="truncate text-[11px] font-semibold tracking-[0.1em] text-foreground/80 uppercase">{group.name}</span>
-        <span className="min-w-0 truncate font-mono text-[11px] text-muted-foreground">{groupMeta(group)}</span>
+        <span className="truncate text-[13px] font-medium text-heading first-letter:uppercase">{group.name}</span>
+        <span className="min-w-0 truncate text-xs text-muted-foreground">{groupMeta(group)}</span>
         {group.waiting > 0 && <StatusDot tone="attention" size="sm" label={`${group.waiting} waiting`} />}
         {group.running > 0 && <StatusDot tone="running" pulse size="sm" label={`${group.running} running`} />}
         {group.failed - group.recovered > 0 && <StatusDot tone="danger" size="sm" label={`${group.failed - group.recovered} failed`} />}
@@ -106,14 +106,14 @@ function LedgerGroupBlock({ group, selectedSeq, onSelect, compact }: { group: Le
         <ChevronDown aria-hidden className={cn("size-3.5 shrink-0 text-muted-foreground opacity-0 transition-transform group-hover/phase:opacity-100 group-focus-visible/phase:opacity-100", !expanded && "-rotate-90 opacity-100")} />
       </button>
       {expanded && (
-        <ul className="flex flex-col px-1">
+        <ul className="flex flex-col gap-0.5 px-1.5">
           {group.entries.map((e) => (
             <li key={`${e.type}:${e.seq}`}>
               <LedgerRow entry={e} selected={e.seq === selectedSeq} onSelect={onSelect} compact={compact} />
             </li>
           ))}
           {group.hiddenGates > 0 && (
-            <li className="px-2 py-0.5 pl-[30px] font-mono text-[10.5px] text-muted-foreground/80">+ {plural(group.hiddenGates, "policy gate")}</li>
+            <li className="px-2 py-1 pl-[32px] text-xs text-muted-foreground">+ {plural(group.hiddenGates, "policy gate")}</li>
           )}
         </ul>
       )}
@@ -138,22 +138,22 @@ function LedgerRow({ entry, selected, onSelect, compact }: { entry: LedgerEntry;
       title={label && label !== title ? label : undefined}
       data-seq={entry.seq}
       className={cn(
-        "relative flex w-full min-w-0 items-center gap-2.5 rounded-lg px-2 text-left transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none",
-        compact ? "h-8" : "h-9",
-        "hover:bg-muted/70",
-        running && "bg-status-running-bg/40 text-status-running-fg",
-        failed && "bg-status-danger-bg/50",
-        waiting && "bg-status-attention-bg/70",
-        selected && "bg-primary-soft ring-1 ring-primary/25 hover:bg-primary-soft",
+        "relative flex w-full min-w-0 items-center gap-2.5 rounded-[12px] px-2.5 text-left transition-[background-color,box-shadow] duration-150 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
+        compact ? "h-9" : "h-10",
+        "hover:bg-foreground/[0.04]",
+        running && "bg-status-running-bg text-status-running-fg",
+        failed && "bg-status-danger-bg/60",
+        waiting && "bg-status-attention-bg",
+        selected && "bg-raised shadow-[var(--raised-shadow),0_0_0_1px_var(--circle-border)] hover:bg-raised",
       )}
       style={entry.depth ? { paddingLeft: 8 + entry.depth * 14 } : undefined}
     >
       {running && <span aria-hidden className="hatch pointer-events-none absolute inset-y-1 left-0 w-[3px] rounded-full text-status-running-fg" />}
       <StatusDot tone={st.tone} pulse={st.pulse} size="md" />
-      <span className="w-[46px] shrink-0 truncate font-mono text-[10px] font-medium tracking-[0.08em] text-muted-foreground uppercase">{entryKind(entry)}</span>
+      <span className="w-[44px] shrink-0 truncate font-mono text-[11px] text-muted-foreground lowercase">{entryKind(entry)}</span>
       <span
         className={cn(
-          "min-w-0 flex-1 truncate font-mono text-[12.5px] text-foreground",
+          "min-w-0 flex-1 truncate font-mono text-[13px] text-heading",
           (running || waiting || failed) && "font-semibold",
           running && "text-status-running-fg",
           entry.type === "human" && entry.human.answeredBy === "policy" && "text-muted-foreground",
@@ -162,7 +162,7 @@ function LedgerRow({ entry, selected, onSelect, compact }: { entry: LedgerEntry;
         {title}
       </span>
       {entry.type === "step" && entry.step.patchRef && (
-        <span className="inline-flex h-[18px] shrink-0 items-center gap-0.5 rounded-full bg-status-success-bg px-1.5 font-mono text-[10px] text-status-success-fg">
+        <span className="inline-flex h-5 shrink-0 items-center gap-0.5 rounded-full bg-status-success-bg px-1.5 font-mono text-[11px] text-status-success-fg">
           <GitCommitHorizontal aria-hidden className="size-3" />
           patch
         </span>

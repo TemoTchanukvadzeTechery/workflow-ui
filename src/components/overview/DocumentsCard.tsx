@@ -48,15 +48,15 @@ function DocRow({ projectId, slot, doc, missingText }: { projectId: string; slot
   const Icon = slot.icon;
   if (!doc) {
     return (
-      <div className="flex items-center gap-3 px-5 py-3">
-        <span aria-hidden className="inline-flex size-8 shrink-0 items-center justify-center rounded-xl border border-dashed text-muted-foreground/70">
-          <Icon className="size-4" strokeWidth={1.75} />
+      <div className="flex items-center gap-3.5 px-5 py-3.5 sm:px-7">
+        <span aria-hidden className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-dashed border-circle-border text-muted-foreground">
+          <Icon className="size-[18px]" strokeWidth={1.75} />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-[13px] font-medium text-muted-foreground">{slot.label}</span>
-          <span className="block truncate text-xs text-muted-foreground/80">{missingText ?? `Not produced yet · ${slot.by}`}</span>
+          <span className="block text-[15px] leading-5 text-muted-foreground">{slot.label}</span>
+          <span className="mt-0.5 block truncate text-[13px] text-muted-foreground">{missingText ?? `Not produced yet · ${slot.by}`}</span>
         </span>
-        <span className="hidden text-[11px] text-muted-foreground @sm:inline">Stage {stageDef(slot.stage).n}</span>
+        <span className="hidden text-xs text-muted-foreground @sm:inline">Stage {stageDef(slot.stage).n}</span>
       </div>
     );
   }
@@ -66,17 +66,17 @@ function DocRow({ projectId, slot, doc, missingText }: { projectId: string; slot
   return (
     <Link
       href={`/projects/${encodeURIComponent(projectId)}/docs/${encodeURIComponent(doc.id)}`}
-      className="group flex items-center gap-3 px-5 py-3 transition-colors duration-150 hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset"
+      className="group flex items-center gap-3.5 px-5 py-3.5 transition-colors duration-150 hover:bg-foreground/[0.03] focus-visible:bg-foreground/[0.03] focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none focus-visible:ring-inset sm:px-7"
     >
-      <span aria-hidden className="inline-flex size-8 shrink-0 items-center justify-center rounded-xl bg-muted text-foreground">
-        <Icon className="size-4" strokeWidth={1.75} />
+      <span aria-hidden className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-well text-heading">
+        <Icon className="size-[18px]" strokeWidth={1.75} />
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex min-w-0 items-center gap-2">
-          <span className="text-[13px] font-medium text-foreground">{slot.label}</span>
-          {n ? <span className="font-mono text-[11px] text-muted-foreground">v{n}</span> : null}
+          <span className="text-[15px] leading-5 font-medium text-heading">{slot.label}</span>
+          {n ? <span className="font-mono text-xs text-muted-foreground">v{n}</span> : null}
         </span>
-        <span className="block truncate text-xs text-muted-foreground">
+        <span className="mt-0.5 block truncate text-[13px] text-muted-foreground">
           {line.text}
           {line.at ? (
             <>
@@ -85,7 +85,7 @@ function DocRow({ projectId, slot, doc, missingText }: { projectId: string; slot
             </>
           ) : null}
         </span>
-        <span className="block truncate font-mono text-[11px] text-muted-foreground/80">{doc.path}</span>
+        <span className="block truncate font-mono text-xs text-muted-foreground">{doc.path}</span>
       </span>
       <span className="flex shrink-0 flex-col items-end gap-1">
         <StatusPill status={{ kind: "doc", value: doc.status }} size="sm" />
@@ -101,7 +101,7 @@ export function DocumentsCard({ bundle, className }: { bundle: ProjectBundle; cl
   const produced = rows.filter((r) => r.doc).length;
   return (
     <SectionCard title="Documents" description={`${produced} of ${SLOTS.length} produced · agent output stays Draft until a person accepts it`} flush className={cn("@container", className)}>
-      <ul className="divide-y border-t">
+      <ul className="divide-y divide-rule border-t border-rule">
         {rows.map(({ slot, doc }) => (
           <li key={slot.kind}>
             <DocRow projectId={bundle.project.id} slot={slot} doc={doc} missingText={slot.kind === "memory" && !doc && memoryImportedOnly(bundle.documents) ? "No memory update (documents imported)" : undefined} />

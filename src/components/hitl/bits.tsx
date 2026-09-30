@@ -47,7 +47,7 @@ export function StageStatusPill({ status, className }: { status: StageStatus; cl
 
 export function MonoChip({ children, className, title }: { children: ReactNode; className?: string; title?: string }) {
   return (
-    <span title={title} className={cn("inline-flex h-5 shrink-0 items-center rounded-md bg-muted px-1.5 font-mono text-[11px] leading-none whitespace-nowrap text-muted-foreground", className)}>
+    <span title={title} className={cn("inline-flex h-5 shrink-0 items-center rounded-[6px] bg-foreground/[0.05] px-1.5 font-mono text-[11px] leading-none whitespace-nowrap text-muted-foreground dark:bg-foreground/[0.08]", className)}>
       {children}
     </span>
   );
@@ -75,8 +75,8 @@ export function TimeAgo({ at, prefix, suffix, elapsed, className }: { at: number
 /** A small inline notice (warning or info). Pass role="alert" only for errors. */
 export function Notice({ tone = "attention", icon: Icon = CircleAlert, children, className, role }: { tone?: Tone; icon?: LucideIcon; children: ReactNode; className?: string; role?: "alert" | "status" }) {
   return (
-    <div role={role} className={cn("flex items-start gap-2 rounded-lg px-3 py-2 text-[13px]", TONE_CLASS[tone], className)}>
-      <Icon aria-hidden className="mt-0.5 size-4 shrink-0" />
+    <div role={role} className={cn("flex items-start gap-2.5 rounded-[16px] px-4 py-3 text-[13px] leading-5", TONE_CLASS[tone], className)}>
+      <Icon aria-hidden className="mt-0.5 size-4 shrink-0" strokeWidth={2} />
       <div className="min-w-0 flex-1">{children}</div>
     </div>
   );

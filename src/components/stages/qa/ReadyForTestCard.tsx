@@ -9,7 +9,7 @@
 import { ChevronDown, ClipboardCheck, ExternalLink, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { useId, useState } from "react";
-import { actorText, RelativeTime, SectionCard } from "@/components/common";
+import { actorText, CircleIconButton, RelativeTime, SectionCard } from "@/components/common";
 import { Markdown } from "@/components/docs";
 import { latestChecks } from "@/components/tasks";
 import type { DeliveryTask, DocumentArtifact, ProjectBundle } from "@/lib/delivery/types";
@@ -89,10 +89,11 @@ export function ReadyForTestCard({ projectId, bundle }: { projectId: string; bun
   return (
     <SectionCard
       density="dense"
-      kicker="Hand-off from Implementation"
       title={
-        <span className="inline-flex items-center gap-2">
-          <ClipboardCheck aria-hidden className="size-4 text-muted-foreground" />
+        <span className="inline-flex items-center gap-2.5">
+          <span className="inline-flex size-8 items-center justify-center rounded-full bg-status-running-bg text-status-running-fg">
+            <ClipboardCheck aria-hidden className="size-4" />
+          </span>
           Ready for test
         </span>
       }
@@ -103,36 +104,29 @@ export function ReadyForTestCard({ projectId, bundle }: { projectId: string; bun
               Written by {actorText(handoff.by)} at the Implementation gate <RelativeTime at={handoff.at} />.{" "}
             </>
           ) : null}
-          QA tests against this note.
+          QA tests against this hand-off from Implementation.
         </span>
       }
-      actions={
-        doc ? (
-          <Link href={docHref(projectId, doc.id)} className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
-            Open the note
-            <ExternalLink aria-hidden className="size-3" />
-          </Link>
-        ) : null
-      }
+      cardMenu={doc ? <CircleIconButton href={docHref(projectId, doc.id)} icon={ExternalLink} label="Open the Ready for test note" /> : null}
     >
-      <div className="space-y-3">
+      <div className="space-y-4">
         {tldr || env ? (
-          <div className="space-y-1 text-[13px]">
-            {tldr ? <p className="leading-snug">{tldr}</p> : null}
+          <div className="space-y-2">
+            {tldr ? <p className="max-w-3xl text-[15px] leading-6 text-heading">{tldr}</p> : null}
             {env ? (
-              <p className="text-xs text-muted-foreground">
-                Environment: <span className="font-mono text-[11px] text-foreground">{env}</span>
+              <p className="flex flex-wrap items-center gap-2 text-[13px] text-muted-foreground">
+                Environment <span className="inline-flex h-6 items-center rounded-full bg-well px-2.5 font-mono text-xs text-heading">{env}</span>
               </p>
             ) : null}
           </div>
         ) : null}
 
-        <div className="space-y-1.5">
-          <h3 className="kicker">Check first</h3>
+        <div className="space-y-2">
+          <h3 className="text-[13px] font-medium text-heading">Check first</h3>
           {items.length ? (
             <ul className="space-y-1.5">
               {items.map(({ task, reasons }) => (
-                <li key={task.id} className="flex items-start gap-2 rounded-lg bg-status-attention-bg px-3 py-2 text-[13px]">
+                <li key={task.id} className="flex items-start gap-2.5 rounded-[14px] bg-status-attention-bg px-3.5 py-2.5 text-sm">
                   <TriangleAlert aria-hidden className="mt-0.5 size-4 shrink-0 text-status-attention-fg" />
                   <div className="min-w-0 space-y-0.5">
                     <p className="min-w-0">
@@ -142,7 +136,7 @@ export function ReadyForTestCard({ projectId, bundle }: { projectId: string; bun
                       <span className="break-words">{task.title}</span>
                     </p>
                     {reasons.map((r, i) => (
-                      <p key={i} className="text-xs text-foreground/80">
+                      <p key={i} className="text-[13px] text-foreground/80">
                         {r}
                       </p>
                     ))}
@@ -151,14 +145,14 @@ export function ReadyForTestCard({ projectId, bundle }: { projectId: string; bun
               ))}
             </ul>
           ) : (
-            <p className="text-xs text-muted-foreground">Nothing flagged: no task was escalated or approved with a failing check, and the notes name none.</p>
+            <p className="text-[13px] text-muted-foreground">Nothing flagged: no task was escalated or approved with a failing check, and the notes name none.</p>
           )}
         </div>
 
         {other.length ? (
-          <div className="space-y-1">
-            <h3 className="kicker">Developer notes</h3>
-            <ul className="list-disc space-y-0.5 pl-5 text-[13px]">
+          <div className="space-y-1.5">
+            <h3 className="text-[13px] font-medium text-heading">Developer notes</h3>
+            <ul className="list-disc space-y-1 pl-5 text-sm">
               {other.map((n, i) => (
                 <li key={i}>{n}</li>
               ))}
@@ -173,13 +167,13 @@ export function ReadyForTestCard({ projectId, bundle }: { projectId: string; bun
               onClick={() => setOpen((o) => !o)}
               aria-expanded={open}
               aria-controls={bodyId}
-              className="inline-flex items-center gap-1 rounded text-xs font-medium text-primary hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+              className="inline-flex items-center gap-1 rounded text-[13px] font-medium text-primary hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
             >
               <ChevronDown aria-hidden className={cn("size-3.5 transition-transform duration-150", !open && "-rotate-90")} />
               {open ? "Hide the full note" : "Show the full note"}
             </button>
             {open ? (
-              <div id={bodyId} className="mt-2 max-h-[28rem] overflow-y-auto rounded-xl border px-4 py-3">
+              <div id={bodyId} className="mt-2 max-h-[28rem] overflow-y-auto rounded-[16px] bg-field px-5 py-4 shadow-[0_0_0_1px_var(--rule)]">
                 <Markdown source={note} size="sm" idPrefix="rft-" />
               </div>
             ) : null}

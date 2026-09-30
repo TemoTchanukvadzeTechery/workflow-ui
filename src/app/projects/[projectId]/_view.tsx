@@ -26,15 +26,15 @@ export function ProjectOverviewView({ projectId }: { projectId: string }) {
 
       <ProjectKpis bundle={bundle} />
 
-      <div className="grid min-w-0 gap-4 @5xl:grid-cols-5">
-        <DocumentsCard bundle={bundle} className="@5xl:col-span-2" />
-        <EpicsSummary bundle={bundle} className="@5xl:col-span-3" />
+      <div className="grid min-w-0 gap-4 @5xl:grid-cols-12">
+        <DocumentsCard bundle={bundle} className="@5xl:col-span-5" />
+        <EpicsSummary bundle={bundle} className="@5xl:col-span-7" />
       </div>
 
       <div className="grid min-w-0 gap-4 @5xl:grid-cols-2">
         <DecisionsLog bundle={bundle} />
         {/* No fixed height: a clipped list cut entries mid-line. "Show more" grows it instead. */}
-        <SectionCard kicker="Live" title="Activity" description="People and agents on this project">
+        <SectionCard title="Activity" description="People and agents on this project">
           <ActivityFeed items={bundle.activity} initial={8} emptyText="Nothing has happened on this project yet." />
         </SectionCard>
       </div>

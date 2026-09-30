@@ -15,12 +15,12 @@ import { cn } from "@/lib/utils";
 export function EpicKey({ epic, className }: { epic: Epic; className?: string }) {
   if (epic.key) return <IdChip id={epic.key} size="sm" className={className} />;
   // The status pill beside it says Draft / Accepted; the key cell only says whether Jira has it.
-  return <span className={cn("text-xs whitespace-nowrap text-muted-foreground", className)}>Not in Jira yet</span>;
+  return <span className={cn("text-[13px] whitespace-nowrap text-muted-foreground", className)}>Not in Jira yet</span>;
 }
 
 /** Ref chips (BR-1, FR3); `texts` supplies the hover text per id. */
 export function RefChips({ refs, texts, tone = "neutral", empty = "—", className, max }: { refs: string[]; texts?: Record<string, string>; tone?: "neutral" | "primary"; empty?: ReactNode; className?: string; max?: number }) {
-  if (refs.length === 0) return <span className="text-xs text-muted-foreground">{empty}</span>;
+  if (refs.length === 0) return <span className="text-[13px] text-muted-foreground">{empty}</span>;
   const shown = max ? refs.slice(0, max) : refs;
   const rest = refs.length - shown.length;
   return (
@@ -30,8 +30,8 @@ export function RefChips({ refs, texts, tone = "neutral", empty = "—", classNa
           const chip = (
             <span
               className={cn(
-                "inline-flex h-5 items-center rounded-md px-1.5 font-mono text-[11px] whitespace-nowrap",
-                tone === "primary" ? "bg-primary-soft text-primary" : "bg-muted text-muted-foreground",
+                "inline-flex h-6 items-center rounded-[6px] px-1.5 font-mono text-[11.5px] whitespace-nowrap",
+                tone === "primary" ? "bg-status-running-bg text-status-running-fg" : "bg-foreground/[0.05] text-muted-foreground dark:bg-foreground/[0.08]",
               )}
             >
               {r}
@@ -42,7 +42,7 @@ export function RefChips({ refs, texts, tone = "neutral", empty = "—", classNa
           return (
             <Tooltip key={r}>
               <TooltipTrigger asChild>
-                <span tabIndex={0} className="rounded-md focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none" aria-label={`${r}: ${text}`}>
+                <span tabIndex={0} className="rounded-[6px] focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none" aria-label={`${r}: ${text}`}>
                   {chip}
                 </span>
               </TooltipTrigger>
@@ -52,7 +52,7 @@ export function RefChips({ refs, texts, tone = "neutral", empty = "—", classNa
             </Tooltip>
           );
         })}
-        {rest > 0 ? <span className="inline-flex h-5 items-center px-1 text-[11px] text-muted-foreground">+{rest}</span> : null}
+        {rest > 0 ? <span className="inline-flex h-6 items-center px-1 text-xs text-muted-foreground">+{rest}</span> : null}
       </span>
     </TooltipProvider>
   );
@@ -70,7 +70,7 @@ export function BlockedBy({ ids, className }: { ids?: string[]; className?: stri
 export function ParentChip({ parent, className }: { parent?: string; className?: string }) {
   if (!parent) return null;
   return (
-    <span className={cn("inline-flex h-5 items-center gap-1 rounded-md border border-border px-1.5 font-mono text-[11px] text-muted-foreground", className)} title={`Parent epic ${parent}`}>
+    <span className={cn("inline-flex h-6 items-center gap-1 rounded-full bg-well px-2 font-mono text-[11.5px] text-muted-foreground", className)} title={`Parent epic ${parent}`}>
       <GitBranch aria-hidden className="size-3" />
       under {parent}
     </span>
@@ -79,10 +79,10 @@ export function ParentChip({ parent, className }: { parent?: string; className?:
 
 export function MockJiraBanner({ className }: { className?: string }) {
   return (
-    <div role="note" className={cn("flex items-start gap-2 rounded-xl border border-dashed border-border px-3 py-2 text-[13px] text-muted-foreground", className)}>
+    <div role="note" className={cn("flex items-start gap-2.5 rounded-[20px] bg-well/60 px-4 py-3 text-[13px] text-muted-foreground", className)}>
       <Info aria-hidden className="mt-0.5 size-4 shrink-0" />
       <p>
-        <span className="font-medium text-foreground">Mock: po-brd and architect-aad do not write to Jira today.</span> Epics are proposed here from the document; &ldquo;Create in Jira&rdquo; assigns mock keys.
+        <span className="font-medium text-heading">Mock: po-brd and architect-aad do not write to Jira today.</span> Epics are proposed here from the document; &ldquo;Create in Jira&rdquo; assigns mock keys.
       </p>
     </div>
   );

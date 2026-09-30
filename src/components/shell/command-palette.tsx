@@ -16,30 +16,9 @@ import { inboxGroupMeta, itemGroup } from "../inbox/bits";
 import { NAV_ITEMS } from "./nav";
 import { closeCommandPalette, openCommandPalette, setCommandPaletteSearch, toggleCommandPalette, useCommandPaletteState } from "./palette-store";
 
-/**
- * The surface: a card-radius sheet of --card with the card edge and a deep lift, a 44px white
- * search field, 12px-radius rows that select to the well color. Descendant selectors because the
- * cmdk wrappers in ui/command are shared with other comboboxes.
- */
-const DIALOG_CLS = [
-  "top-[14vh] gap-0 rounded-[24px]! bg-card p-0 sm:max-w-[640px]",
-  "shadow-[0_0_0_1px_rgba(0,0,0,.05),0_32px_80px_-24px_rgba(0,0,0,.35),inset_0_1px_0_rgba(255,255,255,.9)] ring-0!",
-  "dark:shadow-[0_0_0_1px_rgba(255,255,255,.08),0_32px_80px_-24px_rgba(0,0,0,.7)]",
-].join(" ");
-
-const COMMAND_CLS = [
-  "rounded-none! bg-transparent p-0",
-  "**:data-[slot=command-input-wrapper]:p-3 **:data-[slot=command-input-wrapper]:pb-2",
-  "**:data-[slot=input-group]:h-11! **:data-[slot=input-group]:rounded-[14px]! **:data-[slot=input-group]:border-[#E6E6E6] **:data-[slot=input-group]:bg-white **:data-[slot=input-group]:shadow-[0_1px_2px_rgba(0,0,0,.04)]!",
-  "dark:**:data-[slot=input-group]:border-white/10 dark:**:data-[slot=input-group]:bg-white/5",
-  "**:data-[slot=input-group-addon]:pl-3.5! **:data-[slot=command-input]:text-[15px]",
-  "**:data-[slot=command-item]:min-h-10 **:data-[slot=command-item]:rounded-xl! **:data-[slot=command-item]:px-3 **:data-[slot=command-item]:text-[14px]",
-  "**:data-[slot=command-item]:data-selected:bg-[#EDEDED] dark:**:data-[slot=command-item]:data-selected:bg-white/8",
-  "**:data-[slot=command-group]:px-2 **:[[cmdk-group-heading]]:px-3! **:[[cmdk-group-heading]]:pt-2.5! **:[[cmdk-group-heading]]:text-[12px]! **:[[cmdk-group-heading]]:font-normal!",
-  "**:data-[slot=command-separator]:mx-3 **:data-[slot=command-separator]:bg-border/70",
-].join(" ");
-
-const KBD_CLS = "h-5 rounded-md bg-[#EAEAEA] px-1.5 font-mono text-[10.5px] text-foreground/70 dark:bg-white/10";
+/** Wider than ui/command's default and higher on the screen, with room between groups. */
+const DIALOG_CLS = "top-[14vh] sm:max-w-[640px]";
+const COMMAND_CLS = "p-2 **:data-[slot=command-group]:px-1 **:data-[slot=command-separator]:mx-2 **:data-[slot=command-separator]:my-1";
 
 /**
  * The one Cmd/Ctrl+K palette: pages, projects, stages (while searching), recent runs and inbox
@@ -75,16 +54,16 @@ export function CommandPalette() {
         <CommandInput value={search} onValueChange={setCommandPaletteSearch} placeholder="Search projects, stages, runs, inbox..." />
         {/* Mounted only while open, so the queries below run on demand. */}
         <PaletteBody go={go} />
-        <div className="flex items-center gap-4 border-t border-border/70 px-5 py-3 text-[12px] text-muted-foreground">
+        <div className="-mx-2 -mb-2 flex items-center gap-4 border-t border-rule px-5 py-3 text-[12px] text-muted-foreground">
           <span className="flex items-center gap-1.5">
-            <Kbd className={KBD_CLS}>Enter</Kbd> open
+            <Kbd>Enter</Kbd> open
           </span>
           <span className="flex items-center gap-1.5">
-            <Kbd className={KBD_CLS}>Up</Kbd>
-            <Kbd className={KBD_CLS}>Down</Kbd> move
+            <Kbd>Up</Kbd>
+            <Kbd>Down</Kbd> move
           </span>
           <span className="ml-auto flex items-center gap-1.5">
-            <Kbd className={KBD_CLS}>Esc</Kbd> close
+            <Kbd>Esc</Kbd> close
           </span>
         </div>
       </Command>
@@ -106,7 +85,7 @@ function PaletteBody({ go }: { go: (href: string) => void }) {
   return (
     <CommandList className="max-h-[min(60vh,28rem)] pb-2">
       <CommandEmpty className="px-6 py-10 text-[14px] text-muted-foreground">
-        No page, project, stage, run or inbox item matches <span className="text-foreground">&ldquo;{search.trim()}&rdquo;</span>.
+        No page, project, stage, run or inbox item matches <span className="text-heading">&ldquo;{search.trim()}&rdquo;</span>.
       </CommandEmpty>
 
       <CommandGroup heading="Pages">

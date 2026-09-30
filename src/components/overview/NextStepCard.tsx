@@ -1,13 +1,16 @@
 "use client";
 
 /**
- * The one loud element on the project overview: what should happen next, who it is for, and a
- * button straight to it. Done projects show who signed off instead.
+ * The one loud element on the project overview, built like the reference's Insights card: a
+ * grained mesh gradient with a glass chip ("Next step · Developer"), a big white numeral (what
+ * waits on people here), the action and a white button straight to it. Done projects show who
+ * signed off instead.
  */
 import { ArrowRight, BadgeCheck, Sparkles } from "lucide-react";
 import Link from "next/link";
-import { actorText, StageIcon } from "@/components/common";
+import { actorText } from "@/components/common";
 import { splitRole } from "@/components/stage/next-action";
+import { MeshBackdrop } from "@/components/viz";
 import { stageDef, type ProjectBundle } from "@/lib/delivery/types";
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -16,87 +19,83 @@ export function NextStepCard({ bundle, className }: { bundle: ProjectBundle; cla
   const { project, nextStep } = bundle;
   const base = `/projects/${encodeURIComponent(project.id)}`;
   const current = stageDef(project.currentStage);
+  const waiting = bundle.inbox.filter((i) => i.tier !== "fyi").length;
 
-  let kicker: string;
+  let chip: string;
   let title: string;
   let body: string | undefined;
   let href: string;
   let cta: string;
   let stage = project.currentStage;
+  let numeral: string;
+  let numeralLabel: string;
 
   if (project.done) {
     const d = [...project.stages.signoff.decisions].reverse().find((x) => x.decision === "approved");
-    kicker = "Delivered";
+    chip = "Delivered";
     title = "Signed off and done";
-    body = `${d ? `Accepted by ${actorText(d.by)}` : "Accepted"}${project.doneAt ? ` on ${formatDate(project.doneAt)}` : ""}. Every stage is approved; if something changes, reopen a stage from its page (Reopen, next to its title).`;
+    body = `${d ? `Accepted by ${actorText(d.by)}` : "Accepted"}${project.doneAt ? ` on ${formatDate(project.doneAt)}` : ""}. If something changes, reopen a stage from its page (Reopen, next to its title).`;
     href = `${base}/signoff`;
     cta = "View the sign-off";
     stage = "signoff";
+    numeral = "5/5";
+    numeralLabel = "stages approved";
   } else if (nextStep) {
     const { role, action } = splitRole(nextStep.text);
     const def = stageDef(nextStep.stage);
-    kicker = `Next step${role ? ` · ${role}` : ""}`;
+    chip = `Next step${role ? ` · ${role}` : ""}`;
     title = action;
     body = `Stage ${def.n} of 5 · ${def.title}`;
     href = nextStep.href;
     cta = nextStep.href.includes("?request=") ? "Answer now" : "Open";
     stage = nextStep.stage;
+    numeral = String(waiting);
+    numeralLabel = waiting === 1 ? "item waits on a person here" : "items wait on people here";
   } else {
-    kicker = "Next step";
+    chip = "Next step";
     title = "Nothing is waiting on a person";
     body = `Agents are working in ${current.title}. You will be asked here and in the Inbox when a run needs input.`;
     href = `${base}/${project.currentStage}`;
     cta = `Open ${current.title}`;
+    numeral = String(waiting);
+    numeralLabel = "items wait on people here";
   }
 
-  // Two quiet facts under the headline: the stage metric and how much waits on people here.
-  const waiting = bundle.inbox.filter((i) => i.tier !== "fyi").length;
-  const metric = bundle.stages[stage]?.metric;
-  const facts: Array<{ label: string; value: string }> = [];
-  if (!project.done) {
-    if (metric) facts.push({ label: stageDef(stage).title, value: metric });
-    facts.push({ label: "Waiting on people", value: String(waiting) });
-  }
+  const metric = project.done ? undefined : bundle.stages[stage]?.metric;
 
   return (
     <section
       aria-label="Next step"
-      className={cn(
-        "relative isolate flex min-h-[200px] min-w-0 flex-col gap-4 overflow-hidden rounded-2xl p-6 text-white shadow-[0_8px_24px_-12px_rgba(27,71,219,.55)]",
-        project.done ? "bg-linear-135 from-[#15803d] to-[#0f5f4a] dark:from-[#166a3a] dark:to-[#0f4a3d]" : "bg-linear-135 from-[#1b47db] via-[#2f43cf] to-[#5b3fc4] dark:from-[#2848b8] dark:via-[#3140a8] dark:to-[#4b36a0]",
-        className,
-      )}
+      className={cn("relative isolate flex min-h-[340px] overflow-hidden text-white min-w-0 flex-col gap-5 rounded-[28px] p-6 shadow-[0_16px_36px_-18px_rgba(20,40,120,.45)] sm:p-7", className)}
     >
-      {/* Decorative: the stage icon, oversized and faint, bleeding off the corner. */}
-      <span aria-hidden className="pointer-events-none absolute -right-6 -bottom-8 -z-10 text-white/10">
-        <StageIcon stage={stage} className="size-44" strokeWidth={1.25} />
+      {/* The Insights card's backdrop (mesh, glass, scrim under the text, grain, dark dimmer). */}
+      <MeshBackdrop />
+      <span className="inline-flex h-8 w-fit items-center gap-1.5 rounded-full border border-white/50 bg-white/25 px-3 text-[13px] leading-none text-[#2F2A2A] shadow-[inset_0_1px_0_rgba(255,255,255,.5)] backdrop-blur-md dark:border-white/25 dark:bg-white/10 dark:text-white dark:shadow-[inset_0_1px_0_rgba(255,255,255,.18)]">
+        {project.done ? <BadgeCheck aria-hidden className="size-3.5" strokeWidth={1.75} /> : <Sparkles aria-hidden className="size-3.5" strokeWidth={1.75} />}
+        {chip}
       </span>
-      <div className="flex items-center gap-2 text-[10.5px] font-semibold tracking-[0.12em] text-white/75 uppercase">
-        {project.done ? <BadgeCheck aria-hidden className="size-3.5" /> : <Sparkles aria-hidden className="size-3.5" />}
-        {kicker}
-      </div>
-      <div className="space-y-2">
-        <h2 className="text-[20px] leading-7 font-medium tracking-[-0.01em] break-words text-white">{title}</h2>
-        {body ? <p className="text-[13px] leading-5 text-white/80">{body}</p> : null}
-      </div>
-      <div className="mt-auto flex flex-col gap-4">
-      {facts.length ? (
-        <dl className="grid grid-cols-2 gap-3 border-t border-white/15 pt-4">
-          {facts.map((f) => (
-            <div key={f.label} className="min-w-0">
-              <dt className="text-[10.5px] font-medium tracking-[0.12em] text-white/65 uppercase">{f.label}</dt>
-              <dd className="mt-0.5 truncate text-[15px] text-white tabular-nums">{f.value}</dd>
-            </div>
-          ))}
-        </dl>
-      ) : null}
-      <Link
-        href={href}
-        className="inline-flex h-9 items-center gap-1.5 self-start rounded-full bg-white px-4 text-[13px] font-medium text-[#1b2f8f] shadow-sm transition-transform duration-150 hover:-translate-y-px focus-visible:ring-3 focus-visible:ring-white/60 focus-visible:outline-none"
-      >
-        {cta}
-        <ArrowRight aria-hidden className="size-4" />
-      </Link>
+
+      <div data-mesh-text className="mt-auto flex flex-col gap-4">
+        <div>
+          <div className="text-[56px] leading-none font-normal tracking-[-0.045em] tabular-nums [text-shadow:0_2px_24px_rgba(10,20,70,.25)] sm:text-[64px]">{numeral}</div>
+          <p className="mt-2 text-[15px] leading-5 text-white/90">{numeralLabel}</p>
+        </div>
+        <div className="space-y-1.5 border-t border-white/20 pt-4">
+          <h2 className="text-[18px] leading-6 font-medium tracking-[-0.01em] text-balance break-words text-white">{title}</h2>
+          {body ? (
+            <p className="text-sm leading-5 text-white/85">
+              {body}
+              {metric ? ` · ${metric}` : ""}
+            </p>
+          ) : null}
+        </div>
+        <Link
+          href={href}
+          className="inline-flex h-10 items-center gap-2 self-start rounded-[14px] bg-white px-4.5 text-sm font-medium text-[#0B0B0B] shadow-[0_6px_16px_-6px_rgba(10,20,70,.45)] transition-transform duration-150 hover:-translate-y-px focus-visible:ring-3 focus-visible:ring-white/70 focus-visible:outline-none"
+        >
+          {cta}
+          <ArrowRight aria-hidden className="size-4" />
+        </Link>
       </div>
     </section>
   );

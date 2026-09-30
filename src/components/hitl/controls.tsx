@@ -2,8 +2,9 @@
 
 /**
  * Form controls for human requests, built on Radix radio groups so arrow keys, Home/End and
- * focus rings behave like native radios. Pills are weft's "choice" control, cards its "cards"
- * control (an option that carries a description).
+ * focus rings behave like native radios. Pills are weft's "choice" control, drawn as the
+ * reference's segmented control (a well track, the chosen segment raised); cards are its "cards"
+ * control (an option that carries a description), drawn as raised segments in a well.
  */
 import { Check, X, type LucideIcon } from "lucide-react";
 import { RadioGroup as RadioGroupPrimitive } from "radix-ui";
@@ -47,7 +48,7 @@ export function PillChoice<T extends string>({
       aria-labelledby={ariaLabelledBy}
       orientation="horizontal"
       disabled={disabled}
-      className={cn("inline-flex flex-wrap items-center gap-1 rounded-full bg-muted p-1", className)}
+      className={cn("inline-flex max-w-full flex-wrap items-center gap-1 bg-well", size === "sm" ? "rounded-[12px] p-[3px]" : "rounded-[16px] p-1", className)}
     >
       {options.map((option) => {
         const Icon = option.icon;
@@ -57,12 +58,12 @@ export function PillChoice<T extends string>({
             value={option.value}
             disabled={option.disabled}
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-full font-medium whitespace-nowrap text-muted-foreground transition-colors duration-150 outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
-              size === "sm" ? "h-6 px-2.5 text-xs" : "h-8 px-3.5 text-[13px]",
-              "data-[state=checked]:bg-card data-[state=checked]:text-foreground data-[state=checked]:shadow-sm",
+              "inline-flex items-center gap-1.5 font-medium whitespace-nowrap text-muted-foreground transition-[color,background-color,box-shadow] duration-150 outline-none hover:text-heading focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-(--disabled-opacity)",
+              size === "sm" ? "h-[30px] rounded-[9px] px-3 text-[13px]" : "h-9 rounded-[12px] px-3.5 text-sm",
+              "data-[state=checked]:bg-raised data-[state=checked]:text-heading data-[state=checked]:shadow-(--raised-shadow)",
             )}
           >
-            {Icon ? <Icon aria-hidden className="size-3.5" /> : null}
+            {Icon ? <Icon aria-hidden className={size === "sm" ? "size-3.5" : "size-4"} strokeWidth={1.9} /> : null}
             {option.label}
           </RadioGroupPrimitive.Item>
         );
@@ -108,7 +109,7 @@ export function OptionCards<T extends string>({
       aria-label={ariaLabel}
       aria-labelledby={ariaLabelledBy}
       disabled={disabled}
-      className={cn("grid gap-2", cols === 3 ? "@xl:grid-cols-3" : cols === 2 ? "@md:grid-cols-2" : "", className)}
+      className={cn("grid gap-1 rounded-[20px] bg-well p-1", cols === 3 ? "@xl:grid-cols-3" : cols === 2 ? "@md:grid-cols-2" : "", className)}
     >
       {options.map((option) => {
         const Icon = option.icon;
@@ -118,25 +119,25 @@ export function OptionCards<T extends string>({
             value={option.value}
             disabled={option.disabled}
             className={cn(
-              "group relative flex h-full flex-col items-start gap-1 rounded-xl border border-border bg-card p-3 text-left transition-colors duration-150 outline-none hover:border-foreground/20 focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
-              "data-[state=checked]:border-primary data-[state=checked]:ring-1 data-[state=checked]:ring-primary",
+              "group relative flex h-full flex-col items-start gap-1.5 rounded-[16px] p-3.5 text-left transition-[background-color,box-shadow] duration-150 outline-none hover:bg-raised/60 focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-(--disabled-opacity)",
+              "data-[state=checked]:bg-raised data-[state=checked]:shadow-(--raised-shadow)",
             )}
           >
             <span className="flex w-full items-center gap-2">
               {Icon ? (
-                <span className={cn("inline-flex size-6 items-center justify-center rounded-full", TONE_CLASS[option.tone ?? "neutral"])}>
-                  <Icon aria-hidden className="size-3.5" />
+                <span className={cn("inline-flex size-7 shrink-0 items-center justify-center rounded-full", TONE_CLASS[option.tone ?? "neutral"])}>
+                  <Icon aria-hidden className="size-4" strokeWidth={1.9} />
                 </span>
               ) : null}
-              <span className="flex-1 text-[13px] font-medium text-foreground">{option.title}</span>
+              <span className="flex-1 text-sm font-medium text-muted-foreground group-hover:text-heading group-data-[state=checked]:text-heading">{option.title}</span>
               <span
                 aria-hidden
-                className="inline-flex size-4 items-center justify-center rounded-full border border-border text-primary-foreground group-data-[state=checked]:border-primary group-data-[state=checked]:bg-primary"
+                className="inline-flex size-5 shrink-0 items-center justify-center rounded-full border border-circle-border text-ink-foreground transition-colors group-data-[state=checked]:border-transparent group-data-[state=checked]:bg-ink"
               >
-                <Check className="size-3 opacity-0 group-data-[state=checked]:opacity-100" />
+                <Check className="size-3 opacity-0 group-data-[state=checked]:opacity-100" strokeWidth={3} />
               </span>
             </span>
-            {option.description ? <span className="text-xs leading-snug text-muted-foreground">{option.description}</span> : null}
+            {option.description ? <span className="text-[13px] leading-5 text-muted-foreground">{option.description}</span> : null}
           </RadioGroupPrimitive.Item>
         );
       })}
@@ -157,8 +158,8 @@ export function ChipToggles({ values, onChange, options, ariaLabel }: { values: 
             aria-pressed={on}
             onClick={() => onChange(on ? values.filter((v) => v !== option.value) : [...values, option.value])}
             className={cn(
-              "inline-flex h-7 items-center gap-1 rounded-full border px-3 text-[13px] transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring",
-              on ? "border-primary bg-primary/10 text-foreground" : "border-border text-muted-foreground hover:text-foreground",
+              "inline-flex h-8 items-center gap-1.5 rounded-full px-3.5 text-[13px] font-medium transition-[color,background-color,box-shadow] duration-150 outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+              on ? "bg-raised text-heading shadow-[0_0_0_1px_var(--chip-edge),var(--raised-shadow)]" : "bg-well text-muted-foreground hover:bg-well-hover hover:text-heading",
             )}
           >
             {on ? <Check aria-hidden className="size-3.5" /> : null}
@@ -242,7 +243,7 @@ export function ChipInput({
           aria-describedby={error ? `${id}-error` : undefined}
           className="font-mono text-[13px]"
         />
-        <Button type="button" variant="outline" onClick={add} disabled={disabled || !draft.trim()} className="rounded-full">
+        <Button type="button" variant="secondary" size="lg" onClick={add} disabled={disabled || !draft.trim()}>
           {addLabel}
         </Button>
       </div>
@@ -254,13 +255,13 @@ export function ChipInput({
       {values.length > 0 ? (
         <ul className="flex flex-wrap gap-1.5" aria-label={`${label}: ${values.length}`}>
           {values.map((value) => (
-            <li key={value} className="inline-flex h-7 items-center gap-1 rounded-full border border-border bg-muted pr-1 pl-2.5 font-mono text-xs">
+            <li key={value} className="inline-flex h-7 items-center gap-1 rounded-full bg-well pr-1 pl-2.5 font-mono text-xs text-heading">
               {renderChip ? renderChip(value) : value}
               <button
                 type="button"
                 onClick={() => onChange(values.filter((v) => v !== value))}
                 aria-label={`Remove ${value}`}
-                className="inline-flex size-5 items-center justify-center rounded-full text-muted-foreground hover:bg-background hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                className="inline-flex size-5 items-center justify-center rounded-full text-muted-foreground hover:bg-raised hover:text-heading focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
               >
                 <X aria-hidden className="size-3" />
               </button>
@@ -275,21 +276,21 @@ export function ChipInput({
 /** A labelled block inside a form: label, optional hint, control. */
 export function FormRow({ label, htmlFor, id, hint, required, children, className }: { label: ReactNode; htmlFor?: string; id?: string; hint?: ReactNode; required?: boolean; children: ReactNode; className?: string }) {
   return (
-    <div className={cn("space-y-1.5", className)}>
+    <div className={cn("space-y-2", className)}>
       <div className="flex items-baseline gap-2">
         {htmlFor ? (
-          <label htmlFor={htmlFor} id={id} className="text-xs font-medium text-foreground">
+          <label htmlFor={htmlFor} id={id} className="text-sm font-medium text-heading">
             {label}
           </label>
         ) : (
-          <span id={id} className="text-xs font-medium text-foreground">
+          <span id={id} className="text-sm font-medium text-heading">
             {label}
           </span>
         )}
-        {required ? <span className="text-[11px] text-muted-foreground">required</span> : null}
+        {required ? <span className="text-xs text-muted-foreground">required</span> : null}
       </div>
       {children}
-      {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
+      {hint ? <p className="text-[13px] leading-5 text-muted-foreground">{hint}</p> : null}
     </div>
   );
 }

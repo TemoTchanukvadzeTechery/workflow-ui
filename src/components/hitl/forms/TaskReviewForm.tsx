@@ -25,6 +25,7 @@ import type { DevTaskInput, TaskReviewAnswer } from "@/lib/weft/workflows";
 import { cn } from "@/lib/utils";
 import { Markdown } from "../../docs/Markdown";
 import { TextDiff, parseDiffText } from "../../docs/TextDiff";
+import { FloatingChip } from "@/components/common";
 import { Notice, TonePill } from "../bits";
 import { BlobContent } from "../BlobContent";
 import { FormRow, PillChoice } from "../controls";
@@ -46,9 +47,9 @@ export const TaskReviewHostContext = createContext<TaskReviewHost | null>(null);
 
 function Stat({ label, value, tone }: { label: string; value: string; tone?: "good" | "bad" }) {
   return (
-    <div className="rounded-lg bg-muted/50 px-3 py-2">
-      <div className="text-[10.5px] tracking-[0.12em] text-muted-foreground uppercase">{label}</div>
-      <div className={cn("font-mono text-sm tabular-nums", tone === "good" && "text-status-success-fg", tone === "bad" && "text-status-danger-fg")}>{value}</div>
+    <div className="rounded-[16px] bg-well/60 px-4 py-3">
+      <div className="text-[13px] text-muted-foreground">{label}</div>
+      <div className={cn("mt-0.5 text-[20px] leading-7 tracking-[-0.02em] text-heading tabular-nums", tone === "good" && "text-status-success-fg", tone === "bad" && "text-status-danger-fg")}>{value}</div>
     </div>
   );
 }
@@ -73,17 +74,17 @@ function ChangedFiles({ diff, runId }: { diff: string; runId: string }) {
   if (files.length === 0) return <p className="text-[13px] text-muted-foreground">No file changes in this review.</p>;
   return (
     <div className="space-y-2">
-      <ul className="overflow-hidden rounded-xl border border-border">
+      <ul className="divide-y divide-rule border-y border-rule">
         {files.map((f) => {
           const Icon = FILE_ICON[f.status];
           return (
-            <li key={f.path} className="flex min-w-0 items-center gap-2 border-b border-border px-3 py-1.5 text-[13px] last:border-b-0">
+            <li key={f.path} className="flex min-h-11 min-w-0 items-center gap-2.5 px-1 py-2 text-sm">
               <Icon aria-hidden className={cn("size-3.5 shrink-0", f.status === "added" ? "text-status-success-fg" : f.status === "deleted" ? "text-status-danger-fg" : "text-muted-foreground")} />
               <span className="sr-only">{f.status}</span>
-              <span className="min-w-0 flex-1 truncate font-mono text-xs" title={f.path}>
+              <span className="min-w-0 flex-1 truncate font-mono text-xs text-heading" title={f.path}>
                 {f.path}
               </span>
-              <span className="shrink-0 font-mono text-[11px] tabular-nums">
+              <span className="shrink-0 font-mono text-xs tabular-nums">
                 <span className="text-status-success-fg">+{f.adds}</span> <span className="text-status-danger-fg">−{f.dels}</span>
               </span>
             </li>
@@ -91,14 +92,14 @@ function ChangedFiles({ diff, runId }: { diff: string; runId: string }) {
         })}
       </ul>
       {host ? (
-        <Button type="button" size="sm" variant="outline" className="h-7 rounded-full" onClick={() => host.openChanges(runId)}>
+        <Button type="button" size="sm" variant="secondary" onClick={() => host.openChanges(runId)}>
           <FileDiff aria-hidden />
           Open the diff in Changes
           <ArrowUpRight aria-hidden />
         </Button>
       ) : (
         <>
-          <Button type="button" size="sm" variant="ghost" className="h-7 rounded-full" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+          <Button type="button" size="sm" variant="ghost" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
             {open ? <ChevronDown aria-hidden /> : <ChevronRight aria-hidden />}
             {open ? "Hide the diff" : "Show the full diff"}
           </Button>
@@ -129,7 +130,7 @@ function CriteriaChecklist({ run, className }: { run?: RunDetail; className?: st
   if (acs.length === 0) return null;
   return (
     <fieldset className={cn("min-w-0 space-y-2", className)}>
-      <legend className="mb-1.5 flex w-full items-baseline gap-2 text-xs font-medium">
+      <legend className="mb-2 flex w-full items-baseline gap-2 text-sm font-medium text-heading">
         Acceptance criteria
         <span className="font-normal text-muted-foreground tabular-nums">
           {ticked.size}/{acs.length} checked by you
@@ -140,7 +141,7 @@ function CriteriaChecklist({ run, className }: { run?: RunDetail; className?: st
           const id = `${base}-${ac.id}`;
           const cov = coverage(run?.checks ?? [], ac.id);
           return (
-            <li key={ac.id} className="flex items-start gap-2 rounded-lg bg-muted/40 px-3 py-2">
+            <li key={ac.id} className="flex items-start gap-2.5 rounded-[14px] bg-well/60 px-3.5 py-2.5">
               <Checkbox
                 id={id}
                 checked={ticked.has(ac.id)}
@@ -154,12 +155,12 @@ function CriteriaChecklist({ run, className }: { run?: RunDetail; className?: st
                 }
                 className="mt-0.5"
               />
-              <label htmlFor={id} className="min-w-0 flex-1 space-y-1 text-[13px] leading-snug">
+              <label htmlFor={id} className="min-w-0 flex-1 space-y-1 text-sm leading-5">
                 <span className="block">
                   <span className="mr-1.5 font-mono text-[11px] text-muted-foreground">{ac.id}</span>
                   {ac.text}
                 </span>
-                <span className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+                <span className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
                   {cov.length ? (
                     cov.map((c) => (
                       <span key={c.check} className={cn("inline-flex items-center gap-1 font-mono", c.pass ? "text-status-success-fg" : "text-status-danger-fg")}>
@@ -215,12 +216,9 @@ export function TaskReviewForm({ request, run, projectId, compact, onAnswered }:
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
-        {facts.taskKey ? <span className="font-mono text-xs text-muted-foreground">{facts.taskKey}</span> : null}
-        <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium">
-          Review {cycle}
-          {typeof maxRework === "number" ? ` · ${Math.max(0, cycle - 1)}/${maxRework} reworks used` : ""}
-        </span>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        {facts.taskKey ? <span className="font-mono text-xs text-heading">{facts.taskKey}</span> : null}
+        <FloatingChip label="Review" value={`${cycle}${typeof maxRework === "number" ? ` · ${Math.max(0, cycle - 1)}/${maxRework} reworks used` : ""}`} tone="running" />
         {escalated ? (
           <TonePill tone="danger" icon={AlertTriangle}>
             Escalated
@@ -245,19 +243,19 @@ export function TaskReviewForm({ request, run, projectId, compact, onAnswered }:
 
       <Tabs defaultValue="changes" className="min-w-0 gap-3">
         <div className="-mx-1 overflow-x-auto px-1 pb-1">
-          <TabsList variant="line" className="h-auto flex-nowrap justify-start gap-1">
-            <TabsTrigger value="changes" className="h-8 flex-none rounded-full px-3 text-[13px] data-active:bg-muted">
+          <TabsList className="justify-start">
+            <TabsTrigger value="changes" className="h-9 flex-none px-3.5">
               <FileDiff aria-hidden />
               Changed files
             </TabsTrigger>
             {verification ? (
-              <TabsTrigger value="verification" className="h-8 flex-none rounded-full px-3 text-[13px] data-active:bg-muted">
+              <TabsTrigger value="verification" className="h-9 flex-none px-3.5">
                 <ShieldCheck aria-hidden />
                 Verification report
               </TabsTrigger>
             ) : null}
             {summary ? (
-              <TabsTrigger value="summary" className="h-8 flex-none rounded-full px-3 text-[13px] data-active:bg-muted">
+              <TabsTrigger value="summary" className="h-9 flex-none px-3.5">
                 Agent summary
               </TabsTrigger>
             ) : null}
@@ -310,8 +308,8 @@ export function TaskReviewForm({ request, run, projectId, compact, onAnswered }:
       {/* The decision bar: pinned to the bottom of the viewport while the form is on screen. */}
       <div
         className={cn(
-          "space-y-3 border-t border-border pt-3",
-          !compact && "sticky bottom-0 z-10 -mx-4 -mb-4 rounded-b-2xl bg-card/95 px-4 pb-4 backdrop-blur @2xl:-mx-5 @2xl:-mb-5 @2xl:px-5 @2xl:pb-5 @3xl:flex @3xl:items-end @3xl:gap-6 @3xl:space-y-0",
+          "space-y-3 border-t border-rule pt-4",
+          !compact && "sticky bottom-0 z-10 -mx-5 -mb-5 rounded-b-2xl bg-card/95 px-5 pb-5 backdrop-blur @2xl:-mx-6 @2xl:-mb-6 @2xl:px-6 @2xl:pb-6 @3xl:flex @3xl:items-end @3xl:gap-6 @3xl:space-y-0",
         )}
       >
         <FormRow label="Decision" id={decisionId} required className="min-w-0 @3xl:max-w-[60%]">

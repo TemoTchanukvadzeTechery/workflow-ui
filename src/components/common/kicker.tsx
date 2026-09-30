@@ -10,7 +10,7 @@ export interface KickerProps {
   tone?: "muted" | "primary";
 }
 
-/** Weft-style kicker: 10.5px uppercase, 0.12em tracking, muted. */
+/** Tiny uppercase caption (11px, 0.1em tracking, muted). Rare in the reference: section captions only. */
 export function Kicker({ children, className, as: Comp = "div", tone = "muted" }: KickerProps) {
   return <Comp className={cn("kicker", tone === "primary" && "text-primary", className)}>{children}</Comp>;
 }

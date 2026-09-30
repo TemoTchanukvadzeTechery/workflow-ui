@@ -42,8 +42,8 @@ export interface IntakeFormProps {
 function NumberField({ label, value, min, max, onChange, disabled, hint }: { label: string; value: number; min: number; max: number; onChange: (n: number) => void; disabled?: boolean; hint?: string }) {
   const id = useId();
   return (
-    <div className="space-y-1">
-      <label htmlFor={id} className="block text-xs font-medium">
+    <div className="space-y-1.5">
+      <label htmlFor={id} className="block text-[13px] font-medium text-heading">
         {label}
       </label>
       <Input
@@ -59,7 +59,7 @@ function NumberField({ label, value, min, max, onChange, disabled, hint }: { lab
         className="block w-28"
         aria-describedby={`${id}-hint`}
       />
-      <p id={`${id}-hint`} className="text-[11px] text-muted-foreground">
+      <p id={`${id}-hint`} className="text-xs text-muted-foreground">
         {hint ?? `${min} to ${max}`}
       </p>
     </div>
@@ -88,7 +88,7 @@ export function IntakeForm({ value, onChange, errors = {}, mode, projectId, outP
       {!hideIdentity ? (
         <div className="grid gap-4 @xl:grid-cols-2">
           <div className="space-y-1.5">
-            <label htmlFor={nameId} className="block text-xs font-medium">
+            <label htmlFor={nameId} className="block text-[13px] font-medium text-heading">
               Project name <span className="font-normal text-muted-foreground">required</span>
             </label>
             <Input
@@ -108,7 +108,7 @@ export function IntakeForm({ value, onChange, errors = {}, mode, projectId, outP
             ) : null}
           </div>
           <div className="space-y-1.5">
-            <label htmlFor={summaryId} className="block text-xs font-medium">
+            <label htmlFor={summaryId} className="block text-[13px] font-medium text-heading">
               One-line summary <span className="font-normal text-muted-foreground">optional</span>
             </label>
             <Input id={summaryId} value={value.summary} onChange={(e) => onChange({ ...value, summary: e.target.value })} placeholder="e.g. Fewer missed reorders" className="placeholder:text-muted-foreground/60" disabled={disabled} />
@@ -117,7 +117,7 @@ export function IntakeForm({ value, onChange, errors = {}, mode, projectId, outP
       ) : null}
 
       <div className="space-y-1.5">
-        <label htmlFor={requestId} className="block text-xs font-medium">
+        <label htmlFor={requestId} className="block text-[13px] font-medium text-heading">
           What should the BRD cover?
         </label>
         <Textarea
@@ -131,7 +131,7 @@ export function IntakeForm({ value, onChange, errors = {}, mode, projectId, outP
           aria-describedby={`${requestId}-hint${errors.request ? ` ${requestId}-err` : ""}`}
           className="min-h-32 placeholder:text-muted-foreground/60"
         />
-        <p id={`${requestId}-hint`} className="text-[11px] text-muted-foreground">
+        <p id={`${requestId}-hint`} className="text-xs text-muted-foreground">
           {importingBrd ? "Optional with an imported BRD: kept with the project for a later po-brd run." : "What the PO wants, in their words. The agent reads it as note N1 and cites it by line."}
         </p>
         {errors.request ? (
@@ -142,24 +142,24 @@ export function IntakeForm({ value, onChange, errors = {}, mode, projectId, outP
         {detected.length > 0 ? (
           <div className="space-y-1 pt-1">
           <div className="flex flex-wrap items-center gap-1.5" aria-label="References detected in the request">
-            <span className="text-xs text-muted-foreground">Detected:</span>
+            <span className="text-[13px] text-muted-foreground">Detected:</span>
             {detected.map((ref) => {
               const added = sourceValues.has(ref);
               const kind = refKind(ref);
               const KindIcon = kind === "confluence" ? BookOpen : Ticket;
               return (
-                <span key={ref} className="inline-flex h-7 items-center gap-1 rounded-full border border-border bg-muted/50 pr-1 pl-2.5 font-mono text-xs" title={kind === "confluence" ? `Confluence page ${ref}` : `Jira issue ${ref}`}>
+                <span key={ref} className="inline-flex h-8 items-center gap-1 rounded-full bg-well pr-1 pl-3 font-mono text-xs text-heading" title={kind === "confluence" ? `Confluence page ${ref}` : `Jira issue ${ref}`}>
                   <KindIcon aria-hidden className="size-3.5 shrink-0 text-muted-foreground" />
                   <span className="sr-only">{kind === "confluence" ? "Confluence page" : "Jira issue"}</span>
                   {ref}
                   {added ? (
-                    <span className="px-1.5 font-sans text-[11px] text-muted-foreground">source</span>
+                    <span className="px-2 font-sans text-xs text-muted-foreground">source</span>
                   ) : (
                     <Button
                       type="button"
                       variant="ghost"
                       size="xs"
-                      className="rounded-full font-sans"
+                      className="rounded-full bg-raised font-sans shadow-(--raised-shadow) hover:bg-(--chip-bg)"
                       disabled={disabled}
                       onClick={() => setIntake({ sources: [...intake.sources, makeSource(kind, ref, actor)] })}
                       aria-label={`Add ${ref} as a source`}
@@ -172,13 +172,13 @@ export function IntakeForm({ value, onChange, errors = {}, mode, projectId, outP
               );
             })}
           </div>
-          <p className="text-[11px] text-muted-foreground">po-brd also finds these in the request; add one as a source to have discovery fetch it first.</p>
+          <p className="text-xs text-muted-foreground">po-brd also finds these in the request; add one as a source to have discovery fetch it first.</p>
           </div>
         ) : null}
       </div>
 
       <section aria-labelledby={`${requestId}-sources`} className="space-y-2">
-        <h3 id={`${requestId}-sources`} className="text-xs font-medium">
+        <h3 id={`${requestId}-sources`} className="text-[13px] font-medium text-heading">
           Requirement channels
         </h3>
         <SourcesPicker value={intake.sources} onChange={(sources) => setIntake({ sources })} disabled={disabled} />
@@ -186,14 +186,14 @@ export function IntakeForm({ value, onChange, errors = {}, mode, projectId, outP
 
       <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
         <CollapsibleTrigger asChild>
-          <button type="button" className="inline-flex items-center gap-1.5 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
+          <button type="button" className="inline-flex h-9 items-center gap-1.5 rounded-[12px] bg-well px-3 text-[13px] font-medium text-heading transition-colors hover:bg-well-hover focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none">
             {advancedOpen ? <ChevronDown aria-hidden className="size-3.5" /> : <ChevronRight aria-hidden className="size-3.5" />}
             <SlidersHorizontal aria-hidden className="size-3.5" />
             Advanced
           </button>
         </CollapsibleTrigger>
         <CollapsibleContent className="pt-3">
-          <div className="space-y-4 rounded-xl border border-border p-4">
+          <div className="space-y-5 rounded-[20px] bg-well/60 p-5">
             <div className="grid gap-4 @lg:grid-cols-3">
               <NumberField label="Max review rounds" value={intake.options.maxRounds} min={1} max={5} onChange={(n) => setOptions({ maxRounds: n })} disabled={disabled} />
               <NumberField label="Discovery rounds" value={intake.options.discoveryRounds} min={1} max={5} onChange={(n) => setOptions({ discoveryRounds: n })} disabled={disabled || !intake.options.discover} />
@@ -201,22 +201,22 @@ export function IntakeForm({ value, onChange, errors = {}, mode, projectId, outP
             </div>
             <div className="flex items-center gap-2">
               <Switch id={discoverId} checked={intake.options.discover} onCheckedChange={(c) => setOptions({ discover: c })} disabled={disabled} />
-              <label htmlFor={discoverId} className="text-[13px]">
+              <label htmlFor={discoverId} className="text-sm text-heading">
                 Search Jira & Confluence first
               </label>
             </div>
             <div className="grid gap-4 @xl:grid-cols-2">
               <div className="space-y-1">
-                <label htmlFor={budgetId} className="block text-xs font-medium">
+                <label htmlFor={budgetId} className="block text-[13px] font-medium text-heading">
                   Budget
                 </label>
                 <Input id={budgetId} value={intake.options.budget ?? ""} onChange={(e) => setOptions({ budget: e.target.value })} placeholder="$8" disabled={disabled} className="block w-32 font-mono" />
-                <p className="text-[11px] text-muted-foreground">A run option, not workflow input: &quot;$8&quot;, &quot;500k&quot; or &quot;500k,$8&quot;.</p>
+                <p className="text-xs text-muted-foreground">A run option, not workflow input: &quot;$8&quot;, &quot;500k&quot; or &quot;500k,$8&quot;.</p>
               </div>
               <div className="space-y-1">
-                <span className="block text-xs font-medium">Output</span>
+                <span className="block text-[13px] font-medium text-heading">Output</span>
                 <p className="flex min-h-8 items-center font-mono text-[13px] break-words text-muted-foreground">{importingBrd ? `Saves the imported BRD as ${out}` : `Writes ${out}`}</p>
-                <p className="text-[11px] text-muted-foreground">Memory stays shared: memory/memory.md.</p>
+                <p className="text-xs text-muted-foreground">Memory stays shared: memory/memory.md.</p>
               </div>
             </div>
             {errors.options ? (
@@ -228,7 +228,7 @@ export function IntakeForm({ value, onChange, errors = {}, mode, projectId, outP
         </CollapsibleContent>
       </Collapsible>
       {!advancedOpen ? (
-        <p className="-mt-4 font-mono text-[11px] break-words text-muted-foreground">
+        <p className="-mt-3 font-mono text-xs break-words text-muted-foreground">
           {importingBrd ? `Saves the imported BRD as ${out}` : `Writes ${out}${mode === "edit" ? "" : " once the run starts"}`}
         </p>
       ) : null}

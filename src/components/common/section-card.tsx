@@ -30,7 +30,8 @@ export interface SectionCardProps {
 
 /**
  * The reference card (STYLE.md 1): 28px radius, off-white surface with a box-shadow edge and
- * soft lift, a 20-22px medium title and an optional circle action on the right. Padding is 28px
+ * soft lift, a 22px medium title (20px on phones and dense pages) and an optional circle action
+ * on the right, as in the reference's "Payments" and "Gross Volume" cards. Padding is 28px
  * on overview pages ("airy", 20px on phones) and 20px on dense pages.
  */
 export function SectionCard({
@@ -73,7 +74,7 @@ export function SectionCard({
               <h2
                 className={cn(
                   "truncate font-medium tracking-[-0.015em] text-heading",
-                  airy ? "text-[20px] leading-7 sm:text-[21px]" : "text-[18px] leading-6 sm:text-[20px] sm:leading-7",
+                  airy ? "text-[20px] leading-[1.25] sm:text-[22px] sm:leading-[1.2]" : "text-[18px] leading-6 sm:text-[20px] sm:leading-7",
                 )}
               >
                 {title}

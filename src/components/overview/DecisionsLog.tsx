@@ -89,7 +89,7 @@ export function DecisionsLog({ bundle, className }: { bundle: ProjectBundle; cla
       ) : (
         <>
           {earlier > 0 ? (
-            <Button variant="ghost" size="sm" className="mb-2 -ml-2 rounded-full text-muted-foreground" onClick={() => setShowAll(true)}>
+            <Button variant="secondary" size="sm" className="mb-3" onClick={() => setShowAll(true)}>
               <ChevronUp aria-hidden />
               Show {earlier} earlier {earlier === 1 ? "decision" : "decisions"}
             </Button>
@@ -99,16 +99,16 @@ export function DecisionsLog({ bundle, className }: { bundle: ProjectBundle; cla
               const t = toneClasses(e.tone);
               const Icon = e.icon;
               return (
-                <li key={e.id} className="flex gap-3">
+                <li key={e.id} className="flex gap-3.5">
                   <span className="flex flex-col items-center self-stretch">
-                    <span aria-hidden className={cn("inline-flex size-7 shrink-0 items-center justify-center rounded-full", t.bg, t.text)}>
-                      <Icon className="size-3.5" strokeWidth={2} />
+                    <span aria-hidden className={cn("inline-flex size-9 shrink-0 items-center justify-center rounded-full", t.bg, t.text)}>
+                      <Icon className="size-4" strokeWidth={1.9} />
                     </span>
-                    {i < entries.length - 1 ? <span aria-hidden className="mt-1 w-px flex-1 bg-border" /> : null}
+                    {i < entries.length - 1 ? <span aria-hidden className="my-1 w-px flex-1 bg-rule" /> : null}
                   </span>
-                  <div className="min-w-0 flex-1 pb-4">
-                    <p className="text-[13px] leading-5 font-medium text-foreground">{e.title}</p>
-                    <p className="flex flex-wrap items-center gap-x-1.5 text-[11px] text-muted-foreground">
+                  <div className="min-w-0 flex-1 pt-0.5 pb-5">
+                    <p className="text-sm leading-5 font-medium text-heading">{e.title}</p>
+                    <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs leading-4 text-muted-foreground">
                       <span>Stage {stageDef(e.stage).n}</span>
                       {e.by ? (
                         <>
@@ -119,14 +119,14 @@ export function DecisionsLog({ bundle, className }: { bundle: ProjectBundle; cla
                       <span aria-hidden>·</span>
                       <RelativeTime at={e.at} />
                     </p>
-                    {e.comment ? <blockquote className="mt-1.5 border-l-2 pl-2.5 text-[13px] leading-5 text-foreground/85">{e.comment}</blockquote> : null}
+                    {e.comment ? <blockquote className="mt-2 border-l-2 border-rule pl-3 text-sm leading-5 text-foreground/85">{e.comment}</blockquote> : null}
                     {e.warnings?.length ? (
-                      <div className="mt-2 rounded-xl bg-status-attention-bg/60 px-3 py-2">
-                        <p className="text-[11px] font-medium text-status-attention-fg">Acknowledged {e.warnings.length === 1 ? "warning" : `${e.warnings.length} warnings`}</p>
+                      <div className="mt-2.5 rounded-[16px] bg-status-attention-bg px-4 py-3">
+                        <p className="text-xs font-medium text-status-attention-fg">Acknowledged {e.warnings.length === 1 ? "warning" : `${e.warnings.length} warnings`}</p>
                         <ul className="mt-1 space-y-0.5">
                           {e.warnings.map((w) => (
-                            <li key={w} className="flex gap-1.5 text-xs leading-5 text-foreground/85">
-                              <TriangleAlert aria-hidden className="mt-1 size-3 shrink-0 text-status-attention-fg" />
+                            <li key={w} className="flex gap-2 text-[13px] leading-5 text-foreground/90">
+                              <TriangleAlert aria-hidden className="mt-1 size-3.5 shrink-0 text-status-attention-fg" />
                               <span className="min-w-0">{w}</span>
                             </li>
                           ))}

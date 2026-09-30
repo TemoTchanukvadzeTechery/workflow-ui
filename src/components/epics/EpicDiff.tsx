@@ -77,7 +77,7 @@ function ListDiff({ change }: { change: FieldChange }) {
       <li
         key={`${kind}-${text}`}
         className={cn(
-          "flex gap-2 rounded-md px-2 py-1 text-[13px] leading-snug",
+          "flex gap-2 rounded-[10px] px-2.5 py-1.5 text-[13px] leading-5",
           kind === "add" && "bg-status-success-bg text-foreground",
           kind === "del" && "bg-status-danger-bg text-muted-foreground line-through",
           kind === "keep" && "text-muted-foreground",
@@ -93,10 +93,10 @@ function ListDiff({ change }: { change: FieldChange }) {
       <li
         key={`${kind}-${text}`}
         className={cn(
-          "inline-flex h-5 items-center rounded-md px-1.5 font-mono text-[11px]",
+          "inline-flex h-6 items-center rounded-[6px] px-1.5 font-mono text-[11.5px]",
           kind === "add" && "bg-status-success-bg text-status-success-fg",
           kind === "del" && "bg-status-danger-bg text-status-danger-fg line-through",
-          kind === "keep" && "bg-muted text-muted-foreground",
+          kind === "keep" && "bg-foreground/[0.05] text-muted-foreground",
         )}
       >
         <span className="sr-only">{kind === "add" ? "Added: " : kind === "del" ? "Removed: " : "Unchanged: "}</span>
@@ -116,12 +116,12 @@ function ListDiff({ change }: { change: FieldChange }) {
 function TextChange({ change }: { change: FieldChange }) {
   return (
     <div className="grid gap-1.5 text-[13px] @xl:grid-cols-[1fr_auto_1fr] @xl:items-start">
-      <p className="rounded-md bg-status-danger-bg px-2 py-1 text-muted-foreground line-through">
+      <p className="rounded-[10px] bg-status-danger-bg px-2.5 py-1.5 text-muted-foreground line-through">
         <span className="sr-only">Before: </span>
         {String(change.before ?? "") || "—"}
       </p>
       <ArrowRight aria-hidden className="mx-auto hidden size-4 text-muted-foreground @xl:block" />
-      <p className="rounded-md bg-status-success-bg px-2 py-1">
+      <p className="rounded-[10px] bg-status-success-bg px-2.5 py-1.5 text-foreground">
         <span className="sr-only">After: </span>
         {String(change.after ?? "") || "—"}
       </p>
@@ -131,18 +131,18 @@ function TextChange({ change }: { change: FieldChange }) {
 
 export function EpicDiff({ epic, stage, className }: { epic: Epic; stage?: StageId; className?: string }) {
   const blocks = epicDiffBlocks(epic, { stage });
-  if (blocks.length === 0) return <p className={cn("text-xs text-muted-foreground", className)}>No field changes recorded.</p>;
+  if (blocks.length === 0) return <p className={cn("text-[13px] text-muted-foreground", className)}>No field changes recorded.</p>;
   return (
     <div className={cn("@container space-y-3", className)}>
       {blocks.map((b, i) => (
         <div key={i} className="space-y-2">
-          <p className="text-xs text-muted-foreground">
-            <span className="font-medium text-foreground">{b.entry.change}</span> · {actorText(b.entry.by)} · <TimeAgo at={b.entry.at} />
+          <p className="text-[13px] text-muted-foreground">
+            <span className="font-medium text-heading">{b.entry.change}</span> · {actorText(b.entry.by)} · <TimeAgo at={b.entry.at} />
           </p>
           <dl className="space-y-2">
             {b.changes.map((c) => (
               <div key={c.field} className="grid gap-1 @xl:grid-cols-[9rem_1fr] @xl:gap-3">
-                <dt className="text-xs font-medium text-muted-foreground @xl:pt-1">{FIELD_LABEL[c.field] ?? c.field}</dt>
+                <dt className="text-[13px] text-muted-foreground @xl:pt-1.5">{FIELD_LABEL[c.field] ?? c.field}</dt>
                 <dd className="min-w-0">{Array.isArray(c.before) || Array.isArray(c.after) ? <ListDiff change={c} /> : <TextChange change={c} />}</dd>
               </div>
             ))}

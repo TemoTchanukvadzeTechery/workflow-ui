@@ -62,16 +62,18 @@ export function FinalPanel({ projectId, bundle, onGo }: { projectId: string; bun
   return (
     <div className="space-y-4">
       {approved && approval ? (
-        <div className="flex flex-wrap items-start gap-3 rounded-2xl bg-status-success-bg px-4 py-3 text-status-success-fg">
-          <BadgeCheck aria-hidden className="mt-0.5 size-5 shrink-0" />
-          <div className="min-w-0 flex-[1_1_16rem] text-[13px]">
-            <p className="font-medium">Certified and sent to PO Review</p>
+        <div className="card-surface flex flex-wrap items-center gap-3.5 rounded-[20px] px-5 py-4">
+          <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-status-success-bg text-status-success-fg">
+            <BadgeCheck aria-hidden className="size-5" />
+          </span>
+          <div className="min-w-0 flex-[1_1_16rem] text-sm">
+            <p className="text-[15px] font-medium text-heading">Certified and sent to PO Review</p>
             <p className="text-foreground/80">
               by {actorText(approval.by)} <RelativeTime at={approval.at} />
               {approval.comment ? <>: &ldquo;{approval.comment}&rdquo;</> : null}
             </p>
           </div>
-          <Button asChild size="sm" className="rounded-full">
+          <Button asChild>
             <Link href={`/projects/${encodeURIComponent(projectId)}/signoff`}>
               Open PO Review
               <ArrowRight aria-hidden />
@@ -79,33 +81,40 @@ export function FinalPanel({ projectId, bundle, onGo }: { projectId: string; bun
           </Button>
         </div>
       ) : null}
-      <SectionCard density="dense" kicker="Stage 4 gate" title="Certify & send to PO Review" description="QA certifies once every rule below holds. The Product Owner then reviews the delivery and signs off.">
-        <ul className="divide-y">
+      <SectionCard density="dense" title="Certify & send to PO Review" description="The Stage 4 gate. QA certifies once every rule below holds; the Product Owner then reviews the delivery and signs off.">
+        <ul className="divide-y divide-rule">
           {items.map((i) => (
-            <li key={i.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 py-3 first:pt-0 last:pb-0">
-              <span className={cn("inline-flex size-7 shrink-0 items-center justify-center rounded-full", i.ok ? "bg-status-success-bg text-status-success-fg" : "bg-status-danger-bg text-status-danger-fg")}>
-                {i.ok ? <CircleCheck aria-hidden className="size-4" /> : <CircleSlash aria-hidden className="size-4" />}
-              </span>
-              <div className="min-w-0 flex-1 space-y-1">
-                <p className="text-[13px] font-medium">
+            <li key={i.id} className="space-y-2.5 py-4 first:pt-1 last:pb-0">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                <span className={cn("inline-flex size-7 shrink-0 items-center justify-center rounded-full", i.ok ? "bg-status-success-bg text-status-success-fg" : "bg-status-danger-bg text-status-danger-fg")}>
+                  {i.ok ? <CircleCheck aria-hidden className="size-4" /> : <CircleSlash aria-hidden className="size-4" />}
+                </span>
+                <p className="min-w-0 flex-1 text-[15px] leading-6 text-muted-foreground">
                   {i.label} <span className="sr-only">{i.ok ? "(done)" : "(blocking)"}</span>
                 </p>
-                {i.id !== "requests" ? <HatchedBar done={i.done} total={i.total} size="sm" tone={i.ok ? "success" : "running"} label={`${i.done} of ${i.total}`} className="max-w-72" /> : null}
-                <p className={cn("text-xs", i.ok ? "text-muted-foreground" : "text-foreground")}>
-                  {i.ok ? (i.id === "requests" ? "Nothing is waiting." : `${i.done}/${i.total} done`) : (i.blocker ?? `${i.done}/${i.total} done`)}
-                </p>
-                {i.hint ? <p className="text-xs text-status-danger-fg">{i.hint}</p> : null}
+                {i.id !== "requests" ? (
+                  <span className="text-[15px] text-heading tabular-nums">
+                    {i.done}/{i.total}
+                  </span>
+                ) : null}
+                {!i.ok && i.step && !approved ? (
+                  <Button type="button" variant="secondary" size="sm" onClick={() => onGo(i.step!)}>
+                    Resolve
+                    <ArrowRight aria-hidden />
+                  </Button>
+                ) : null}
               </div>
-              {!i.ok && i.step && !approved ? (
-                <Button type="button" variant="outline" size="sm" className="h-7 rounded-full" onClick={() => onGo(i.step!)}>
-                  Resolve
-                  <ArrowRight aria-hidden />
-                </Button>
+              {i.id !== "requests" ? <HatchedBar done={i.done} total={i.total} size="lg" tone={i.ok ? "success" : "running"} label={`${i.label}: ${i.done} of ${i.total}`} /> : null}
+              {!i.ok || i.id === "requests" ? (
+                <p className={cn("text-[13px] leading-5", i.ok ? "text-muted-foreground" : "text-foreground")}>
+                  {i.ok ? "Nothing is waiting." : (i.blocker ?? `${i.done}/${i.total} done`)}
+                </p>
               ) : null}
+              {i.hint ? <p className="text-[13px] text-status-danger-fg">{i.hint}</p> : null}
             </li>
           ))}
           {extra.map((b) => (
-            <li key={b} className="flex items-center gap-3 py-3 text-[13px]">
+            <li key={b} className="flex items-center gap-3 py-4 text-sm">
               <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-status-danger-bg text-status-danger-fg">
                 <CircleSlash aria-hidden className="size-4" />
               </span>
@@ -114,7 +123,7 @@ export function FinalPanel({ projectId, bundle, onGo }: { projectId: string; bun
           ))}
         </ul>
         {handoff ? (
-          <p className="mt-3 flex flex-wrap items-center gap-x-1.5 gap-y-1 border-t pt-3 text-xs text-muted-foreground">
+          <p className="mt-4 flex flex-wrap items-center gap-x-1.5 gap-y-1 border-t border-rule pt-4 text-[13px] text-muted-foreground">
             <ClipboardCheck aria-hidden className="size-3.5" />
             QA tested against the developer&rsquo;s hand-off:
             <Link href={docHref(projectId, handoff.id)} className="font-medium text-primary hover:underline">
@@ -127,7 +136,7 @@ export function FinalPanel({ projectId, bundle, onGo }: { projectId: string; bun
         <SectionCard density="dense" title="Warnings to acknowledge" description="They do not block certification, but you tick each one in the approval dialog, and they are recorded with your decision.">
           <ul className="space-y-1.5">
             {view.warnings.map((w) => (
-              <li key={w} className="flex items-start gap-2 rounded-lg bg-status-attention-bg px-3 py-2 text-[13px]">
+              <li key={w} className="flex items-start gap-2.5 rounded-[14px] bg-status-attention-bg px-3.5 py-2.5 text-sm">
                 <TriangleAlert aria-hidden className="mt-0.5 size-4 shrink-0 text-status-attention-fg" />
                 {w}
               </li>

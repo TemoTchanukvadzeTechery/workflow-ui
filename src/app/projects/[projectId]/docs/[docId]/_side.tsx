@@ -25,8 +25,8 @@ import { KIND_HINT, KIND_LABEL, SOURCE_LABEL, refDomId, type DocDetail, type Ope
 function Fact({ label, children, wide }: { label: string; children: ReactNode; wide?: boolean }) {
   return (
     <div className={cn("flex min-w-0 flex-col gap-1", wide && "col-span-2")}>
-      <dt className="text-[10.5px] font-medium tracking-[0.12em] text-muted-foreground uppercase">{label}</dt>
-      <dd className="min-w-0 text-[13px] text-foreground">{children}</dd>
+      <dt className="text-[13px] leading-5 text-muted-foreground">{label}</dt>
+      <dd className="min-w-0 text-[15px] leading-6 text-heading">{children}</dd>
     </div>
   );
 }
@@ -35,7 +35,7 @@ function MonoTag({ children, tone = "neutral", className }: { children: ReactNod
   return (
     <span
       className={cn(
-        "inline-flex h-5 shrink-0 items-center rounded-md px-1.5 font-mono text-[11px] font-medium tabular-nums",
+        "inline-flex h-5 shrink-0 items-center rounded-md px-1.5 font-mono text-xs font-medium tabular-nums",
         tone === "primary" ? "bg-primary-soft text-primary" : tone === "attention" ? "bg-status-attention-bg text-status-attention-fg" : "bg-muted text-muted-foreground",
         className,
       )}
@@ -59,7 +59,7 @@ function ShowMore<T>({ items, limit, forceOpen, render, noun }: { items: readonl
             type="button"
             onClick={() => setOpen(!all)}
             aria-expanded={all}
-            className="inline-flex h-8 items-center gap-1 rounded-full px-2.5 text-xs font-medium text-primary transition-colors hover:bg-primary-soft focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            className="inline-flex h-8 items-center gap-1 rounded-[12px] px-2.5 text-[13px] font-medium text-primary transition-colors hover:bg-primary-soft focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
           >
             <ChevronDown aria-hidden className={cn("size-3.5 transition-transform", all && "rotate-180")} />
             {all ? "Show fewer" : `Show all ${items.length} ${noun}`}
@@ -150,9 +150,9 @@ export function VersionsCard({
           const hasPrev = i < newestFirst.length - 1;
           const run = v.runId ? runIndex?.[v.runId] : undefined;
           return (
-            <li key={v.n} className={cn("relative rounded-xl px-2.5 py-2 transition-colors", selected ? "bg-primary-soft/70 ring-1 ring-primary/25" : "hover:bg-muted/60")}>
+            <li key={v.n} className={cn("relative rounded-[14px] px-3 py-2.5 transition-[background-color,box-shadow]", selected ? "bg-raised shadow-[var(--raised-shadow),0_0_0_1px_var(--circle-border)]" : "hover:bg-foreground/[0.03]")}>
               <div className="flex items-start gap-2.5">
-                <span className={cn("mt-0.5 grid size-6 shrink-0 place-items-center rounded-full", selected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>
+                <span className={cn("mt-0.5 grid size-7 shrink-0 place-items-center rounded-full", selected ? "bg-ink text-ink-foreground" : "bg-well text-muted-foreground")}>
                   <Icon aria-hidden className="size-3.5" />
                 </span>
                 <div className="min-w-0 flex-1">
@@ -161,12 +161,12 @@ export function VersionsCard({
                       type="button"
                       onClick={() => onSelect(v.n)}
                       aria-current={selected ? "true" : undefined}
-                      className="rounded text-[13px] font-medium text-foreground after:absolute after:inset-0 after:rounded-xl hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                      className="rounded text-sm font-medium text-heading after:absolute after:inset-0 after:rounded-[14px] hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
                     >
                       {label?.label ?? `v${v.n}`}
                       <span className="sr-only">{selected ? " (shown)" : ", show this version"}</span>
                     </button>
-                    {i === 0 ? <span className="rounded-full bg-muted px-1.5 text-[10.5px] font-medium text-muted-foreground">Latest</span> : null}
+                    {i === 0 ? <span className="inline-flex h-5 items-center rounded-full bg-status-success-bg px-2 text-xs font-medium text-status-success-fg">Latest</span> : null}
                     <span className="text-xs text-muted-foreground">{SOURCE_LABEL[v.source]}</span>
                   </div>
                   {v.reason ? <p className="mt-0.5 text-xs text-muted-foreground">{v.reason}</p> : null}
@@ -178,7 +178,7 @@ export function VersionsCard({
                       <button
                         type="button"
                         onClick={() => onCompare(v.n)}
-                        className="inline-flex h-6 items-center gap-1 rounded-full px-2 text-xs font-medium text-primary hover:bg-primary-soft focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                        className="inline-flex h-6 items-center gap-1 rounded-full px-2 text-xs font-medium text-primary hover:bg-primary-soft focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
                       >
                         <GitCompare aria-hidden className="size-3" />
                         Diff
@@ -210,7 +210,7 @@ export function RequirementsCard({ doc }: { doc: DocDetail }) {
         description={`${plural(doc.frs.length, "FR")} traced to BRD requirements${untraced ? `, ${untraced} untraced` : ""}`}
         bodyClassName="pt-1"
       >
-        <ul className="flex flex-col divide-y divide-border">
+        <ul className="flex flex-col divide-y divide-rule">
           <ShowMore
             items={doc.frs}
             limit={6}
@@ -219,7 +219,7 @@ export function RequirementsCard({ doc }: { doc: DocDetail }) {
               <li key={fr.id} className="flex flex-col gap-1.5 py-2.5 first:pt-1">
                 <div className="flex items-start gap-2">
                   <MonoTag tone="primary">{fr.id}</MonoTag>
-                  <p className="min-w-0 flex-1 text-[13px] leading-5 text-foreground">{fr.text}</p>
+                  <p className="min-w-0 flex-1 text-sm leading-5 text-heading">{fr.text}</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-1.5 pl-[42px] text-xs text-muted-foreground">
                   <span className="sr-only">Traces</span>
@@ -246,7 +246,7 @@ export function RequirementsCard({ doc }: { doc: DocDetail }) {
         description={`${plural(doc.requirements.length - candidates, "confirmed requirement")}${candidates ? `, ${candidates} candidate` : ""}`}
         bodyClassName="pt-1"
       >
-        <ul className="flex flex-col divide-y divide-border">
+        <ul className="flex flex-col divide-y divide-rule">
           <ShowMore
             items={doc.requirements}
             limit={8}
@@ -257,7 +257,7 @@ export function RequirementsCard({ doc }: { doc: DocDetail }) {
                   {r.id}
                 </MonoTag>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[13px] leading-5 text-foreground">{r.text}</p>
+                  <p className="text-sm leading-5 text-heading">{r.text}</p>
                   {r.candidate ? <p className="mt-0.5 text-xs text-status-attention-fg">Candidate: not confirmed by the PO yet</p> : null}
                 </div>
               </li>
@@ -295,7 +295,7 @@ export function DependenciesCard({ deps, reveal, kind }: { deps: readonly Depend
                     {d.id}
                   </MonoTag>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[13px] leading-5 font-medium text-foreground">{d.title}</p>
+                    <p className="text-sm leading-5 font-medium text-heading">{d.title}</p>
                     <p className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted-foreground">
                       <KindIcon aria-hidden className="size-3.5" />
                       <span className="sr-only">{d.kind === "jira" ? "Jira" : "Confluence"}</span>
@@ -305,7 +305,7 @@ export function DependenciesCard({ deps, reveal, kind }: { deps: readonly Depend
                     </p>
                     {d.why ? (
                       <details className="group mt-1">
-                        <summary className="inline-flex cursor-pointer list-none items-center gap-1 rounded text-xs font-medium text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none [&::-webkit-details-marker]:hidden">
+                        <summary className="inline-flex cursor-pointer list-none items-center gap-1 rounded text-xs font-medium text-primary focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none [&::-webkit-details-marker]:hidden">
                           <ChevronDown aria-hidden className="size-3 transition-transform group-open:rotate-180" />
                           Why it matters
                         </summary>
@@ -337,10 +337,10 @@ export function MemoryCard({ memory, isMemoryDoc }: { memory: NonNullable<DocDet
     >
       <div className="mb-2.5 flex flex-wrap items-center gap-1.5">
         <StatusPill size="sm" status={{ kind: "memory", value: memory.status }} />
-        {memory.status === "updated" ? <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">{memory.major ? "Major update" : "Minor update"}</span> : null}
+        {memory.status === "updated" ? <span className="rounded-full bg-well px-2 py-0.5 text-xs font-medium text-muted-foreground">{memory.major ? "Major update" : "Minor update"}</span> : null}
       </div>
       {memory.changes.length === 0 ? (
-        <p className="rounded-lg bg-muted/50 px-3 py-3 text-center text-[13px] text-muted-foreground">No changes recorded.</p>
+        <p className="rounded-[14px] bg-well px-3 py-3 text-center text-sm text-muted-foreground">No changes recorded.</p>
       ) : (
         <ul className="flex flex-col gap-1.5">
           <ShowMore
@@ -350,8 +350,8 @@ export function MemoryCard({ memory, isMemoryDoc }: { memory: NonNullable<DocDet
             render={(item, i) => {
               const c = parseChangeItem(item);
               return (
-                <li key={i} className="flex min-w-0 flex-col gap-1 rounded-lg border border-border px-2.5 py-2">
-                  {c.kind ? <span className="inline-flex h-5 w-fit items-center rounded-full bg-muted px-2 font-mono text-[11px] text-muted-foreground">{c.kind}</span> : null}
+                <li key={i} className="flex min-w-0 flex-col gap-1 rounded-[14px] bg-well px-3 py-2.5">
+                  {c.kind ? <span className="inline-flex h-5 w-fit items-center rounded-full bg-raised px-2 font-mono text-xs text-muted-foreground shadow-(--raised-shadow)">{c.kind}</span> : null}
                   <div className="min-w-0 [overflow-wrap:anywhere]">
                     <Markdown source={c.summary} size="sm" className="[&_p]:my-0" />
                   </div>
@@ -362,7 +362,7 @@ export function MemoryCard({ memory, isMemoryDoc }: { memory: NonNullable<DocDet
         </ul>
       )}
       {memory.stale.length ? (
-        <div className="mt-3 rounded-lg bg-status-attention-bg px-3 py-2 text-xs text-status-attention-fg">
+        <div className="mt-3 rounded-[14px] bg-status-attention-bg px-3.5 py-2.5 text-[13px] text-status-attention-fg">
           <p className="font-medium">{plural(memory.stale.length, "stale register entry", "stale register entries")}</p>
           <ul className="mt-1 list-disc space-y-0.5 pl-4">
             {memory.stale.map((s, i) => (
@@ -416,7 +416,7 @@ export function SystemsCard({ systems }: { systems: readonly SystemChange[] }) {
   const changed = systems.filter((s) => s.changed).length;
   return (
     <SectionCard density="dense" title="System changes" description={`${changed} of ${plural(systems.length, "system")} change`} bodyClassName="pt-1">
-      <ul className="flex flex-col divide-y divide-border">
+      <ul className="flex flex-col divide-y divide-rule">
         <ShowMore
           items={systems}
           limit={6}

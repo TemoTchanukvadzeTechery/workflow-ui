@@ -3,4 +3,4 @@ export { StageLayout, type StageLayoutProps, type StageStep } from "./StageLayou
 export { GateFooter, type GateFooterProps } from "./GateFooter";
 export { NotesPanel, anchorLabel, type NotesPanelProps, type NoteAnchorOption } from "./NotesPanel";
 export { StaleBanner, LockedStage, ReopenDialog, type ReopenDialogProps } from "./StageBanners";
-export { RunChip } from "./RunChip";
+export { RunChip, type RunChipProps } from "./RunChip";

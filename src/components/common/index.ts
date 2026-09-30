@@ -26,5 +26,6 @@ export { STAGE_ICONS, STAGE_ICON_BY_NAME, StageIcon, type StageIconProps } from 
 export { CountBadge, StatusDot, StatusPill, type CountBadgeProps, type StatusDotProps, type StatusPillProps } from "./status";
 export { StripedBar, type StripedBarProps } from "./striped-bar";
 export { TokenChip, type TokenChipProps } from "./token-chip";
+export { revealInScroller, useScrollFade } from "./use-scroll-fade";
 export { TONE_CLASSES, toneClasses, type ToneClasses } from "./tone";
 export { ToolbarButton, ToolbarGroup, ToolbarText, type ToolbarButtonProps, type ToolbarGroupProps, type ToolbarTextProps } from "./toolbar";

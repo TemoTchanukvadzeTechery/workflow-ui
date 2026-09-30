@@ -51,22 +51,22 @@ function ResultCell({ value, label }: { value: TraceRow["automated"]; label: str
 function Chips({ label, items, hrefOf, mono = true }: { label: string; items: Array<{ id: string; text: string }>; hrefOf?: (id: string) => string; mono?: boolean }) {
   if (items.length === 0) {
     return (
-      <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
-        <span className="kicker">{label}</span>
+      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+        <span>{label}</span>
         <span>none</span>
       </span>
     );
   }
   return (
     <span className="inline-flex min-w-0 flex-wrap items-center gap-1">
-      <span className="kicker">{label}</span>
+      <span className="text-xs text-muted-foreground">{label}</span>
       {items.map((it) =>
         hrefOf ? (
-          <Link key={it.id} href={hrefOf(it.id)} className={cn("inline-flex h-5 items-center rounded-md border bg-background px-1.5 text-[11px] text-foreground hover:border-primary/60 hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none", mono && "font-mono")}>
+          <Link key={it.id} href={hrefOf(it.id)} className={cn("inline-flex h-6 items-center rounded-full px-2 text-xs text-heading shadow-[inset_0_0_0_1px_var(--circle-border)] hover:text-primary hover:shadow-[inset_0_0_0_1px_var(--ring)] focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none", mono && "font-mono")}>
             {it.text}
           </Link>
         ) : (
-          <span key={it.id} className={cn("inline-flex h-5 items-center rounded-md border bg-background px-1.5 text-[11px] text-foreground", mono && "font-mono")}>
+          <span key={it.id} className={cn("inline-flex h-6 items-center rounded-full bg-well px-2 text-xs text-heading", mono && "font-mono")}>
             {it.text}
           </span>
         ),
@@ -77,7 +77,7 @@ function Chips({ label, items, hrefOf, mono = true }: { label: string; items: Ar
 
 function RowDetails({ projectId, row, tasks, evidence, onOpenEvidence }: { projectId: string; row: TraceRow; tasks: DeliveryTask[]; evidence: Evidence[]; onOpenEvidence?: (taskId: string, evidenceId?: string) => void }) {
   const rowTasks = row.taskIds.map((id) => tasks.find((t) => t.id === id)).filter((t): t is DeliveryTask => !!t);
-  if (rowTasks.length === 0) return <p className="text-xs text-muted-foreground">No task implements this requirement yet, so nothing can be tested.</p>;
+  if (rowTasks.length === 0) return <p className="text-[13px] text-muted-foreground">No task implements this requirement yet, so nothing can be tested.</p>;
   return (
     <ul className="space-y-2">
       {rowTasks.map((t) => {
@@ -85,15 +85,15 @@ function RowDetails({ projectId, row, tasks, evidence, onOpenEvidence }: { proje
         const acs = t.acceptanceCriteria.filter((ac) => acIds.includes(ac.id));
         const live = evidence.filter((e) => e.taskId === t.id && !e.supersededBy);
         return (
-          <li key={t.id} className="rounded-lg border bg-background px-3 py-2">
+          <li key={t.id} className="rounded-[14px] bg-field px-3.5 py-2.5 shadow-[0_0_0_1px_var(--rule)]">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <Link href={`/projects/${projectId}/tasks/${t.id}`} className="font-mono text-xs font-medium text-primary underline-offset-2 hover:underline">
                 {t.jiraKey ?? t.id}
               </Link>
-              <span className="min-w-0 flex-1 truncate text-[13px]">{t.title}</span>
+              <span className="min-w-0 flex-1 truncate text-sm text-heading">{t.title}</span>
               <StatusPill {...qaStatusMeta(t.qa.status)} size="sm" />
               {onOpenEvidence ? (
-                <Button type="button" variant="ghost" size="xs" className="rounded-full" onClick={() => onOpenEvidence(t.id)}>
+                <Button type="button" variant="ghost" size="xs" onClick={() => onOpenEvidence(t.id)}>
                   <FileSearch aria-hidden />
                   Evidence ({live.length})
                 </Button>
@@ -111,7 +111,7 @@ function RowDetails({ projectId, row, tasks, evidence, onOpenEvidence }: { proje
                 const cls = ac.met ? "text-status-success-fg" : inconclusive ? "text-status-attention-fg" : "text-status-danger-fg";
                 const label = ac.met ? "Met" : inconclusive ? "Needs manual check" : "Not met";
                 return (
-                  <li key={ac.id} className="flex items-start gap-2 text-xs">
+                  <li key={ac.id} className="flex items-start gap-2 text-[13px]">
                     <Icon aria-hidden className={cn("mt-0.5 size-3.5 shrink-0", cls)} strokeWidth={2.25} />
                     <span className="min-w-0 flex-1">
                       <span className="font-mono">{ac.id}</span> <span className={cn("font-medium", cls)}>{label}</span> <span className="text-muted-foreground">·</span> {ac.text}
@@ -119,11 +119,11 @@ function RowDetails({ projectId, row, tasks, evidence, onOpenEvidence }: { proje
                     <span className="flex shrink-0 flex-wrap justify-end gap-1">
                       {hits.slice(0, 4).map((e) =>
                         onOpenEvidence ? (
-                          <button key={e.id} type="button" onClick={() => onOpenEvidence(t.id, e.id)} className="rounded bg-muted px-1 font-mono text-[10.5px] hover:bg-primary-soft hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none" aria-label={`Open evidence ${e.id}: ${e.title}`}>
+                          <button key={e.id} type="button" onClick={() => onOpenEvidence(t.id, e.id)} className="rounded-full bg-well px-1.5 font-mono text-[11px] hover:bg-primary-soft hover:text-primary focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none" aria-label={`Open evidence ${e.id}: ${e.title}`}>
                             {e.id}
                           </button>
                         ) : (
-                          <span key={e.id} className="rounded bg-muted px-1 font-mono text-[10.5px]">
+                          <span key={e.id} className="rounded-full bg-well px-1.5 font-mono text-[11px]">
                             {e.id}
                           </span>
                         ),
@@ -187,9 +187,9 @@ export function TraceMatrix({ projectId, rows, tasks, epics, evidence, readOnly,
         </label>
       </div>
 
-      <div className="overflow-hidden rounded-xl border">
-        <div aria-hidden className="hidden border-b bg-muted/50 px-3 py-2 @3xl/trace:block">
-          <div className="grid grid-cols-[minmax(0,1fr)_76px_76px_72px_168px] items-center gap-3 text-[11px] font-medium tracking-[0.06em] text-muted-foreground uppercase">
+      <div className="-mx-5 border-t border-rule">
+        <div aria-hidden className="hidden h-11 items-center border-b border-rule px-5 @3xl/trace:flex">
+          <div className="grid w-full grid-cols-[minmax(0,1fr)_76px_76px_72px_168px] items-center gap-3 text-[13px] text-muted-foreground">
             <span>Requirement · FR · Epics · Tasks · ACs</span>
             <span>Automated</span>
             <span>Manual</span>
@@ -200,17 +200,17 @@ export function TraceMatrix({ projectId, rows, tasks, epics, evidence, readOnly,
           </div>
         </div>
         {shown.length === 0 ? (
-          <div className="px-3 py-8">
+          <div className="px-5 py-8">
             <EmptyState size="sm" icon={CircleCheck} title="Every requirement is met or waived" body="Turn off Not met only to see the full matrix." />
           </div>
         ) : null}
-        <ul className="divide-y" aria-label="Requirement traceability">
+        <ul className="divide-y divide-rule" aria-label="Requirement traceability">
           {shown.map((r) => {
             const isOpen = open.has(r.brRef);
             const canWaive = !readOnly && r.verdict !== "met" && r.verdict !== "waived";
             const detailsId = `trace-${r.brRef}-details`;
             return (
-              <li key={r.brRef} aria-label={`${r.brRef}: ${traceVerdictMeta(r.verdict).label}`} className={cn("px-3 py-2.5", r.verdict === "missing" && "bg-status-danger-bg/30")}>
+              <li key={r.brRef} aria-label={`${r.brRef}: ${traceVerdictMeta(r.verdict).label}`} className={cn("px-5 py-3.5 transition-colors hover:bg-foreground/[0.02]", r.verdict === "missing" && "bg-status-danger-bg/40")}>
                 <div className="grid gap-x-3 gap-y-2 @3xl/trace:grid-cols-[minmax(0,1fr)_76px_76px_72px_168px] @3xl/trace:items-start">
                   <div className="min-w-0 space-y-1.5">
                     <div className="flex items-start gap-2">
@@ -220,11 +220,11 @@ export function TraceMatrix({ projectId, rows, tasks, epics, evidence, readOnly,
                         aria-expanded={isOpen}
                         aria-controls={detailsId}
                         aria-label={`${isOpen ? "Hide" : "Show"} acceptance criteria for ${r.brRef}`}
-                        className="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                        className="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-foreground/[0.05] hover:text-heading focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
                       >
                         <ChevronDown aria-hidden className={cn("size-4 transition-transform duration-150", !isOpen && "-rotate-90")} />
                       </button>
-                      <p className="min-w-0 text-[13px] leading-snug">
+                      <p className="min-w-0 text-sm leading-5 text-heading">
                         <span className="mr-1.5 font-mono text-xs font-semibold">{r.brRef}</span>
                         {r.brText}
                       </p>
@@ -233,19 +233,19 @@ export function TraceMatrix({ projectId, rows, tasks, epics, evidence, readOnly,
                       <Chips label="FR" items={r.frRefs.map((f) => ({ id: f, text: f }))} />
                       <Chips label="Epics" items={r.epicIds.map((id) => ({ id, text: epicOf(id)?.key ?? id }))} />
                       <Chips label="Tasks" items={r.taskIds.map((id) => ({ id, text: taskOf(id)?.jiraKey ?? id }))} hrefOf={(id) => `/projects/${projectId}/tasks/${id}`} />
-                      <span className="inline-flex items-center gap-1 text-[11px]">
-                        <span className="kicker">ACs</span>
+                      <span className="inline-flex items-center gap-1 text-xs">
+                        <span className="text-muted-foreground">ACs</span>
                         <span className="tabular-nums">{r.acIds.length}</span>
                       </span>
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pl-7 @3xl/trace:contents">
                     <div className="@3xl/trace:pt-0.5">
-                      <span className="mr-1 text-[11px] text-muted-foreground @3xl/trace:hidden">Automated</span>
+                      <span className="mr-1 text-xs text-muted-foreground @3xl/trace:hidden">Automated</span>
                       <ResultCell value={r.automated} label="Automated" />
                     </div>
                     <div className="@3xl/trace:pt-0.5">
-                      <span className="mr-1 text-[11px] text-muted-foreground @3xl/trace:hidden">Manual</span>
+                      <span className="mr-1 text-xs text-muted-foreground @3xl/trace:hidden">Manual</span>
                       <ResultCell value={r.manual} label="Manual" />
                     </div>
                     <div className="@3xl/trace:text-right">
@@ -253,7 +253,7 @@ export function TraceMatrix({ projectId, rows, tasks, epics, evidence, readOnly,
                         type="button"
                         onClick={() => (r.taskIds.length === 1 && onOpenEvidence ? onOpenEvidence(r.taskIds[0]) : toggle(r.brRef))}
                         disabled={r.evidenceCount === 0}
-                        className="inline-flex h-6 items-center gap-1 rounded-full px-2 text-xs tabular-nums hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:text-muted-foreground disabled:hover:bg-transparent"
+                        className="inline-flex h-7 items-center gap-1 rounded-full px-2.5 text-[13px] tabular-nums hover:bg-foreground/[0.05] focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none disabled:text-muted-foreground disabled:hover:bg-transparent"
                         aria-label={`${r.evidenceCount} evidence items for ${r.brRef}`}
                       >
                         <FileSearch aria-hidden className="size-3.5 text-muted-foreground" />
@@ -264,7 +264,7 @@ export function TraceMatrix({ projectId, rows, tasks, epics, evidence, readOnly,
                   <div className="flex flex-wrap items-center gap-1.5 pl-7 @3xl/trace:flex-col @3xl/trace:items-start @3xl/trace:pl-0">
                     <StatusPill {...traceVerdictMeta(r.verdict)} size="sm" />
                     {canWaive ? (
-                      <Button type="button" variant="outline" size="xs" className="rounded-full" onClick={() => setWaiving(r)} aria-label={`Waive ${r.brRef}`}>
+                      <Button type="button" variant="secondary" size="xs" onClick={() => setWaiving(r)} aria-label={`Waive ${r.brRef}`}>
                         <ShieldOff aria-hidden />
                         Waive
                       </Button>
@@ -272,7 +272,7 @@ export function TraceMatrix({ projectId, rows, tasks, epics, evidence, readOnly,
                   </div>
                 </div>
                 {r.waiver ? (
-                  <p className="mt-1.5 pl-7 text-xs text-muted-foreground">
+                  <p className="mt-1.5 pl-7 text-[13px] text-muted-foreground">
                     Waived by <span className="text-foreground">{actorText(r.waiver.by)}</span> <RelativeTime at={r.waiver.at} />
                     {r.waiver.comment ? <>: &ldquo;{r.waiver.comment}&rdquo;</> : null}
                   </p>

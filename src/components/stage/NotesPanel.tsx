@@ -69,8 +69,8 @@ export function NotesPanel({ projectId, stage, notes, anchorOptions = [], docLab
   return (
     <div className={cn("space-y-3", className)}>
       {!readOnly ? (
-        <div className="space-y-2 rounded-xl border border-border p-3">
-          <label htmlFor={textId} className="text-xs font-medium">
+        <div className="space-y-2.5 rounded-[20px] bg-well/60 p-3">
+          <label htmlFor={textId} className="block px-0.5 text-[13px] font-medium text-heading">
             Add a note
           </label>
           <Textarea
@@ -108,25 +108,25 @@ export function NotesPanel({ projectId, stage, notes, anchorOptions = [], docLab
               </>
             ) : null}
             <span className="flex-1" />
-            <Button size="sm" className="rounded-full" onClick={submit} disabled={!text.trim() || add.isPending}>
+            <Button size="sm" onClick={submit} disabled={!text.trim() || add.isPending}>
               {add.isPending ? "Adding…" : "Add note"}
             </Button>
           </div>
         </div>
       ) : null}
       {sorted.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-border px-3 py-6 text-center text-[13px] text-muted-foreground">No notes yet.</p>
+        <p className="rounded-[20px] bg-well/60 px-4 py-8 text-center text-[13px] text-muted-foreground">No notes yet.</p>
       ) : (
-        <ul className="space-y-2">
+        <ul className="divide-y divide-rule">
           {sorted.map((note) => {
             const anchor = anchorLabel(note.anchor, docLabels);
             return (
-              <li key={note.id} className="group rounded-xl border border-border p-3 text-[13px]">
+              <li key={note.id} className="group px-1 py-3 text-sm">
                 <div className="flex items-start gap-2">
                   <div className="min-w-0 flex-1 space-y-1">
-                    {anchor ? <span className="inline-flex h-5 items-center rounded-md bg-muted px-1.5 font-mono text-[11px] text-muted-foreground">[{anchor}]</span> : null}
-                    {note.anchor?.quote ? <blockquote className="border-l-2 border-border pl-2 text-xs text-muted-foreground italic">{note.anchor.quote}</blockquote> : null}
-                    <p className="break-words whitespace-pre-wrap">{note.text}</p>
+                    {anchor ? <span className="token-chip h-5 font-mono text-[11px]">[{anchor}]</span> : null}
+                    {note.anchor?.quote ? <blockquote className="border-l-2 border-rule pl-2.5 text-[13px] text-muted-foreground italic">{note.anchor.quote}</blockquote> : null}
+                    <p className="break-words whitespace-pre-wrap text-foreground">{note.text}</p>
                   </div>
                   {/* A note a run already received stays: deleting it would lose where the run's input came from. */}
                   {!readOnly && !note.sentToRunId ? (
@@ -142,7 +142,7 @@ export function NotesPanel({ projectId, stage, notes, anchorOptions = [], docLab
                     </Button>
                   ) : null}
                 </div>
-                <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                   <span>{actorName(note.by)}</span>
                   <TimeAgo at={note.at} />
                   {note.sentToRunId ? (

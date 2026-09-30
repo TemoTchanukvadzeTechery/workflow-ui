@@ -15,6 +15,7 @@ import { splitLines } from "@/lib/weft/schema-form";
 import type { PlannedTask, PlanReviewAnswer } from "@/lib/weft/workflows";
 import { DocViewer } from "../../docs/DocViewer";
 import { DraftReportTabs } from "../../docs/DraftReportTabs";
+import { FloatingChip } from "@/components/common";
 import { MonoChip, Notice, TonePill } from "../bits";
 import { BlobContent } from "../BlobContent";
 import { FormRow, PillChoice } from "../controls";
@@ -48,61 +49,61 @@ export function PlanTasksTable({ tasks }: { tasks: PlannedTask[] }) {
     return [...by.entries()].sort((a, b) => a[0] - b[0]);
   }, [tasks]);
   return (
-    <div className="space-y-3">
+    <div className="space-y-5">
       {waves.map(([wave, list]) => (
-        <div key={wave} className="relative overflow-x-auto rounded-xl border border-border">
+        <div key={wave} className="relative overflow-x-auto">
           {/* Fixed layout so every wave table lines its columns up with the others. */}
-          <table className="w-full min-w-[640px] table-fixed border-collapse text-[13px]">
-            <caption className="border-b border-border bg-muted/50 px-3 py-1.5 text-left text-xs font-medium">
+          <table className="w-full min-w-[640px] table-fixed border-collapse text-sm">
+            <caption className="pb-1 text-left text-sm font-medium text-heading">
               Wave {wave} <span className="font-normal text-muted-foreground">· {list.length} {list.length === 1 ? "task" : "tasks"}</span>
             </caption>
-            <thead className="text-left text-xs text-muted-foreground">
-              <tr>
-                <th scope="col" className="px-3 py-1.5 font-medium">
+            <thead className="text-left text-[13px] text-muted-foreground">
+              <tr className="border-b border-rule">
+                <th scope="col" className="h-10 px-3 font-normal first:pl-1">
                   Task
                 </th>
-                <th scope="col" className="w-48 px-3 py-1.5 font-medium">
+                <th scope="col" className="h-10 w-48 px-3 font-normal">
                   Repo
                 </th>
-                <th scope="col" className="w-14 px-3 py-1.5 font-medium">
+                <th scope="col" className="h-10 w-14 px-3 font-normal">
                   Size
                 </th>
-                <th scope="col" className="w-28 px-3 py-1.5 font-medium">
+                <th scope="col" className="h-10 w-28 px-3 font-normal">
                   Depends on
                 </th>
-                <th scope="col" className="w-32 px-3 py-1.5 font-medium">
+                <th scope="col" className="h-10 w-32 px-3 font-normal">
                   Traces
                 </th>
-                <th scope="col" className="w-14 px-3 py-1.5 text-right font-medium">
+                <th scope="col" className="h-10 w-14 px-3 text-right font-normal">
                   ACs
                 </th>
               </tr>
             </thead>
             <tbody>
               {list.map((t) => (
-                <tr key={t.id} className="border-t border-border align-top">
-                  <td className="px-3 py-2">
+                <tr key={t.id} className="border-b border-rule align-top transition-colors last:border-b-0 hover:bg-foreground/[0.025]">
+                  <td className="py-3 pr-3 pl-1">
                     <div className="flex items-baseline gap-2">
                       <span className="shrink-0 font-mono text-xs whitespace-nowrap text-muted-foreground">{t.id}</span>
-                      <span className="font-medium">{t.title}</span>
+                      <span className="font-medium text-heading">{t.title}</span>
                     </div>
                     {t.blockedBy ? <div className="mt-0.5 text-xs text-status-attention-fg">Blocked by {t.blockedBy}</div> : null}
                   </td>
-                  <td className="px-3 py-2">
+                  <td className="px-3 py-3">
                     <MonoChip className="max-w-full truncate" title={t.repo}>
                       {t.repo}
                     </MonoChip>
                   </td>
-                  <td className="px-3 py-2 font-mono text-xs">{t.size}</td>
-                  <td className="px-3 py-2 font-mono text-xs text-muted-foreground">{t.dependencies.length > 0 ? t.dependencies.join(", ") : "none"}</td>
-                  <td className="px-3 py-2">
+                  <td className="px-3 py-3 font-mono text-xs">{t.size}</td>
+                  <td className="px-3 py-3 font-mono text-xs text-muted-foreground">{t.dependencies.length > 0 ? t.dependencies.join(", ") : "none"}</td>
+                  <td className="px-3 py-3">
                     <div className="flex flex-wrap gap-1">
                       {t.traces.map((tr) => (
                         <MonoChip key={tr}>{tr}</MonoChip>
                       ))}
                     </div>
                   </td>
-                  <td className="px-3 py-2 text-right font-mono text-xs tabular-nums">{t.acceptanceCriteria.length}</td>
+                  <td className="px-3 py-3 text-right font-mono text-xs tabular-nums">{t.acceptanceCriteria.length}</td>
                 </tr>
               ))}
             </tbody>
@@ -149,8 +150,8 @@ export function PlanReviewForm({ request, projectId, compact, onAnswered, edited
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-        <span className="rounded-full bg-muted px-2.5 py-1 font-medium text-foreground">Round {round}</span>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-[13px] text-muted-foreground">
+        <FloatingChip label="Round" value={String(round)} tone="running" />
         {shownTasks ? (
           <span>
             {shownTasks.length} tasks in {waves} waves
@@ -179,13 +180,14 @@ export function PlanReviewForm({ request, projectId, compact, onAnswered, edited
           compareText={edited !== undefined && edited !== base ? base : undefined}
           compareLabel="the proposed plan"
           toc={!compact}
+          variant="panel"
           bodyClassName="max-h-[50vh]"
         />
       ) : null}
 
       {shownTasks ? (
-        <section aria-label="Tasks" className="space-y-2">
-          <h4 className="text-[13px] font-medium">Tasks</h4>
+        <section aria-label="Tasks" className="space-y-3">
+          <h4 className="text-sm font-medium text-heading">Tasks</h4>
           <PlanTasksTable tasks={shownTasks} />
         </section>
       ) : tasksAttachment && tasksText.data !== undefined ? (
@@ -193,8 +195,8 @@ export function PlanReviewForm({ request, projectId, compact, onAnswered, edited
       ) : null}
 
       {report ? (
-        <section aria-label="Plan report" className="space-y-2">
-          <h4 className="text-[13px] font-medium">Plan report</h4>
+        <section aria-label="Plan report" className="space-y-3">
+          <h4 className="text-sm font-medium text-heading">Plan report</h4>
           <BlobContent blobRef={report.ref}>{(text) => <DraftReportTabs markdown={text} />}</BlobContent>
         </section>
       ) : null}

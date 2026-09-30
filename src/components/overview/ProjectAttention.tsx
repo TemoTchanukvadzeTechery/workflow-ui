@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import type { InboxItem, ProjectBundle } from "@/lib/delivery/types";
 import { cn } from "@/lib/utils";
+import { CardMenu } from "../dashboard/CardMenu";
 import { AttentionRow } from "../inbox/AttentionRow";
 import { orderByGroup } from "../inbox/bits";
 
@@ -26,7 +27,7 @@ function HumanAttention({ item, projectId }: { item: HumanItem; projectId: strin
       <div className="flex min-w-0 flex-col @lg:flex-row @lg:items-start @lg:gap-1">
         <AttentionRow item={item} showProject={false} className="min-w-0 flex-1" />
         <CollapsibleTrigger asChild>
-          <Button variant="ghost" size="sm" className="-mt-1.5 mb-1 ml-11 shrink-0 self-start rounded-full text-primary @lg:mt-2 @lg:mb-0 @lg:ml-0">
+          <Button variant="secondary" size="sm" className="mb-2 ml-[62px] shrink-0 self-start @lg:mt-3 @lg:mb-0 @lg:ml-0">
             <MessageSquareReply aria-hidden />
             <span>
               {open ? "Hide" : "Answer here"}
@@ -50,20 +51,20 @@ export function ProjectAttention({ bundle, className }: { bundle: ProjectBundle;
   const waiting = items.filter((i) => i.tier !== "fyi").length;
   return (
     <SectionCard
-      kicker="This project"
       title={
-        <span className="inline-flex items-center gap-2">
+        <span className="inline-flex items-center gap-2.5">
           Needs your attention
-          <CountBadge n={waiting} tone="attention" hideZero={false} label={`${waiting} items waiting on people`} />
+          <CountBadge n={waiting} tone="attention" hideZero={false} label={`${waiting} items waiting on people`} className="h-6 min-w-6 text-xs" />
         </span>
       }
       description={waiting === 0 ? "Nothing on this project waits on a person." : "Answer requests here, or open them where they live."}
+      cardMenu={<CardMenu href="/inbox" label="Open the inbox" />}
       className={cn("@container", className)}
     >
       {items.length === 0 ? (
         <EmptyState size="sm" icon={CircleCheck} title="Nothing needs you right now" body="Agents keep working; new questions show up here, in the stage and in the Inbox." />
       ) : (
-        <ul className="-mx-3 flex flex-col">
+        <ul className="-mx-3 flex flex-col gap-1">
           {items.map((item) => (
             <li key={item.id}>{item.kind === "human" ? <HumanAttention item={item} projectId={bundle.project.id} /> : <AttentionRow item={item} showProject={false} />}</li>
           ))}

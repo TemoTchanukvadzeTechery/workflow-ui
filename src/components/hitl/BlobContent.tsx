@@ -35,10 +35,10 @@ export function renderText(text: string, mediaType: string | undefined, opts: { 
     } catch {
       // not JSON after all: show it as text
     }
-    return <pre className="max-h-[50vh] overflow-auto rounded-lg bg-muted/50 p-3 font-mono text-xs leading-5">{pretty}</pre>;
+    return <pre className="max-h-[50vh] overflow-auto rounded-[16px] bg-well/60 p-4 font-mono text-xs leading-5 text-heading">{pretty}</pre>;
   }
   if (text.trim() === "(no change)" || looksLikeLineDiff(text)) return <TextDiff diffText={text} maxHeightClass="max-h-[60vh]" />;
-  return <pre className="max-h-[50vh] overflow-auto rounded-lg bg-muted/50 p-3 font-mono text-xs leading-5 whitespace-pre-wrap">{text}</pre>;
+  return <pre className="max-h-[50vh] overflow-auto rounded-[16px] bg-well/60 p-4 font-mono text-xs leading-5 whitespace-pre-wrap text-heading">{text}</pre>;
 }
 
 /** Loads a blob and hands its text to `children` (or renders it by media type). */
@@ -72,8 +72,8 @@ export function AttachmentTabs({ items, className, render }: { items: BlobItem[]
     const only = items[0]!;
     return (
       <div className={cn("space-y-2", className)}>
-        <p className="text-xs font-medium text-muted-foreground">
-          {only.label} <span className="font-mono">· {only.ref.size.toLocaleString()} bytes</span>
+        <p className="text-[13px] font-medium text-heading">
+          {only.label} <span className="font-mono text-xs font-normal text-muted-foreground">· {only.ref.size.toLocaleString()} bytes</span>
         </p>
         <BlobContent blobRef={only.ref} mediaType={only.mediaType}>
           {render?.[only.label.toLowerCase()]}
@@ -84,9 +84,9 @@ export function AttachmentTabs({ items, className, render }: { items: BlobItem[]
   return (
     <Tabs defaultValue="a0" className={cn("min-w-0 gap-3", className)}>
       <div className="-mx-1 overflow-x-auto px-1 pb-1">
-        <TabsList variant="line" className="h-auto flex-nowrap justify-start gap-1">
+        <TabsList className="justify-start">
           {items.map((item, i) => (
-            <TabsTrigger key={i} value={`a${i}`} className="h-8 flex-none rounded-full px-3 text-[13px] capitalize data-active:bg-muted">
+            <TabsTrigger key={i} value={`a${i}`} className="h-9 flex-none px-3.5 capitalize">
               {item.label}
             </TabsTrigger>
           ))}

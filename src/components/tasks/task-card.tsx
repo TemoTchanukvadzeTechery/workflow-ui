@@ -8,7 +8,7 @@
  */
 import { ArrowRight, Eye, Hourglass, Play } from "lucide-react";
 import Link from "next/link";
-import { Elapsed, StatusDot } from "@/components/common";
+import { Elapsed, StatusDot, StripedBar } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import type { DeliveryTask } from "@/lib/delivery/types";
@@ -17,7 +17,6 @@ import type { TaskRequestRef } from "./pending";
 import {
   AgentAvatar,
   BlockedLine,
-  ChecksStat,
   DepChips,
   DiffStat,
   EscalatedBadge,
@@ -30,6 +29,7 @@ import {
   attemptStartedAt,
   isAgentWorking,
   isQueued,
+  latestChecks,
   taskHref,
   waitReason,
 } from "./task-bits";
@@ -61,13 +61,17 @@ export function TaskCard({ task, projectId, tasks, pending = [], model, canStart
   const wait = waitReason(task, tasks);
   const since = working ? attemptStartedAt(task, runCreatedAt) : undefined;
   const reworking = working && task.reworkCount > 0 && task.devReview?.decision === "changes_requested";
+  const checks = latestChecks(task.checks);
+  const passed = checks.filter((c) => c.status === "pass").length;
+  const checksOk = passed === checks.length;
 
   return (
     <article
       aria-label={`${task.id} ${task.title}`}
       className={cn(
-        "group/card relative flex min-w-0 flex-col gap-2 rounded-xl border border-border bg-card p-3 shadow-[0_1px_2px_rgba(0,0,0,.04)] transition-colors duration-150 hover:border-foreground/20",
-        review && "border-status-review-fg/40 ring-1 ring-status-review-fg/25",
+        // A raised card inside the lane's well (STYLE.md 1): the reference's selected-segment surface with a soft lift.
+        "group/card relative flex min-w-0 flex-col gap-2.5 rounded-[16px] bg-raised p-3.5 shadow-[var(--raised-shadow),0_10px_24px_-18px_rgb(0_0_0/0.35)] transition-shadow duration-150 hover:shadow-[var(--raised-shadow),0_14px_30px_-16px_rgb(0_0_0/0.4)]",
+        review && "shadow-[var(--raised-shadow),0_0_0_1.5px_color-mix(in_srgb,var(--status-review-solid)_45%,transparent),0_10px_24px_-16px_color-mix(in_srgb,var(--status-review-solid)_45%,transparent)]",
         className,
       )}
     >
@@ -77,8 +81,8 @@ export function TaskCard({ task, projectId, tasks, pending = [], model, canStart
         <MiniChip title={`Size ${task.size}`}>{task.size}</MiniChip>
       </div>
 
-      <h3 className="text-[13px] leading-snug font-medium text-foreground">
-        <Link href={href} className="rounded-sm outline-none after:absolute after:inset-0 after:rounded-xl after:content-[''] hover:underline focus-visible:ring-2 focus-visible:ring-ring">
+      <h3 className="text-[15px] leading-[21px] font-medium tracking-[-0.01em] text-heading">
+        <Link href={href} className="rounded-sm outline-none after:absolute after:inset-0 after:rounded-[16px] after:content-[''] hover:underline focus-visible:after:ring-3 focus-visible:after:ring-ring/50">
           <ScopedTitle title={task.title} hideScope={task.repo} />
         </Link>
       </h3>
@@ -96,9 +100,9 @@ export function TaskCard({ task, projectId, tasks, pending = [], model, canStart
       ) : null}
 
       {working ? (
-        <div className="space-y-1 rounded-lg bg-status-running-bg/60 px-2 py-1.5">
+        <div className="space-y-1.5 rounded-[12px] bg-status-running-bg px-2.5 py-2">
           <AgentAvatar model={model} live />
-          <p className="flex min-w-0 items-center gap-1.5 font-mono text-[11px] text-status-running-fg" aria-live="polite">
+          <p className="flex min-w-0 items-center gap-1.5 font-mono text-xs text-status-running-fg" aria-live="polite">
             <StatusDot tone="running" pulse size="sm" />
             <span className="min-w-0 flex-1 truncate" title={task.latestStep}>
               {task.latestStep ?? "Working"}
@@ -111,27 +115,35 @@ export function TaskCard({ task, projectId, tasks, pending = [], model, canStart
           </p>
         </div>
       ) : task.status === "in_review" && task.latestStep ? (
-        <p className="truncate font-mono text-[11px] text-status-review-fg" title={task.latestStep}>
+        <p className="truncate text-[13px] text-status-review-fg" title={task.latestStep}>
           {task.latestStep}
         </p>
       ) : null}
 
-      {task.checks.length > 0 || task.diffStats ? (
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          <ChecksStat checks={task.checks} />
-          <DiffStat stats={task.diffStats} />
-          {task.status === "done" && task.finishedAt && task.startedAt ? (
-            <span className="ml-auto font-mono text-[11px] text-muted-foreground tabular-nums" title="Time from start to approval">
-              <Elapsed since={task.startedAt} until={task.finishedAt} style="human" />
+      {checks.length > 0 ? (
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2 text-xs">
+            <span className={cn("tabular-nums", checksOk ? "text-status-success-fg" : "text-status-danger-fg")}>
+              {passed}/{checks.length} checks
             </span>
-          ) : null}
+            <span className="flex-1" />
+            <DiffStat stats={task.diffStats} />
+            {task.status === "done" && task.finishedAt && task.startedAt ? (
+              <span className="font-mono text-xs text-muted-foreground tabular-nums" title="Time from start to approval">
+                <Elapsed since={task.startedAt} until={task.finishedAt} style="human" />
+              </span>
+            ) : null}
+          </div>
+          <StripedBar value={passed} max={checks.length} tone={checksOk ? "success" : "danger"} height={8} label={`${passed} of ${checks.length} checks passed`} />
         </div>
+      ) : task.diffStats ? (
+        <DiffStat stats={task.diffStats} />
       ) : null}
 
       {task.status === "blocked" ? <BlockedLine reason={task.blockedBy} /> : null}
       {showDeps && task.dependencies.length > 0 ? <DepChips deps={task.dependencies} tasks={tasks} projectId={projectId} className="relative z-[1]" /> : null}
       {wait ? (
-        <p className="flex items-start gap-1.5 text-[11px] leading-4 text-muted-foreground">
+        <p className="flex items-start gap-1.5 text-xs leading-4 text-muted-foreground">
           <Hourglass aria-hidden className="mt-px size-3 shrink-0" />
           <span className="min-w-0">
             {queued ? "Queued · " : ""}
@@ -143,7 +155,7 @@ export function TaskCard({ task, projectId, tasks, pending = [], model, canStart
       {reviewHref || (canStart && onStart) ? (
         <div className="relative z-[1] flex items-center gap-2 pt-0.5">
           {reviewHref && review ? (
-            <Button asChild size="sm" className="h-7 flex-1 rounded-full bg-status-review-fg text-white hover:bg-status-review-fg/85 dark:text-background">
+            <Button asChild size="sm" className="flex-1 bg-status-review-fg text-white dark:text-background">
               <Link href={reviewHref}>
                 <Eye aria-hidden />
                 {review.kind === "qa-review" ? "QA review" : "Review"}
@@ -152,7 +164,7 @@ export function TaskCard({ task, projectId, tasks, pending = [], model, canStart
             </Button>
           ) : null}
           {canStart && onStart ? (
-            <Button size="sm" variant="outline" className="h-7 rounded-full" onClick={onStart} disabled={starting}>
+            <Button size="sm" variant="secondary" onClick={onStart} disabled={starting}>
               {starting ? <Spinner aria-hidden /> : <Play aria-hidden />}
               Start task
             </Button>

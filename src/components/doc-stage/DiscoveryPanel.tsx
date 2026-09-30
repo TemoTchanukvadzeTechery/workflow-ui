@@ -36,9 +36,9 @@ export interface DiscoveryPanelProps {
 function PassRow({ p }: { p: PassSummary }) {
   const answered = p.status === "answered";
   return (
-    <li className="flex flex-col gap-1.5 px-3 py-2.5 @xl:flex-row @xl:items-start @xl:gap-3">
-      <span className="inline-flex h-6 w-fit shrink-0 items-center rounded-full bg-muted px-2.5 text-xs font-medium">Pass {p.pass}</span>
-      <div className="min-w-0 flex-1 space-y-1 text-[13px]">
+    <li className="flex flex-col gap-2 px-1 py-3.5 @xl:flex-row @xl:items-start @xl:gap-4">
+      <span className="inline-flex h-7 w-fit shrink-0 items-center rounded-full bg-well px-3 text-[13px] font-medium text-heading">Pass {p.pass}</span>
+      <div className="min-w-0 flex-1 space-y-1.5 text-sm">
         <p>
           <span className="tabular-nums">{p.found}</span> {p.found === 1 ? "dependency" : "dependencies"} found
           {answered ? (
@@ -58,18 +58,18 @@ function PassRow({ p }: { p: PassSummary }) {
         {p.added.length || p.removed.length ? (
           <p className="flex flex-wrap gap-1">
             {p.added.map((r) => (
-              <span key={`a-${r}`} className="inline-flex h-5 items-center rounded-md bg-status-success-bg px-1.5 font-mono text-[11px] text-status-success-fg">
+              <span key={`a-${r}`} className="inline-flex h-6 items-center rounded-[6px] bg-status-success-bg px-1.5 font-mono text-[11.5px] text-status-success-fg">
                 + {r}
               </span>
             ))}
             {p.removed.map((r) => (
-              <span key={`r-${r}`} className="inline-flex h-5 items-center rounded-md bg-status-danger-bg px-1.5 font-mono text-[11px] text-status-danger-fg line-through">
+              <span key={`r-${r}`} className="inline-flex h-6 items-center rounded-[6px] bg-status-danger-bg px-1.5 font-mono text-[11.5px] text-status-danger-fg line-through">
                 {r}
               </span>
             ))}
           </p>
         ) : null}
-        {p.guidance ? <p className="text-xs text-muted-foreground">Guidance: &ldquo;{p.guidance}&rdquo;</p> : null}
+        {p.guidance ? <p className="text-[13px] text-muted-foreground">Guidance: &ldquo;{p.guidance}&rdquo;</p> : null}
       </div>
     </li>
   );
@@ -111,12 +111,12 @@ export function DiscoveryPanel({ projectId, kind, runId, run, runPending, runErr
       <InlineRequests projectId={projectId} runId={runId} run={run} prefix="deps:review:" focus={focus} onAnswered={onAnswered} />
 
       {discoverOff ? (
-        <p className="rounded-xl border border-dashed border-border px-4 py-3 text-[13px] text-muted-foreground">Discovery was turned off for this run (Search Jira &amp; Confluence first: off). Only the seeds and notes you gave are used.</p>
+        <p className="rounded-[20px] bg-well/60 px-5 py-4 text-[13px] text-muted-foreground">Discovery was turned off for this run (Search Jira &amp; Confluence first: off). Only the seeds and notes you gave are used.</p>
       ) : null}
 
       {passes.some((p) => p.status !== "pending") ? (
         <SectionCard density="dense" title="Discovery passes" description="Each pass ends with your review; search more runs another pass (up to 3).">
-          <ul className={cn("@container divide-y divide-border rounded-xl border border-border")}>
+          <ul className={cn("@container divide-y divide-rule border-y border-rule")}>
             {passes.map((p) => (
               <PassRow key={p.human.id} p={p} />
             ))}

@@ -14,11 +14,11 @@ import { stageDef } from "@/lib/delivery/types";
 import { cn } from "@/lib/utils";
 
 function ActorAvatar({ actor }: { actor: Actor }) {
-  if (actor.kind === "human") return <InitialsAvatar name={actor.name} size="md" />;
+  if (actor.kind === "human") return <InitialsAvatar name={actor.name} size="lg" />;
   const Icon = actor.kind === "agent" ? Bot : actor.kind === "policy" ? ShieldCheck : Cog;
   return (
-    <span aria-hidden className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
-      <Icon className="size-3.5" />
+    <span aria-hidden className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-well text-muted-foreground">
+      <Icon className="size-4" strokeWidth={1.75} />
     </span>
   );
 }
@@ -41,18 +41,18 @@ export function ActivityFeed({ items, projects, initial = 8, emptyText = "No act
 
   return (
     <div className={cn("flex flex-col", className)}>
-      <ol className="relative flex flex-col">
+      <ol className="relative -mx-2 flex flex-col">
         {visible.map((a, i) => {
           const project = projects?.[a.projectId];
           const body = (
             <>
               <span className="relative flex flex-col items-center self-stretch">
                 <ActorAvatar actor={a.actor} />
-                {i < visible.length - 1 ? <span aria-hidden className="mt-1 w-px flex-1 bg-border" /> : null}
+                {i < visible.length - 1 ? <span aria-hidden className="my-1 w-px flex-1 bg-rule" /> : null}
               </span>
-              <span className="min-w-0 flex-1 pb-3">
-                <span className="block text-[13px] leading-snug text-foreground">{a.text}</span>
-                <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[11px] text-muted-foreground">
+              <span className="min-w-0 flex-1 pt-0.5 pb-4">
+                <span className="block text-sm leading-5 text-heading">{a.text}</span>
+                <span className="mt-1 flex flex-wrap items-center gap-x-1.5 text-xs leading-4 text-muted-foreground">
                   <span className={cn(a.actor.kind !== "human" && "font-mono")}>{actorText(a.actor)}</span>
                   <span aria-hidden>·</span>
                   {project ? (
@@ -76,18 +76,18 @@ export function ActivityFeed({ items, projects, initial = 8, emptyText = "No act
           return (
             <li key={a.id}>
               {a.href ? (
-                <Link href={a.href} className="flex gap-3 rounded-lg px-1.5 pt-1.5 transition-colors duration-150 hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
+                <Link href={a.href} className="flex gap-3.5 rounded-[16px] px-2 pt-2 transition-colors duration-150 hover:bg-foreground/[0.035] focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none dark:hover:bg-foreground/[0.05]">
                   {body}
                 </Link>
               ) : (
-                <div className="flex gap-3 px-1.5 pt-1.5">{body}</div>
+                <div className="flex gap-3.5 px-2 pt-2">{body}</div>
               )}
             </li>
           );
         })}
       </ol>
       {sorted.length > shown ? (
-        <Button variant="ghost" size="sm" className="mt-1 self-start rounded-full text-muted-foreground" onClick={() => setShown((n) => n + 12)}>
+        <Button variant="secondary" size="sm" className="mt-1 self-start" onClick={() => setShown((n) => n + 12)}>
           Show {Math.min(12, sorted.length - shown)} more
         </Button>
       ) : null}

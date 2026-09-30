@@ -1,16 +1,13 @@
-"use client";
-
 /**
- * Time and cost per stage: one small bar chart (switch between agent cost and wall-clock time)
- * over the five stages, with the same numbers in a table underneath.
+ * Time and cost per stage, drawn like the reference's Gross Volume and Retention cards: the total
+ * as a hero numeral with a floating chip, a step chart of the chosen metric (agent cost or
+ * wall-clock time) over the five stages, and the same numbers in a table underneath.
  */
 import { Clock3, DollarSign } from "lucide-react";
 import { useState } from "react";
-import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis, type TooltipContentProps } from "recharts";
-import { SectionCard } from "@/components/common";
-import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
+import { FloatingChip, SectionCard, SegmentedControl } from "@/components/common";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { StepAreaChart } from "@/components/viz";
 import { useNow } from "@/hooks/use-now";
 import { useRuns } from "@/lib/api/queries";
 import type { ProjectBundle } from "@/lib/delivery/types";
@@ -32,40 +29,6 @@ interface Point {
   open: boolean;
 }
 
-const config = {
-  usd: { label: "Agent cost", color: "var(--chart-1)" },
-  hours: { label: "Time", color: "var(--chart-2)" },
-} satisfies ChartConfig;
-
-const AXIS_TICK = { fontSize: 11 };
-
-function hoursLabel(h: number): string {
-  if (h >= 48) return `${Math.round(h / 24)}d`;
-  return `${Math.round(h)}h`;
-}
-
-function PointTooltip({ active, payload }: TooltipContentProps<number, string>) {
-  const p = payload?.[0]?.payload as Point | undefined;
-  if (!active || !p) return null;
-  return (
-    <div className="grid min-w-40 gap-1 rounded-lg border border-border/60 bg-popover px-2.5 py-2 text-xs text-popover-foreground shadow-lg">
-      <div className="font-medium text-foreground">{p.title}</div>
-      <div className="flex justify-between gap-3">
-        <span className="text-muted-foreground">Agent cost</span>
-        <span className="tabular-nums">{p.usd === null ? "-" : formatUsd(p.usd)}</span>
-      </div>
-      <div className="flex justify-between gap-3">
-        <span className="text-muted-foreground">Time</span>
-        <span className="tabular-nums">{p.ms === undefined ? "-" : `${formatDuration(p.ms)}${p.open ? " so far" : ""}`}</span>
-      </div>
-      <div className="flex justify-between gap-3">
-        <span className="text-muted-foreground">Agent runs</span>
-        <span className="tabular-nums">{p.runs}</span>
-      </div>
-    </div>
-  );
-}
-
 export function StageCostChart({ bundle, className }: { bundle: ProjectBundle; className?: string }) {
   const [metric, setMetric] = useState<Metric>("cost");
   const now = useNow(60_000);
@@ -80,84 +43,84 @@ export function StageCostChart({ bundle, className }: { bundle: ProjectBundle; c
   const totalMs = data.reduce((sum, p) => sum + (p.ms ?? 0), 0);
   const totalRuns = data.reduce((sum, p) => sum + p.runs, 0);
 
+  const values = data.map((p) => (metric === "cost" ? (p.usd ?? 0) : (p.ms ?? 0)));
+  const peak = values.reduce((best, v, i) => (v > (values[best] ?? 0) ? i : best), 0);
+  const fmt = (v: number) => (metric === "cost" ? formatUsd(v) : formatDuration(v));
+
   return (
     <SectionCard
       density="dense"
-      kicker="Time and cost"
-      title="Per stage"
-      description={
-        <span>
-          <span className="font-medium text-foreground tabular-nums">{formatUsd(bundle.spendUsd)}</span> agent cost · <span className="tabular-nums">{formatDuration(totalMs)}</span> end to end · {plural(totalRuns, "agent run")}
-        </span>
-      }
+      title="Time and cost"
+      description="Per stage, all agent runs"
       actions={
-        <ToggleGroup type="single" size="sm" variant="outline" value={metric} onValueChange={(v) => v && setMetric(v as Metric)} aria-label="Chart shows">
-          <ToggleGroupItem value="cost" aria-label="Agent cost per stage" className="gap-1 px-2 text-xs">
-            <DollarSign aria-hidden />
-            <span className="hidden sm:inline">Cost</span>
-          </ToggleGroupItem>
-          <ToggleGroupItem value="time" aria-label="Time per stage" className="gap-1 px-2 text-xs">
-            <Clock3 aria-hidden />
-            <span className="hidden sm:inline">Time</span>
-          </ToggleGroupItem>
-        </ToggleGroup>
+        <SegmentedControl
+          size="sm"
+          aria-label="Chart shows"
+          value={metric}
+          onValueChange={setMetric}
+          items={[
+            { value: "cost", label: <span className="hidden sm:inline">Cost</span>, icon: DollarSign, ariaLabel: "Agent cost per stage" },
+            { value: "time", label: <span className="hidden sm:inline">Time</span>, icon: Clock3, ariaLabel: "Time per stage" },
+          ]}
+        />
       }
       className={className}
     >
-      {metric === "cost" && runsQ.isPending ? (
-        <Skeleton className="h-[140px] w-full rounded-xl" />
-      ) : metric === "cost" && !costKnown ? (
-        <p className="flex h-[140px] items-center justify-center rounded-xl border border-dashed text-[13px] text-muted-foreground">Run costs could not be loaded.</p>
-      ) : (
-        <ChartContainer config={config} className="aspect-auto h-[140px] w-full" initialDimension={{ width: 480, height: 140 }}>
-          <BarChart data={data} margin={{ top: 6, right: 0, bottom: 0, left: 0 }} barCategoryGap="28%">
-            <CartesianGrid vertical={false} />
-            <XAxis dataKey="label" tickLine={false} axisLine={false} tick={AXIS_TICK} tickMargin={6} interval={0} />
-            <YAxis
-              width={40}
-              tickLine={false}
-              axisLine={false}
-              tick={AXIS_TICK}
-              tickCount={4}
-              allowDecimals={false}
-              tickFormatter={(v: number) => (metric === "cost" ? `$${v}` : hoursLabel(v))}
-            />
-            <Tooltip cursor={{ fill: "var(--muted)", opacity: 0.6 }} content={(props) => <PointTooltip {...(props as TooltipContentProps<number, string>)} />} />
-            <Bar dataKey={metric === "cost" ? "usd" : "hours"} name={metric === "cost" ? "Agent cost" : "Time"} fill={metric === "cost" ? "var(--color-usd)" : "var(--color-hours)"} radius={[4, 4, 0, 0]} maxBarSize={36} activeBar={{ fillOpacity: 0.8 }} />
-          </BarChart>
-        </ChartContainer>
-      )}
-      <div className="relative mt-3 overflow-x-auto rounded-xl border">
-        <table className="w-full text-[13px]">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <span className="text-[44px] leading-none font-normal tracking-[-0.04em] text-heading tabular-nums sm:text-[52px]">{metric === "cost" ? formatUsd(bundle.spendUsd) : formatDuration(totalMs)}</span>
+        <FloatingChip tone="running" label={metric === "cost" ? "Runs" : "Agent cost"} value={metric === "cost" ? plural(totalRuns, "run") : formatUsd(bundle.spendUsd)} />
+      </div>
+      <p className="mt-2 text-[13px] text-muted-foreground">{metric === "cost" ? `agent cost · ${formatDuration(totalMs)} end to end` : `end to end · ${plural(totalRuns, "agent run")}`}</p>
+
+      <div className="mt-4 border-t border-rule pt-2">
+        {metric === "cost" && runsQ.isPending ? (
+          <Skeleton className="h-[180px] w-full rounded-[16px]" />
+        ) : metric === "cost" && !costKnown ? (
+          <p className="flex h-[180px] items-center justify-center rounded-[16px] border border-dashed border-circle-border text-sm text-muted-foreground">Run costs could not be loaded.</p>
+        ) : (
+          <StepAreaChart
+            data={data.map((p, i) => ({ label: p.label, value: values[i] ?? 0 }))}
+            highlightIndex={peak}
+            chipLabel={`${data[peak]?.label ?? ""}: ${fmt(values[peak] ?? 0)}`}
+            xLabels={data.map((p) => p.label)}
+            height={190}
+            formatValue={(v, i) => `${data[i]?.label ?? ""}: ${fmt(v)}`}
+            ariaLabel={metric === "cost" ? "Agent cost per stage" : "Time per stage"}
+          />
+        )}
+      </div>
+
+      <div className="relative -mx-5 mt-4 overflow-x-auto border-t border-rule">
+        <table className="w-full text-sm">
           <caption className="sr-only">Time, agent cost and runs per stage</caption>
-          <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
-            <tr>
-              <th scope="col" className="px-3 py-1.5 font-medium">
+          <thead className="text-left text-[13px] text-muted-foreground">
+            <tr className="h-10 border-b border-rule">
+              <th scope="col" className="px-5 py-2 font-normal">
                 Stage
               </th>
-              <th scope="col" className="px-3 py-1.5 text-right font-medium">
+              <th scope="col" className="px-3 py-2 text-right font-normal">
                 Time
               </th>
-              <th scope="col" className="px-3 py-1.5 text-right font-medium">
+              <th scope="col" className="px-3 py-2 text-right font-normal">
                 Cost
               </th>
-              <th scope="col" className="hidden px-3 py-1.5 text-right font-medium sm:table-cell">
+              <th scope="col" className="hidden px-5 py-2 text-right font-normal sm:table-cell">
                 Runs
               </th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-rule">
             {data.map((p) => (
-              <tr key={p.label} className="border-t">
-                <th scope="row" className="px-3 py-1.5 text-left font-normal">
+              <tr key={p.label} className="h-11 transition-colors hover:bg-foreground/[0.025]">
+                <th scope="row" className="px-5 py-2 text-left font-normal text-heading">
                   <span className="text-muted-foreground tabular-nums">{p.n}</span> {p.name}
                 </th>
-                <td className={cn("px-3 py-1.5 text-right whitespace-nowrap tabular-nums", p.ms === undefined && "text-muted-foreground")}>
+                <td className={cn("px-3 py-2 text-right whitespace-nowrap tabular-nums", p.ms === undefined && "text-muted-foreground")}>
                   {p.ms === undefined ? "-" : formatDuration(p.ms)}
                   {p.open ? <span className="text-muted-foreground"> so far</span> : null}
                 </td>
-                <td className={cn("px-3 py-1.5 text-right whitespace-nowrap tabular-nums", (p.usd === null || p.usd === 0) && "text-muted-foreground")}>{p.usd === null ? "-" : formatUsd(p.usd)}</td>
-                <td className="hidden px-3 py-1.5 text-right tabular-nums sm:table-cell">{p.runs}</td>
+                <td className={cn("px-3 py-2 text-right whitespace-nowrap tabular-nums", (p.usd === null || p.usd === 0) && "text-muted-foreground")}>{p.usd === null ? "-" : formatUsd(p.usd)}</td>
+                <td className="hidden px-5 py-2 text-right tabular-nums sm:table-cell">{p.runs}</td>
               </tr>
             ))}
           </tbody>

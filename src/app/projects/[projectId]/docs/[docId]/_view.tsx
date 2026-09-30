@@ -7,16 +7,17 @@
  * open questions. ?v= selects a version without a server round trip (history.replaceState keeps
  * useSearchParams in sync); version texts come from the blob store and stay cached.
  */
-import { ArrowLeft, Download, FileX, History } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Download, FileX, History, Link2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { actorText, EmptyState, ErrorState, RelativeTime, SectionCard, StatusPill } from "@/components/common";
+import { actorText, CircleIconButton, EmptyState, ErrorState, RelativeTime, SectionCard, StatusPill } from "@/components/common";
 import { DocViewer, versionLabels, type DocViewerMode } from "@/components/docs";
 import { Notice } from "@/components/hitl";
 import { useRunIndexFor } from "@/components/runs/use-run-index";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCopy } from "@/hooks/use-copy";
 import { stageHref } from "@/hooks/use-stage-params";
 import { ApiError } from "@/lib/api/client";
 import { useBlobText, useDoc, useProject } from "@/lib/api/queries";
@@ -40,7 +41,7 @@ export function DocPageView({ projectId, docId }: { projectId: string; docId: st
             title="Document not found"
             body={`This project has no document "${docId}". It may have been replaced, or the demo data was reset.`}
             action={
-              <Button asChild variant="outline" size="sm" className="rounded-full">
+              <Button asChild variant="secondary" size="sm">
                 <Link href={`/projects/${encodeURIComponent(projectId)}`}>Project overview</Link>
               </Button>
             }
@@ -135,27 +136,29 @@ function Loaded({ projectId, doc, text: latestText, version, requested }: { proj
   const kicker = KIND_LABEL[doc.kind] === heading ? "Document" : KIND_LABEL[doc.kind];
 
   return (
-    <div className="flex min-w-0 flex-col gap-5">
-      <header className="flex min-w-0 flex-col gap-3">
+    <div className="flex min-w-0 flex-col gap-6">
+      <header className="flex min-w-0 flex-col gap-5">
         <div>
-          <Button asChild variant="ghost" size="sm" className="-ml-2 rounded-full text-muted-foreground">
-            <Link href={backHref}>
-              <ArrowLeft aria-hidden />
-              {stageTitle}
-            </Link>
-          </Button>
+          <Link
+            href={backHref}
+            className="inline-flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-heading focus-visible:rounded-sm focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+          >
+            <ArrowLeft aria-hidden className="size-4" />
+            {stageTitle}
+          </Link>
         </div>
-        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between md:gap-6">
-          <div className="flex min-w-0 flex-col gap-1.5">
-            <p className="text-[11px] font-medium tracking-[0.14em] text-muted-foreground uppercase">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between md:gap-6">
+          <div className="flex min-w-0 flex-col gap-2.5">
+            <p className="text-[13px] text-muted-foreground">
               {kicker} <span aria-hidden>·</span> Stage {stageDef(stage).n} {stageTitle}
             </p>
-            <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2">
-              <h1 className="min-w-0 text-[24px] leading-8 font-normal tracking-[-0.02em] text-foreground sm:text-[28px] sm:leading-9">{heading}</h1>
-              <StatusPill status={{ kind: "doc", value: doc.status }} />
+            <div className="flex min-w-0 items-start gap-2.5">
+              <h1 className="min-w-0 text-[30px] leading-[1.12] font-normal tracking-[-0.025em] break-words text-heading sm:text-[38px] sm:leading-[1.08] sm:tracking-[-0.03em] xl:text-[42px]">{heading}</h1>
+              <CopyDocLink />
             </div>
-            <p className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[13px] text-muted-foreground">
-              <span className="min-w-0 font-mono text-xs break-words text-foreground/80">{doc.path}</span>
+            <p className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1.5 text-[13px] text-muted-foreground">
+              <StatusPill status={{ kind: "doc", value: doc.status }} />
+              <span className="inline-flex h-7 min-w-0 items-center rounded-full bg-well px-2.5 font-mono text-xs break-all text-heading">{doc.path}</span>
               <span aria-hidden>·</span>
               <span>
                 {labelOf(current.n)} <span aria-hidden>·</span>{" "}
@@ -166,12 +169,15 @@ function Loaded({ projectId, doc, text: latestText, version, requested }: { proj
             </p>
           </div>
           <div className="flex shrink-0 flex-wrap items-center gap-2">
-            <Button variant="outline" className="rounded-full" onClick={download} disabled={text === undefined}>
+            <Button variant="secondary" onClick={download} disabled={text === undefined}>
               <Download aria-hidden />
               Download .md
             </Button>
-            <Button asChild variant="ghost" className="rounded-full">
-              <Link href={backHref}>Open in {stageTitle}</Link>
+            <Button asChild>
+              <Link href={backHref}>
+                Open in {stageTitle}
+                <ArrowRight aria-hidden />
+              </Link>
             </Button>
           </div>
         </div>
@@ -194,7 +200,7 @@ function Loaded({ projectId, doc, text: latestText, version, requested }: { proj
                 <span>
                   You are viewing {labelOf(current.n)}, an older version.
                 </span>
-                <button type="button" onClick={() => setVersion(latest.n)} className="rounded font-medium text-primary hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
+                <button type="button" onClick={() => setVersion(latest.n)} className="rounded font-medium text-primary hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none">
                   Show the latest ({labelOf(latest.n)})
                 </button>
               </span>
@@ -229,6 +235,21 @@ function Loaded({ projectId, doc, text: latestText, version, requested }: { proj
         </div>
       </div>
     </div>
+  );
+}
+
+/** The reference's raised "copy link" circle beside the title. */
+function CopyDocLink() {
+  const { copied, copy } = useCopy();
+  return (
+    <CircleIconButton
+      variant="raised"
+      size="sm"
+      icon={copied ? Check : Link2}
+      label={copied ? "Link copied" : "Copy link to this document"}
+      className="mt-1 sm:mt-2"
+      onClick={() => void copy(window.location.href, "the document link")}
+    />
   );
 }
 

@@ -102,7 +102,7 @@ function IntakeEditor({ projectId, bundle, run, restart, onRestart, onStarted, o
       }
       actions={
         restart ? (
-          <Button variant="ghost" size="sm" className="rounded-full" onClick={() => onRestart(false)}>
+          <Button variant="ghost" size="sm" onClick={() => onRestart(false)}>
             <X aria-hidden />
             Cancel
           </Button>
@@ -117,12 +117,12 @@ function IntakeEditor({ projectId, bundle, run, restart, onRestart, onStarted, o
         }}
       >
         <IntakeForm value={value} onChange={setValue} errors={errors} mode="edit" projectId={projectId} outPath={project.docPaths.brd} hideIdentity disabled={busy} />
-        <div className="flex flex-wrap items-center gap-2 border-t border-border pt-4">
-          <Button type="submit" className="rounded-full" disabled={busy}>
+        <div className="flex flex-wrap items-center gap-2 border-t border-rule pt-4">
+          <Button type="submit" disabled={busy}>
             <Play aria-hidden />
             {start.isPending ? "Starting…" : "Start requirements run"}
           </Button>
-          <Button type="button" variant="outline" className="rounded-full" onClick={save} disabled={busy || !dirty}>
+          <Button type="button" variant="secondary" onClick={save} disabled={busy || !dirty}>
             <Save aria-hidden />
             {update.isPending && !start.isPending ? "Saving…" : dirty ? "Save draft" : "Saved"}
           </Button>
@@ -133,7 +133,7 @@ function IntakeEditor({ projectId, bundle, run, restart, onRestart, onStarted, o
               stage="requirements"
               onImported={onImported}
               trigger={
-                <Button type="button" variant="ghost" className="rounded-full">
+                <Button type="button" variant="ghost">
                   <Import aria-hidden />
                   Import existing BRD
                 </Button>
@@ -171,7 +171,7 @@ export function IntakeStep(props: IntakeStepProps) {
           run={run}
           action={
             again ? (
-              <Button size="sm" className="rounded-full" onClick={() => onRestart(true)}>
+              <Button size="sm" onClick={() => onRestart(true)}>
                 <RotateCcw aria-hidden />
                 Start another run
               </Button>
@@ -185,7 +185,7 @@ export function IntakeStep(props: IntakeStepProps) {
               <span className="font-medium">The last po-brd run {run?.status === "cancelled" ? "was cancelled" : "failed"}.</span>{" "}
               {run?.error?.message ? <span className="break-words">{run.error.message}</span> : brd?.status === "accepted" ? "The accepted BRD is unchanged." : "No BRD was accepted."}
             </p>
-            <Button size="sm" className="rounded-full" onClick={() => onRestart(true)}>
+            <Button size="sm" onClick={() => onRestart(true)}>
               <RotateCcw aria-hidden />
               Start another run
             </Button>
@@ -213,11 +213,11 @@ export function IntakeStep(props: IntakeStepProps) {
             </Notice>
           ) : null}
           <div className="space-y-1.5">
-            <h4 className="text-xs font-medium text-muted-foreground">Request</h4>
+            <h4 className="text-sm font-medium text-heading">Request</h4>
             <RequestText text={project.intake.request} empty={importedLast ? "No request text; the BRD was imported." : undefined} />
           </div>
           <div className="space-y-1.5">
-            <h4 className="text-xs font-medium text-muted-foreground">Requirement channels</h4>
+            <h4 className="text-sm font-medium text-heading">Requirement channels</h4>
             <SourceChips sources={project.intake.sources} />
           </div>
           <OptionsStrip options={project.intake.options} out={project.docPaths.brd} />

@@ -24,19 +24,19 @@ type StepState = "done" | "current" | "todo";
 
 function FlowStep({ n, label, state, detail }: { n: number; label: string; state: StepState; detail?: string }) {
   return (
-    <li className="flex min-w-0 items-center gap-2">
+    <li className={cn("flex min-w-0 items-center gap-2.5 rounded-[16px] px-3 py-2.5", state === "current" && "bg-raised shadow-(--raised-shadow)")} aria-current={state === "current" ? "step" : undefined}>
       <span
         className={cn(
-          "inline-flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-medium tabular-nums",
-          state === "done" ? "bg-status-success-bg text-status-success-fg" : state === "current" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
+          "inline-flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-medium tabular-nums",
+          state === "done" ? "bg-status-success-bg text-status-success-fg" : state === "current" ? "bg-ink text-ink-foreground" : "bg-raised text-muted-foreground",
         )}
       >
         {state === "done" ? <Check aria-hidden className="size-3.5" strokeWidth={2.5} /> : n}
         <span className="sr-only">{state === "done" ? "done" : state === "current" ? "current step" : "to do"}</span>
       </span>
       <span className="min-w-0">
-        <span className={cn("block text-[13px] leading-tight font-medium", state === "todo" && "text-muted-foreground")}>{label}</span>
-        {detail ? <span className="block truncate text-[11px] text-muted-foreground">{detail}</span> : null}
+        <span className={cn("block text-sm leading-5 font-medium", state === "todo" ? "text-muted-foreground" : "text-heading")}>{label}</span>
+        {detail ? <span className="block truncate text-xs text-muted-foreground">{detail}</span> : null}
       </span>
     </li>
   );
@@ -74,7 +74,7 @@ export function EpicsPanel({ projectId, bundle, readOnly }: { projectId: string;
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <MockJiraBanner />
       <SectionCard
         density="dense"
@@ -90,15 +90,15 @@ export function EpicsPanel({ projectId, bundle, readOnly }: { projectId: string;
           .join(" · ")}
         actions={
           !readOnly ? (
-            <Button size="sm" variant="outline" className="rounded-full" onClick={() => setSheet({ open: true })}>
-              <Plus aria-hidden />
+            <Button variant="secondary" onClick={() => setSheet({ open: true })}>
               Add epic
+              <Plus aria-hidden />
             </Button>
           ) : null
         }
       >
-        <div className="space-y-4">
-          <ol className="grid gap-3 rounded-xl bg-muted/50 p-3 sm:grid-cols-3" aria-label="Epic steps">
+        <div className="space-y-5">
+          <ol className="grid gap-1 rounded-[20px] bg-well p-1 sm:grid-cols-3" aria-label="Epic steps">
             <FlowStep n={1} label="Review the proposal" state={reviewDone ? "done" : "current"} detail={drafts.length ? `${drafts.length} draft to review` : "Edit, add or delete"} />
             <FlowStep n={2} label="Accept epics" state={reviewDone ? "done" : "todo"} detail={acceptedAt && reviewDone ? "Accepted" : "Accepts every draft"} />
             <FlowStep n={3} label="Create in Jira (mock)" state={allSynced ? "done" : reviewDone ? "current" : "todo"} detail={allSynced ? `${synced.length} created` : toSync.length ? `${toSync.length} ready` : "Assigns keys"} />
@@ -112,7 +112,7 @@ export function EpicsPanel({ projectId, bundle, readOnly }: { projectId: string;
               body="Every BRD requirement is already covered, or none were proposed. Add at least one epic to pass the gate."
               action={
                 !readOnly ? (
-                  <Button size="sm" className="rounded-full" onClick={() => setSheet({ open: true })}>
+                  <Button size="sm" onClick={() => setSheet({ open: true })}>
                     <Plus aria-hidden />
                     Add epic
                   </Button>
@@ -124,22 +124,22 @@ export function EpicsPanel({ projectId, bundle, readOnly }: { projectId: string;
           )}
 
           {parked.length > 0 ? (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[13px] text-muted-foreground">
               {parked.length === 1 ? "1 epic is" : `${parked.length} epics are`} blocked by an open question and {parked.length === 1 ? "stays" : "stay"} draft when you accept: {parked.map((e) => `${e.title} (${e.blockedBy?.join(", ")})`).join("; ")}. Edit an epic to clear its blocker once the question is answered.
             </p>
           ) : null}
 
           {!readOnly ? (
-            <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3">
-              <Button className="rounded-full" disabled={drafts.length === 0 || accept.isPending} onClick={() => accept.mutate("requirements")}>
+            <div className="flex flex-wrap items-center gap-2 border-t border-rule pt-4">
+              <Button disabled={drafts.length === 0 || accept.isPending} onClick={() => accept.mutate("requirements")}>
                 <ListChecks aria-hidden />
                 {accept.isPending ? "Accepting…" : drafts.length ? `Accept ${drafts.length} ${drafts.length === 1 ? "epic" : "epics"}` : "Epics accepted"}
               </Button>
-              <Button variant={drafts.length === 0 && toSync.length ? "default" : "outline"} className="rounded-full" disabled={toSync.length === 0 || sync.isPending} onClick={() => sync.mutate()}>
+              <Button variant={drafts.length === 0 && toSync.length ? "default" : "secondary"} disabled={toSync.length === 0 || sync.isPending} onClick={() => sync.mutate()}>
                 <CloudUpload aria-hidden />
                 {sync.isPending ? "Creating…" : toSync.length ? `Create ${toSync.length} in Jira` : allSynced ? "All in Jira" : "Create in Jira"}
               </Button>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-[13px] text-muted-foreground">
                 {drafts.length ? "Accept the epics before creating them in Jira." : toSync.length ? `Keys come from the ${bundle.project.jiraProject} project (mock).` : allSynced ? "Every open epic has a Jira key." : ""}
               </span>
             </div>

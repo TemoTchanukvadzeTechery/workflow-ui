@@ -37,43 +37,43 @@ function ImportSlot({ stage, value, onChange, disabled, disabledReason }: { stag
   const Icon = doc.icon;
   const [open, setOpen] = useState(false);
   return (
-    <div className={cn("rounded-xl border p-3", value ? "border-primary/30 bg-primary-soft/50" : "border-dashed")}>
+    <div className={cn("rounded-[20px] p-4", value ? "bg-primary-soft shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--primary)_22%,transparent)]" : "bg-well")}>
       <div className="flex items-start gap-3">
-        <span aria-hidden className="inline-flex size-8 shrink-0 items-center justify-center rounded-xl bg-muted text-foreground">
-          <Icon className="size-4" strokeWidth={1.75} />
+        <span aria-hidden className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-raised text-heading shadow-(--raised-shadow)">
+          <Icon className="size-[18px]" strokeWidth={1.75} />
         </span>
-        <div className="min-w-0 flex-1 space-y-0.5">
-          <p className="text-[13px] font-medium text-foreground">{value ? `${doc.label} ready to import` : `Existing ${doc.label}`}</p>
+        <div className="min-w-0 flex-1 space-y-1">
+          <p className="text-[15px] font-medium text-heading">{value ? `${doc.label} ready to import` : `Existing ${doc.label}`}</p>
           {value ? (
             <>
-              <p className="truncate text-xs text-foreground/85" title={importTitle(value)}>
+              <p className="truncate text-[13px] text-foreground/85" title={importTitle(value)}>
                 {importTitle(value)}
               </p>
-              <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
+              <p className="flex items-center gap-1 text-xs text-muted-foreground">
                 {value.source === "confluence" ? <BookOpen aria-hidden className="size-3" /> : <ClipboardPaste aria-hidden className="size-3" />}
                 {value.source === "confluence" ? `Fetched from Confluence page ${value.ref}` : `Pasted, ${value.content.split("\n").length} lines`}
               </p>
             </>
           ) : (
-            <p className="text-xs text-muted-foreground">{disabled && disabledReason ? disabledReason : `Skips the ${doc.workflow} run. Paste markdown or give a Confluence page.`}</p>
+            <p className="text-[13px] leading-5 text-muted-foreground">{disabled && disabledReason ? disabledReason : `Skips the ${doc.workflow} run. Paste markdown or give a Confluence page.`}</p>
           )}
         </div>
       </div>
-      <div className="mt-3 flex flex-wrap gap-2 pl-11">
+      <div className="mt-3 flex flex-wrap gap-2 pl-13">
         <ImportDocDialog
           stage={stage}
           open={open}
           onOpenChange={setOpen}
           onSubmit={(body) => onChange(body)}
           trigger={
-            <Button variant="outline" size="sm" className="rounded-full bg-card" disabled={disabled}>
+            <Button variant="outline" size="sm" className="bg-field" disabled={disabled}>
               {value ? <RefreshCw aria-hidden /> : <Icon aria-hidden />}
               {value ? "Replace" : `Import ${doc.label}`}
             </Button>
           }
         />
         {value ? (
-          <Button variant="ghost" size="sm" className="rounded-full text-muted-foreground" onClick={() => onChange(undefined)} aria-label={`Remove the imported ${doc.label}`}>
+          <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => onChange(undefined)} aria-label={`Remove the imported ${doc.label}`}>
             <Trash2 aria-hidden />
             Remove
           </Button>
@@ -138,9 +138,8 @@ export function NewProjectView() {
   return (
     <div className="@container flex min-w-0 flex-col gap-6">
       <PageHeader
-        kicker="Stage 1 · Requirements intake"
         title="New project"
-        description="Tell po-brd what the Product Owner wants and where to look: Jira issues, Confluence pages and notes. Or start from a BRD you already have."
+        description="Stage 1, the requirements intake. Tell po-brd what the Product Owner wants and where to look: Jira issues, Confluence pages and notes. Or start from a BRD you already have."
       />
 
       <div className="grid min-w-0 items-start gap-4 @5xl:grid-cols-[minmax(0,1fr)_340px]">
@@ -149,9 +148,9 @@ export function NewProjectView() {
         </SectionCard>
 
         <SectionCard
-          title="Start from an existing document"
+          title="Import a document"
           description="Import a BRD, and optionally its AAD, to skip those runs. The project still proposes epics from them, and each stage still needs its epics accepted and its gate approved."
-          className="@5xl:sticky @5xl:top-16"
+          className="@5xl:sticky @5xl:top-4"
           bodyClassName="flex flex-col gap-3"
         >
           <ImportSlot stage="requirements" value={imports.requirements} onChange={(b) => setImport("requirements", b)} disabled={busy} />
@@ -159,10 +158,10 @@ export function NewProjectView() {
         </SectionCard>
       </div>
 
-      <div className="card-surface z-10 flex flex-col gap-3 rounded-2xl p-4 @3xl:sticky @3xl:bottom-3 @3xl:flex-row @3xl:items-center @3xl:justify-between">
+      <div className="prompt-band z-10 flex flex-col gap-3 rounded-[24px] p-4 @3xl:sticky @3xl:bottom-3 @3xl:flex-row @3xl:items-center @3xl:justify-between @3xl:pl-5">
         <div className="min-w-0 space-y-1">
-          <p className="flex items-start gap-1.5 text-[13px] text-muted-foreground">
-            <Info aria-hidden className="mt-0.5 size-3.5 shrink-0" />
+          <p className="flex items-start gap-2 text-sm leading-5 text-heading/80">
+            <Info aria-hidden className="mt-0.5 size-4 shrink-0" strokeWidth={1.75} />
             <span>
               {hasBrd
                 ? `The imported ${imports.architecture ? "BRD and AAD are" : "BRD is"} accepted as v1 and no run starts. Next: accept the proposed epics and approve Requirements.`
@@ -170,19 +169,19 @@ export function NewProjectView() {
             </span>
           </p>
           {footerError ? (
-            <p id="start-hint" role="alert" className="pl-5 text-xs text-destructive">
+            <p id="start-hint" role="alert" className="ml-6 w-fit rounded-[10px] bg-field px-2.5 py-1 text-[13px] font-medium text-destructive">
               {footerError}
             </p>
           ) : null}
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">
           {!hasBrd ? (
-            <Button variant="outline" className="rounded-full" onClick={() => void submit("draft")} disabled={busy}>
+            <Button variant="secondary" size="lg" className="bg-field hover:bg-field/80" onClick={() => void submit("draft")} disabled={busy}>
               {pendingAction === "draft" ? <Spinner /> : <Save aria-hidden />}
               Save draft
             </Button>
           ) : null}
-          <Button className="rounded-full" onClick={() => void submit("start")} disabled={busy} aria-describedby={footerError ? "start-hint" : undefined}>
+          <Button size="lg" onClick={() => void submit("start")} disabled={busy} aria-describedby={footerError ? "start-hint" : undefined}>
             {pendingAction === "start" ? <Spinner /> : hasBrd ? <FileText aria-hidden /> : <Play aria-hidden />}
             {hasBrd ? "Create project" : "Start requirements run"}
           </Button>

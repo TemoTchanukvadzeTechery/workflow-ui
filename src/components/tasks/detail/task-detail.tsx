@@ -10,10 +10,10 @@
  * The review form lists the changed files and hands the diff itself to the Changes tab
  * (TaskReviewHostContext), so the page never shows the same diff twice.
  */
-import { ArrowDown, ArrowLeft, Check, Copy, Eye, FolderX, GitBranch, Hourglass, ListTodo, Play, RefreshCw, Undo2 } from "lucide-react";
+import { ArrowDown, ArrowLeft, Check, Copy, Eye, FolderX, GitBranch, Hourglass, Link2, ListTodo, Play, RefreshCw, Undo2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Duration, Elapsed, EmptyState, ErrorState, StatusDot, StatusPill } from "@/components/common";
+import { CircleIconButton, Duration, Elapsed, EmptyState, ErrorState, SegmentedControl, StatusDot, StatusPill } from "@/components/common";
 import { EvidenceGallery } from "@/components/evidence";
 import { HumanRequestCard, Notice } from "@/components/hitl";
 import { TaskReviewHostContext, type TaskReviewHost } from "@/components/hitl/forms/TaskReviewForm";
@@ -81,33 +81,31 @@ function attemptsOf(bundle: ProjectBundle, task: DeliveryTask): Attempt[] {
   return [...dev, ...qa].sort((a, b) => a.createdAt - b.createdAt);
 }
 
+/** The task's runs as a segmented control: status dot, "Attempt 2", the workflow and run id. */
 function AttemptPicker({ attempts, value, onChange }: { attempts: Attempt[]; value: string; onChange: (runId: string) => void }) {
   return (
-    <div role="radiogroup" aria-label="Attempt" className="-mx-1 flex min-w-0 gap-1 overflow-x-auto px-1 pb-1">
-      {attempts.map((a) => {
-        const on = a.runId === value;
+    <SegmentedControl
+      aria-label="Attempt"
+      value={value}
+      onValueChange={onChange}
+      items={attempts.map((a) => {
         const meta = a.status ? runStatusMeta(a.status) : undefined;
-        return (
-          <button
-            key={a.runId}
-            type="button"
-            role="radio"
-            aria-checked={on}
-            onClick={() => onChange(a.runId)}
-            className={cn(
-              "inline-flex h-9 shrink-0 items-center gap-2 rounded-full border px-3 text-[13px] whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
-              on ? "border-foreground/20 bg-card font-medium text-foreground shadow-sm" : "border-transparent bg-muted text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {meta ? <StatusDot tone={meta.tone} pulse={meta.pulse} size="sm" label={meta.label} /> : null}
-            {a.label}
-            <span className="font-mono text-[11px] text-muted-foreground">
-              {a.kind === "dev" ? "dev-task" : "qa-verify"} {a.runId}
+        const wf = a.kind === "dev" ? "dev-task" : "qa-verify";
+        return {
+          value: a.runId,
+          ariaLabel: `${a.label}, ${wf} ${a.runId}${meta ? `, ${meta.label}` : ""}`,
+          label: (
+            <span className="inline-flex items-center gap-2">
+              {meta ? <StatusDot tone={meta.tone} pulse={meta.pulse} size="sm" /> : null}
+              {a.label}
+              <span className="hidden font-mono text-xs font-normal text-muted-foreground sm:inline">
+                {wf} {a.runId}
+              </span>
             </span>
-          </button>
-        );
+          ),
+        };
       })}
-    </div>
+    />
   );
 }
 
@@ -166,7 +164,7 @@ export function TaskDetailView({ projectId, taskId }: { projectId: string; taskI
         title="Task not found"
         body={`${taskId} is not part of this project's plan.`}
         action={
-          <Button asChild variant="outline" className="rounded-full">
+          <Button asChild variant="secondary">
             <Link href={stageHref(projectId, "implementation", { step: "execution" })}>Open the task board</Link>
           </Button>
         }
@@ -254,7 +252,7 @@ function TaskDetail({ projectId, bundle, task, request, onClearRequest }: { proj
   const devAttempt = attempts.find((a) => a.runId === devRunId);
 
   return (
-    <div className="@container/task flex min-w-0 flex-col gap-4">
+    <div className="@container/task flex min-w-0 flex-col gap-5">
       <TaskHeader projectId={projectId} bundle={bundle} task={task} branchFallback={branchOf(devQ.data)} />
 
       {pending.length > 0 || (request && !pending.some((p) => p.entry.runId === request.runId && p.entry.id === request.requestId)) ? (
@@ -295,13 +293,13 @@ function TaskDetail({ projectId, bundle, task, request, onClearRequest }: { proj
         />
       ) : (
         <>
-          <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <span className="kicker shrink-0">Attempts</span>
+          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2">
+            <span className="shrink-0 text-[15px] text-muted-foreground">Attempts</span>
             <div className="order-last min-w-0 basis-full @2xl/task:order-none @2xl/task:basis-auto @2xl/task:flex-1">
               <AttemptPicker attempts={attempts} value={runId ?? ""} onChange={setPicked} />
             </div>
             {runId ? (
-              <Link href={`/runs/${runId}`} className="ml-auto text-xs font-medium text-primary hover:underline focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
+              <Link href={`/runs/${runId}`} className="ml-auto text-[13px] font-medium text-primary hover:underline focus-visible:rounded-sm focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none">
                 Open in run inspector
               </Link>
             ) : null}
@@ -322,10 +320,10 @@ function TaskDetail({ projectId, bundle, task, request, onClearRequest }: { proj
               )}
             </aside>
 
-            <section ref={detailsRef} aria-label="Task details" className="card-surface min-w-0 scroll-mt-20 rounded-2xl p-4">
-              <Tabs value={activeTab} onValueChange={setTab} className="min-w-0 gap-4">
-                <div className="-mx-1 overflow-x-auto px-1 pb-1">
-                  <TabsList variant="line" className="h-auto flex-nowrap justify-start gap-1">
+            <section ref={detailsRef} aria-label="Task details" className="card-surface min-w-0 scroll-mt-20 rounded-2xl p-4 sm:p-5">
+              <Tabs value={activeTab} onValueChange={setTab} className="min-w-0 gap-5">
+                <div className="-mx-1 overflow-x-auto px-1 pb-1 [scrollbar-width:none]">
+                  <TabsList className="flex-nowrap justify-start">
                     <TabTrigger value="changes">Changes</TabTrigger>
                     <TabTrigger value="checks" count={checks.length ? `${passed}/${checks.length}` : undefined}>
                       Checks
@@ -346,7 +344,7 @@ function TaskDetail({ projectId, bundle, task, request, onClearRequest }: { proj
                   {devRunId ? (
                     <ChangesPanel key={devRunId} runId={devRunId} attemptLabel={attempt?.kind === "qa" && devAttempt ? `${devAttempt.label}, the build QA tested` : undefined} />
                   ) : (
-                    <p className="text-[13px] text-muted-foreground">No dev-task run yet.</p>
+                    <p className="text-sm text-muted-foreground">No dev-task run yet.</p>
                   )}
                 </TabsContent>
                 <TabsContent value="checks" className="min-w-0">
@@ -389,9 +387,9 @@ function PanelSkeleton() {
 
 function TabTrigger({ value, count, children }: { value: string; count?: string; children: ReactNode }) {
   return (
-    <TabsTrigger value={value} className="h-8 flex-none rounded-full px-3 text-[13px] data-active:bg-muted">
+    <TabsTrigger value={value} className="flex-none">
       {children}
-      {count ? <span className="font-mono text-[10.5px] text-muted-foreground tabular-nums">{count}</span> : null}
+      {count ? <span className="text-xs font-normal text-muted-foreground tabular-nums">{count}</span> : null}
     </TabsTrigger>
   );
 }
@@ -408,13 +406,13 @@ function PastRequest({ projectId, request }: { projectId: string; request: Reque
 function ReviewBar({ task, label, onGo }: { task: DeliveryTask; label?: string; onGo: () => void }) {
   const qa = label?.startsWith("qa:review:");
   return (
-    <div className="sticky bottom-3 z-20 mx-auto flex w-full max-w-2xl items-center gap-3 rounded-full border border-status-review-fg/30 bg-card/95 py-1.5 pr-1.5 pl-4 shadow-lg backdrop-blur" role="region" aria-label="Pending review">
+    <div className="glass sticky bottom-4 z-20 mx-auto flex w-full max-w-2xl items-center gap-3 rounded-[20px] py-1.5 pr-1.5 pl-4" role="region" aria-label="Pending review">
       <Eye aria-hidden className="size-4 shrink-0 text-status-review-fg" />
-      <p className="min-w-0 flex-1 truncate text-[13px]">
-        <span className="font-medium">{task.jiraKey ?? task.id}</span> is waiting for your {qa ? "QA review" : "review"}
-        {label ? <span className="ml-1.5 font-mono text-[11px] text-muted-foreground">{label}</span> : null}
+      <p className="min-w-0 flex-1 truncate text-sm">
+        <span className="font-medium text-heading">{task.jiraKey ?? task.id}</span> is waiting for your {qa ? "QA review" : "review"}
+        {label ? <span className="ml-1.5 font-mono text-xs text-muted-foreground">{label}</span> : null}
       </p>
-      <Button size="sm" className="h-8 shrink-0 rounded-full bg-status-review-fg px-3 text-white hover:bg-status-review-fg/85 dark:text-background" onClick={onGo}>
+      <Button className="shrink-0 bg-status-review-fg text-white dark:text-background" onClick={onGo}>
         Review now
         <ArrowDown aria-hidden />
       </Button>
@@ -434,9 +432,9 @@ function branchOf(run: { steps: Array<{ kind: string; key?: string; output?: unk
 
 function Fact({ label, children, className }: { label: string; children: ReactNode; className?: string }) {
   return (
-    <div className={cn("flex min-w-0 flex-col gap-1", className)}>
-      <dt className="kicker">{label}</dt>
-      <dd className="flex min-w-0 flex-wrap items-center gap-1 text-[13px] leading-5">{children}</dd>
+    <div className={cn("flex min-w-0 flex-col gap-1.5", className)}>
+      <dt className="text-[13px] leading-5 text-muted-foreground">{label}</dt>
+      <dd className="flex min-h-6 min-w-0 flex-wrap items-center gap-1.5 text-[15px] leading-6 text-heading">{children}</dd>
     </div>
   );
 }
@@ -444,7 +442,7 @@ function Fact({ label, children, className }: { label: string; children: ReactNo
 function CopyBranch({ branch }: { branch: string }) {
   const { copied, copy } = useCopy();
   return (
-    <span className="inline-flex max-w-full min-w-0 items-center gap-1 rounded-md border bg-muted/60 py-0.5 pr-0.5 pl-1.5 font-mono text-[11.5px] text-foreground">
+    <span className="inline-flex h-7 max-w-full min-w-0 items-center gap-1.5 rounded-full bg-well pr-1 pl-2.5 font-mono text-xs text-heading">
       <GitBranch aria-hidden className="size-3 shrink-0 text-muted-foreground" />
       <span className="min-w-0 truncate" title={branch}>
         {branch}
@@ -453,7 +451,7 @@ function CopyBranch({ branch }: { branch: string }) {
         type="button"
         onClick={() => void copy(branch, "the branch name")}
         aria-label={copied ? "Branch name copied" : "Copy branch name"}
-        className="inline-flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-background hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+        className="inline-flex size-5 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-raised hover:text-heading focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
       >
         {copied ? <Check aria-hidden className="size-3" /> : <Copy aria-hidden className="size-3" />}
       </button>
@@ -481,54 +479,68 @@ function TaskHeader({ projectId, bundle, task, branchFallback }: { projectId: st
   const since = working ? attemptStartedAt(task, (id) => runStarts.get(id)) : undefined;
 
   return (
-    <header className="space-y-3">
+    <header className="space-y-5">
       <Link
         href={inQa ? stageHref(projectId, "qa", { step: "tasks" }) : stageHref(projectId, "implementation", { step: "execution" })}
-        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+        className="inline-flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-heading focus-visible:rounded-sm focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
       >
-        <ArrowLeft aria-hidden className="size-3.5" />
+        <ArrowLeft aria-hidden className="size-4" />
         {inQa ? "QA Certification · tasks" : "Implementation · task board"}
       </Link>
-      <div className="card-surface space-y-4 rounded-2xl p-4 @3xl/task:p-5">
-        <div className="flex flex-wrap items-start gap-x-4 gap-y-3">
-          <div className="min-w-0 flex-1 space-y-1.5">
-            <TaskIdLabel task={task} className="text-xs" />
-            <h1 className="text-[24px] leading-tight font-normal tracking-[-0.02em] @3xl/task:text-[28px]">
+      <div className="flex flex-col gap-4 @3xl/task:flex-row @3xl/task:items-end @3xl/task:justify-between">
+        <div className="min-w-0 flex-1 space-y-3">
+          <TaskIdLabel task={task} className="text-[13px]" />
+          <div className="flex min-w-0 items-start gap-2.5">
+            <h1 className="min-w-0 text-[28px] leading-[1.14] font-normal tracking-[-0.025em] break-words text-heading @3xl/task:text-[36px] @3xl/task:leading-[1.1] @3xl/task:tracking-[-0.03em] @6xl/task:text-[40px]">
               <ScopedTitle title={task.title} />
             </h1>
-            <div className="flex flex-wrap items-center gap-1.5">
-              <StatusPill status={{ kind: "task", value: task.status }} pulse={working} />
-              {showQa ? <StatusPill {...qaMeta} label={`QA · ${qaMeta.label}`} variant="outline" /> : null}
-              {task.reworkFrom === "qa" ? <QaReworkBadge /> : null}
-              <ReworkBadge count={task.reworkCount} max={MAX_REWORK} />
-              {task.escalated ? <EscalatedBadge /> : null}
-            </div>
+            <CopyTaskLink />
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <StatusPill status={{ kind: "task", value: task.status }} pulse={working} />
+            {showQa ? <StatusPill {...qaMeta} label={`QA · ${qaMeta.label}`} variant="chip" /> : null}
+            {task.reworkFrom === "qa" ? <QaReworkBadge /> : null}
+            <ReworkBadge count={task.reworkCount} max={MAX_REWORK} />
+            {task.escalated ? <EscalatedBadge /> : null}
+            <span className="chip-float text-[13px]">
+              <span className="text-muted-foreground">Wave</span>
+              <span className="font-medium tabular-nums">{task.wave}</span>
+              <span aria-hidden className="text-muted-foreground">
+                ·
+              </span>
+              <span className="text-muted-foreground">Size</span>
+              <span className="font-mono font-medium">{task.size}</span>
+            </span>
+          </div>
+        </div>
+        {canStart || canRetry || (canManage && task.status === "blocked") ? (
+          <div className="flex flex-wrap items-center gap-2">
             {canStart ? (
-              <Button className="rounded-full" disabled={start.isPending} onClick={() => start.mutate({ body: { taskIds: [task.id] }, targets: [task], tasks: bundle.tasks })}>
+              <Button disabled={start.isPending} onClick={() => start.mutate({ body: { taskIds: [task.id] }, targets: [task], tasks: bundle.tasks })}>
                 {start.isPending ? <Spinner aria-hidden /> : <Play aria-hidden />}
                 Start task
               </Button>
             ) : null}
             {canRetry ? (
-              <Button variant="outline" className="rounded-full" disabled={retry.isPending} onClick={() => retry.mutate(task.id)}>
+              <Button variant="secondary" disabled={retry.isPending} onClick={() => retry.mutate(task.id)}>
                 {retry.isPending ? <Spinner aria-hidden /> : <RefreshCw aria-hidden />}
                 Retry task
               </Button>
             ) : null}
             {canManage && task.status === "blocked" ? (
-              <Button variant="outline" className="rounded-full" disabled={patch.isPending} onClick={() => patch.mutate({ taskId: task.id, body: { status: "ready" } })}>
+              <Button variant="secondary" disabled={patch.isPending} onClick={() => patch.mutate({ taskId: task.id, body: { status: "ready" } })}>
                 <Undo2 aria-hidden />
                 Mark ready (unblock)
               </Button>
             ) : null}
           </div>
-        </div>
+        ) : null}
+      </div>
 
+      <section aria-label="About this task" className="card-surface space-y-5 rounded-2xl p-5 @3xl/task:p-6">
         {task.status === "blocked" ? <BlockedLine reason={task.blockedBy} /> : null}
         {wait ? (
-          <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
+          <p className="flex items-start gap-1.5 text-[13px] text-muted-foreground">
             <Hourglass aria-hidden className="mt-0.5 size-3.5 shrink-0" />
             <span>
               {isQueued(task) ? "Queued · " : ""}
@@ -536,13 +548,13 @@ function TaskHeader({ projectId, bundle, task, branchFallback }: { projectId: st
             </span>
           </p>
         ) : null}
-        {task.description ? <p className="max-w-3xl text-[13px] leading-relaxed text-muted-foreground">{task.description}</p> : null}
+        {task.description ? <p className="max-w-3xl text-[15px] leading-6 text-foreground/85">{task.description}</p> : null}
 
-        <dl className="grid grid-cols-2 gap-x-4 gap-y-3 border-t border-border pt-4 @4xl/task:grid-cols-4">
+        <dl className={cn("grid grid-cols-2 gap-x-6 gap-y-4 @4xl/task:grid-cols-4", (task.description || wait || task.status === "blocked") && "border-t border-rule pt-5")}>
           <Fact label="Epic" className="col-span-2">
             {epic ? (
               <span className="min-w-0 truncate" title={epic.title}>
-                <span className="font-mono text-xs text-muted-foreground">{epic.key ?? epic.id}</span> {epic.title}
+                <span className="font-mono text-[13px] text-muted-foreground">{epic.key ?? epic.id}</span> {epic.title}
               </span>
             ) : (
               <span className="text-muted-foreground">-</span>
@@ -551,10 +563,10 @@ function TaskHeader({ projectId, bundle, task, branchFallback }: { projectId: st
           <Fact label="Repo">
             <RepoChip repo={task.repo} />
           </Fact>
-          <Fact label="Size · wave">
-            <span className="font-mono text-xs">{task.size}</span>
+          <Fact label="Type · priority">
+            <span className="capitalize">{task.type}</span>
             <span className="text-muted-foreground">·</span>
-            <span>Wave {task.wave}</span>
+            <span className="capitalize">{task.priority}</span>
           </Fact>
           <Fact label="Branch" className="col-span-2">
             {branch ? <CopyBranch branch={branch} /> : <span className="text-muted-foreground">Created when the agent starts</span>}
@@ -565,13 +577,13 @@ function TaskHeader({ projectId, bundle, task, branchFallback }: { projectId: st
           <Fact label="Traces">
             {task.traces.length ? <TraceChips traces={task.traces} /> : <span className="text-muted-foreground">-</span>}
           </Fact>
-          <Fact label="Agent" className="col-span-2">
+          <Fact label="Agent" className="col-span-2 @4xl/task:col-span-4">
             {working ? (
               <>
                 <AgentAvatar live />
                 {since ? (
                   <span title={task.reworkCount > 0 && task.devReview?.decision === "changes_requested" ? `Time on rework ${task.reworkCount}` : "Time on this attempt"}>
-                    <Elapsed since={since} className="font-mono text-xs text-status-running-fg tabular-nums" />
+                    <Elapsed since={since} className="font-mono text-[13px] text-status-running-fg tabular-nums" />
                   </span>
                 ) : null}
               </>
@@ -585,19 +597,29 @@ function TaskHeader({ projectId, bundle, task, branchFallback }: { projectId: st
               <span className="text-muted-foreground">Not started</span>
             )}
           </Fact>
-          <Fact label="Type · priority" className="col-span-2">
-            <span className="capitalize">{task.type}</span>
-            <span className="text-muted-foreground">·</span>
-            <span className="capitalize">{task.priority}</span>
-          </Fact>
         </dl>
         {working && task.latestStep ? (
-          <p className="flex min-w-0 items-center gap-2 rounded-lg bg-status-running-bg/60 px-3 py-1.5 font-mono text-xs text-status-running-fg" aria-live="polite">
+          <p className="flex min-w-0 items-center gap-2 rounded-[14px] bg-status-running-bg px-3.5 py-2.5 font-mono text-[13px] text-status-running-fg" aria-live="polite">
             <StatusDot tone="running" pulse size="sm" />
             <span className="truncate">{task.latestStep}</span>
           </p>
         ) : null}
-      </div>
+      </section>
     </header>
+  );
+}
+
+/** The reference's raised "copy link" circle beside the title. */
+function CopyTaskLink() {
+  const { copied, copy } = useCopy();
+  return (
+    <CircleIconButton
+      variant="raised"
+      size="sm"
+      icon={copied ? Check : Link2}
+      label={copied ? "Link copied" : "Copy link to this task"}
+      className="mt-1 @3xl/task:mt-2"
+      onClick={() => void copy(window.location.href.split("?")[0] ?? window.location.href, "the task link")}
+    />
   );
 }

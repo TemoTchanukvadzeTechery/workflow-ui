@@ -165,7 +165,7 @@ function StartModeNote({ mode, canManage }: { mode: StartMode; canManage: boolea
       : mode === "first-wave"
         ? "Start mode: first wave only. Start later waves yourself."
         : "Start mode: manual. Start each wave or task yourself.";
-  return <p className="text-xs text-muted-foreground">{text}</p>;
+  return <p className="text-[13px] leading-5 text-muted-foreground">{text}</p>;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -203,7 +203,7 @@ function WaveStrip({
 }) {
   const waves = waveGroups(tasks);
   return (
-    <ol aria-label="Waves" className="grid gap-2 @lg:grid-cols-2 @3xl:grid-cols-3">
+    <ol aria-label="Waves" className="grid gap-3 @lg:grid-cols-2 @3xl:grid-cols-3">
       {waves.map(([wave, list]) => {
         const s = waveState(list);
         const complete = s.total > 0 && s.done === s.total;
@@ -218,20 +218,22 @@ function WaveStrip({
                 : { tone: "neutral" as const, label: "Not started" };
         const key = `wave:${wave}`;
         return (
-          <li key={wave} className="card-surface flex min-w-0 flex-col gap-2 rounded-2xl p-3">
-            <div className="flex items-center gap-2">
-              <h3 className="text-[13px] font-medium">
-                Wave {wave} <span className="font-normal text-muted-foreground tabular-nums">· {s.done}/{s.total} done</span>
-              </h3>
-              <span className="flex-1" />
+          <li key={wave} className="card-surface flex min-w-0 flex-col gap-3 rounded-[20px] p-4">
+            <div className="flex min-w-0 items-center gap-2">
+              <h3 className="text-[15px] leading-6 text-muted-foreground">Wave {wave}</h3>
               <StatusPill tone={pill.tone} label={pill.label} size="sm" icon={complete ? taskStatusMeta("done").icon : null} pulse={pill.label === "In progress"} />
+              <span className="flex-1" />
+              <span className="text-[15px] leading-6 text-heading tabular-nums">
+                {s.done}/{s.total}
+                <span className="sr-only"> done</span>
+              </span>
             </div>
-            <HatchedBar done={s.done} partial={s.inFlight} total={s.total} tone={complete ? "success" : "running"} label={`Wave ${wave}: ${s.done} of ${s.total} done, ${s.inFlight} in progress`} />
-            <div className="flex min-h-7 flex-wrap items-center gap-1.5">
+            <HatchedBar done={s.done} partial={s.inFlight} total={s.total} size="lg" tone={complete ? "success" : "running"} label={`Wave ${wave}: ${s.done} of ${s.total} done, ${s.inFlight} in progress`} />
+            <div className="flex min-h-8 flex-wrap items-center gap-1.5">
               {list.map((t) => {
                 const meta = taskStatusMeta(t.status);
                 return (
-                  <span key={t.id} title={`${t.id}: ${meta.label}`} className="inline-flex h-5 items-center gap-1 rounded-md bg-muted px-1.5 font-mono text-[11px] text-muted-foreground">
+                  <span key={t.id} title={`${t.id}: ${meta.label}`} className="inline-flex h-6 items-center gap-1 rounded-full bg-well px-2 font-mono text-[11px] text-muted-foreground">
                     <meta.icon aria-hidden className={cn("size-3", toneClasses(meta.tone).text)} />
                     {t.id}
                     <span className="sr-only">{meta.label}</span>
@@ -240,7 +242,7 @@ function WaveStrip({
               })}
               <span className="flex-1" />
               {canManage && !auto && s.startable.length > 0 ? (
-                <Button size="sm" variant="outline" className="h-7 rounded-full" disabled={startingKey === key} onClick={() => onStartWave(wave, s.startable)}>
+                <Button size="sm" variant="secondary" disabled={startingKey === key} onClick={() => onStartWave(wave, s.startable)}>
                   {startingKey === key ? <Spinner aria-hidden /> : <Play aria-hidden />}
                   Start wave {wave}
                 </Button>
@@ -261,7 +263,7 @@ function QueuedNote({ queued, all }: { queued: DeliveryTask[]; all: DeliveryTask
   const why = first ? waitReason(first, all) : null;
   const text = first && why ? `Queued: ${first.id} ${why}${queued.length > 1 ? ` (+${queued.length - 1} more)` : ""}` : "Queued";
   return (
-    <span className="inline-flex min-w-0 items-center gap-1 text-[11px] text-muted-foreground" title={text}>
+    <span className="inline-flex min-w-0 items-center gap-1 text-xs text-muted-foreground" title={text}>
       <Hourglass aria-hidden className="size-3 shrink-0" />
       <span className="min-w-0 truncate">{text}</span>
     </span>
@@ -306,23 +308,23 @@ function Kanban({ projectId, tasks, all, pending, model, canStartTask, startingK
               key={col.id}
               role="listitem"
               aria-label={`${col.label}: no tasks`}
-              className="order-first inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full bg-foreground/[0.03] px-2.5 @xl:order-none @xl:h-auto @xl:w-9 @xl:snap-start @xl:flex-col @xl:gap-2 @xl:rounded-2xl @xl:px-0 @xl:py-3 dark:bg-foreground/[0.04]"
+              className="order-first inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-well px-3 @xl:order-none @xl:h-auto @xl:w-10 @xl:snap-start @xl:flex-col @xl:gap-2 @xl:rounded-[20px] @xl:px-0 @xl:py-3.5"
             >
               <col.meta.icon aria-hidden className={cn("size-3.5", toneClasses(col.meta.tone).text)} />
-              <span className="order-last font-mono text-[11px] text-muted-foreground tabular-nums @xl:order-none">0</span>
-              <span className="text-[11px] font-medium whitespace-nowrap text-muted-foreground @xl:[writing-mode:vertical-rl]">{col.label}</span>
+              <span className="order-last text-xs text-muted-foreground tabular-nums @xl:order-none">0</span>
+              <span className="text-xs font-medium whitespace-nowrap text-muted-foreground @xl:[writing-mode:vertical-rl]">{col.label}</span>
             </div>
           ) : (
             <section
               key={col.id}
               role="listitem"
               aria-label={`${col.label}: ${list.length} ${list.length === 1 ? "task" : "tasks"}`}
-              className="flex w-full min-w-0 shrink-0 flex-col gap-2 rounded-2xl bg-foreground/[0.03] p-2 @xl:w-auto @xl:max-w-[340px] @xl:min-w-[200px] @xl:flex-[1_1_210px] @xl:snap-start dark:bg-foreground/[0.04]"
+              className="flex w-full min-w-0 shrink-0 flex-col gap-2 rounded-[20px] bg-well p-2 @xl:w-auto @xl:max-w-[340px] @xl:min-w-[210px] @xl:flex-[1_1_220px] @xl:snap-start"
             >
-              <header className="flex items-center gap-1.5 px-1 pt-0.5">
-                <col.meta.icon aria-hidden className={cn("size-3.5", toneClasses(col.meta.tone).text)} />
-                <h3 className="text-xs font-medium">{col.label}</h3>
-                <span className="font-mono text-[11px] text-muted-foreground tabular-nums">{list.length}</span>
+              <header className="flex h-8 items-center gap-2 px-2">
+                <col.meta.icon aria-hidden className={cn("size-4", toneClasses(col.meta.tone).text)} strokeWidth={2} />
+                <h3 className="text-[13px] font-medium text-heading">{col.label}</h3>
+                <span className="text-[13px] text-muted-foreground tabular-nums">{list.length}</span>
               </header>
               <div className="flex flex-col gap-2">
                 {list.map((t) => (
@@ -377,15 +379,15 @@ function OffBoardLane({ projectId, tasks, all, canManage }: { projectId: string;
   const blocked = tasks.filter((t) => t.status === "blocked");
   const cancelled = tasks.filter((t) => t.status === "cancelled");
   return (
-    <Collapsible open={open} onOpenChange={setOpen} className="rounded-2xl border border-dashed border-border">
-      <CollapsibleTrigger className="flex w-full items-center gap-2 rounded-2xl px-3 py-2 text-left text-[13px] outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring">
+    <Collapsible open={open} onOpenChange={setOpen} className="rounded-[20px] bg-well">
+      <CollapsibleTrigger className="flex min-h-11 w-full items-center gap-2 rounded-[20px] px-4 py-2 text-left text-sm outline-none hover:bg-well-hover focus-visible:ring-3 focus-visible:ring-ring/50">
         {open ? <ChevronDown aria-hidden className="size-4 text-muted-foreground" /> : <ChevronRight aria-hidden className="size-4 text-muted-foreground" />}
-        <span className="font-medium">Blocked</span>
-        <span className="font-mono text-xs text-muted-foreground tabular-nums">{blocked.length}</span>
+        <span className="font-medium text-heading">Blocked</span>
+        <span className="text-[13px] text-muted-foreground tabular-nums">{blocked.length}</span>
         <span aria-hidden className="text-muted-foreground">·</span>
-        <span className="font-medium">Cancelled</span>
-        <span className="font-mono text-xs text-muted-foreground tabular-nums">{cancelled.length}</span>
-        <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">{blocked[0]?.blockedBy ? `${blocked[0].id}: ${blocked[0].blockedBy}` : ""}</span>
+        <span className="font-medium text-heading">Cancelled</span>
+        <span className="text-[13px] text-muted-foreground tabular-nums">{cancelled.length}</span>
+        <span className="min-w-0 flex-1 truncate text-[13px] text-muted-foreground">{blocked[0]?.blockedBy ? `${blocked[0].id}: ${blocked[0].blockedBy}` : ""}</span>
       </CollapsibleTrigger>
       <CollapsibleContent>
         <div className="grid gap-2 p-2 pt-0 @lg:grid-cols-2 @3xl:grid-cols-3">
@@ -396,7 +398,7 @@ function OffBoardLane({ projectId, tasks, all, canManage }: { projectId: string;
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="h-7 self-start rounded-full text-xs"
+                  className="self-start"
                   disabled={patch.isPending}
                   onClick={() => patch.mutate({ taskId: t.id, body: { status: "ready" } })}
                 >
@@ -423,26 +425,26 @@ function OffBoardLane({ projectId, tasks, all, canManage }: { projectId: string;
  * column pinned to the right edge so Review / Start never scroll out of reach. The layout is
  * fixed, so a long agent step truncates in its column instead of widening the table.
  */
-const ACTION_CELL = "sticky right-0 z-[1] bg-card px-3 py-2 text-right shadow-[-1px_0_0_var(--color-border)] @xl:static @xl:shadow-none";
+const ACTION_CELL = "sticky right-0 z-[1] bg-card px-4 py-2.5 text-right shadow-[-1px_0_0_var(--color-rule)] @xl:static @xl:shadow-none";
 
 function TaskTable({ projectId, tasks, pending, model, canStartTask, startingKey, onStartTask }: ViewProps & { tasks: DeliveryTask[] }) {
   const waves = waveGroups(tasks);
   return (
-    <div className="relative min-w-0 overflow-x-auto rounded-2xl border border-border bg-card">
-      <table className="w-full min-w-[36rem] table-fixed border-collapse text-[13px] @xl:min-w-0">
+    <div className="card-surface relative min-w-0 overflow-x-auto rounded-[20px]">
+      <table className="w-full min-w-[36rem] table-fixed border-collapse text-sm @xl:min-w-0">
         <caption className="sr-only">Tasks by wave</caption>
-        <thead className="text-left text-xs text-muted-foreground">
-          <tr className="border-b border-border">
-            <th scope="col" className="px-3 py-2 font-medium">
+        <thead className="text-left text-[13px] text-muted-foreground">
+          <tr className="h-11 border-b border-rule">
+            <th scope="col" className="px-4 py-2 font-normal">
               Task
             </th>
-            <th scope="col" className="w-48 px-3 py-2 font-medium">
+            <th scope="col" className="w-52 px-4 py-2 font-normal">
               Status · agent
             </th>
-            <th scope="col" className="w-28 px-3 py-2 font-medium">
+            <th scope="col" className="w-32 px-4 py-2 font-normal">
               Checks · diff
             </th>
-            <th scope="col" className={cn(ACTION_CELL, "w-28 font-medium")}>
+            <th scope="col" className={cn(ACTION_CELL, "w-32 font-normal")}>
               <span className="sr-only">Action</span>
             </th>
           </tr>
@@ -451,13 +453,13 @@ function TaskTable({ projectId, tasks, pending, model, canStartTask, startingKey
           const s = waveState(list);
           return (
             <tbody key={wave}>
-              <tr className="bg-muted/40">
-                <th scope="rowgroup" colSpan={4} className="px-3 py-1.5 text-left">
+              <tr className="border-t border-rule bg-foreground/[0.02]">
+                <th scope="rowgroup" colSpan={4} className="px-4 py-2 text-left">
                   <div className="flex items-center gap-3">
-                    <span className="text-xs font-medium whitespace-nowrap">
-                      Wave {wave} <span className="font-normal text-muted-foreground">· {s.done}/{s.total} done</span>
+                    <span className="text-[13px] font-medium whitespace-nowrap text-heading">
+                      Wave {wave} <span className="font-normal text-muted-foreground tabular-nums">· {s.done}/{s.total} done</span>
                     </span>
-                    <HatchedBar done={s.done} partial={s.inFlight} total={s.total} size="sm" className="max-w-48" tone={s.done === s.total && s.total > 0 ? "success" : "running"} />
+                    <HatchedBar done={s.done} partial={s.inFlight} total={s.total} size="md" className="max-w-48" tone={s.done === s.total && s.total > 0 ? "success" : "running"} />
                   </div>
                 </th>
               </tr>
@@ -466,11 +468,11 @@ function TaskTable({ projectId, tasks, pending, model, canStartTask, startingKey
                 const working = isAgentWorking(t);
                 const wait = waitReason(t, tasks);
                 return (
-                  <tr key={t.id} className="h-10 border-t border-border align-middle hover:bg-muted/30">
-                    <td className="px-3 py-2">
+                  <tr key={t.id} className="h-12 border-t border-rule align-middle transition-colors hover:bg-foreground/[0.025]">
+                    <td className="px-4 py-2.5">
                       <div className="flex min-w-0 flex-col gap-0.5">
                         <TaskIdLabel task={t} />
-                        <Link href={taskHref(projectId, t.id)} className="font-medium hover:underline focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
+                        <Link href={taskHref(projectId, t.id)} className="font-medium text-heading hover:underline focus-visible:rounded-sm focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none">
                           <ScopedTitle title={t.title} hideScope={t.repo} />
                         </Link>
                         <div className="flex flex-wrap items-center gap-1">
@@ -481,7 +483,7 @@ function TaskTable({ projectId, tasks, pending, model, canStartTask, startingKey
                         </div>
                         {t.status === "blocked" ? <BlockedLine reason={t.blockedBy} /> : null}
                         {wait ? (
-                          <p className="flex items-start gap-1 text-[11px] text-muted-foreground">
+                          <p className="flex items-start gap-1 text-xs text-muted-foreground">
                             <Hourglass aria-hidden className="mt-px size-3 shrink-0" />
                             <span className="min-w-0">
                               {isQueued(t) ? "Queued · " : ""}
@@ -491,19 +493,19 @@ function TaskTable({ projectId, tasks, pending, model, canStartTask, startingKey
                         ) : null}
                       </div>
                     </td>
-                    <td className="px-3 py-2">
-                      <div className="flex min-w-0 flex-col items-start gap-1">
+                    <td className="px-4 py-2.5">
+                      <div className="flex min-w-0 flex-col items-start gap-1.5">
                         <StatusPill status={{ kind: "task", value: t.status }} size="sm" />
                         {working ? <AgentAvatar model={model} live className="max-w-full" /> : null}
                         {t.latestStep && !isQueued(t) ? (
-                          <span className={cn("line-clamp-2 max-w-full font-mono text-[11px] break-words", working ? "text-status-running-fg" : "text-muted-foreground")} title={t.latestStep}>
+                          <span className={cn("line-clamp-2 max-w-full font-mono text-xs break-words", working ? "text-status-running-fg" : "text-muted-foreground")} title={t.latestStep}>
                             {t.latestStep}
                           </span>
                         ) : null}
                       </div>
                     </td>
-                    <td className="px-3 py-2">
-                      <div className="flex flex-col gap-0.5">
+                    <td className="px-4 py-2.5">
+                      <div className="flex flex-col gap-1">
                         <ChecksStat checks={t.checks} />
                         <DiffStat stats={t.diffStats} />
                         {t.checks.length === 0 && !t.diffStats ? <span className="text-muted-foreground">-</span> : null}
@@ -511,16 +513,16 @@ function TaskTable({ projectId, tasks, pending, model, canStartTask, startingKey
                     </td>
                     <td className={ACTION_CELL}>
                       {review ? (
-                        <Button asChild size="sm" className="h-7 rounded-full bg-status-review-fg text-white hover:bg-status-review-fg/85 dark:text-background">
+                        <Button asChild size="sm" className="bg-status-review-fg text-white dark:text-background">
                           <Link href={taskHref(projectId, t.id, `${review.runId}:${review.requestId}`)}>{review.kind === "qa-review" ? "QA review" : "Review"}</Link>
                         </Button>
                       ) : canStartTask(t) ? (
-                        <Button size="sm" variant="outline" className="h-7 rounded-full" onClick={() => onStartTask(t)} disabled={startingKey === `task:${t.id}`}>
+                        <Button size="sm" variant="secondary" onClick={() => onStartTask(t)} disabled={startingKey === `task:${t.id}`}>
                           {startingKey === `task:${t.id}` ? <Spinner aria-hidden /> : <Play aria-hidden />}
                           Start
                         </Button>
                       ) : isQueued(t) ? (
-                        <span className="text-[11px] text-muted-foreground" title={wait ? `Queued: ${wait}` : "Queued"}>
+                        <span className="text-xs text-muted-foreground" title={wait ? `Queued: ${wait}` : "Queued"}>
                           Queued
                         </span>
                       ) : null}

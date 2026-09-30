@@ -128,8 +128,8 @@ export function ChangesPanel({ runId, attemptLabel }: { runId: string; attemptLa
             options={[{ value: ALL, label: "All changes" }, ...patches.map((p) => ({ value: p.key, label: patchLabel(p.key) }))]}
           />
         ) : null}
-        <span className={cn("text-xs text-muted-foreground", current && "font-mono")}>{view.note}</span>
-        {attemptLabel ? <span className="text-xs text-muted-foreground">· {attemptLabel}</span> : null}
+        <span className={cn("text-[13px] text-muted-foreground", current && "font-mono text-xs")}>{view.note}</span>
+        {attemptLabel ? <span className="text-[13px] text-muted-foreground">· {attemptLabel}</span> : null}
         <span className="flex-1" />
         {current?.merged ? <StatusPill tone="success" icon={GitMerge} size="sm" label="Merged into the branch" /> : current?.discarded ? <StatusPill tone="neutral" size="sm" label="Discarded" icon={null} /> : null}
       </div>
@@ -143,9 +143,9 @@ export function ChangesPanel({ runId, attemptLabel }: { runId: string; attemptLa
         </div>
       ) : (
         <>
-          <div className="overflow-hidden rounded-xl border border-border bg-card">
-            <div className="flex items-center gap-3 border-b border-border bg-muted/40 px-3 py-1.5 text-xs">
-              <span className="font-medium">{plural(view.stats.length, "file")} changed</span>
+          <div className="overflow-hidden rounded-[16px] bg-field shadow-[0_0_0_1px_var(--rule)]">
+            <div className="flex h-10 items-center gap-3 border-b border-rule px-4 text-[13px]">
+              <span className="font-medium text-heading">{plural(view.stats.length, "file")} changed</span>
               <span className="font-mono tabular-nums">
                 <span className="text-status-success-fg">+{adds}</span> <span className="text-status-danger-fg">−{dels}</span>
               </span>
@@ -155,14 +155,14 @@ export function ChangesPanel({ runId, attemptLabel }: { runId: string; attemptLa
                 const Icon = FILE_ICON[f.status];
                 const outOfScope = view.outOfScope.includes(f.path);
                 return (
-                  <li key={f.path} className="flex min-w-0 items-center gap-2 border-b border-border px-3 py-1.5 text-[13px] last:border-b-0">
+                  <li key={f.path} className="flex min-h-10 min-w-0 items-center gap-2.5 border-b border-rule px-4 py-2 text-[13px] last:border-b-0">
                     <Icon aria-hidden className={cn("size-3.5 shrink-0", f.status === "added" ? "text-status-success-fg" : f.status === "deleted" ? "text-status-danger-fg" : "text-muted-foreground")} />
                     <span className="sr-only">{f.status}</span>
                     <span className="min-w-0 flex-1 truncate font-mono text-xs" title={f.path}>
                       {f.path}
                     </span>
                     {outOfScope ? <StatusPill tone="attention" size="sm" label="Out of scope" icon={null} /> : null}
-                    <span className="shrink-0 font-mono text-[11px] tabular-nums">
+                    <span className="shrink-0 font-mono text-xs tabular-nums">
                       <span className="text-status-success-fg">+{f.adds}</span> <span className="text-status-danger-fg">−{f.dels}</span>
                     </span>
                   </li>
@@ -171,7 +171,7 @@ export function ChangesPanel({ runId, attemptLabel }: { runId: string; attemptLa
             </ul>
           </div>
 
-          {view.diff ? <TextDiff diffText={view.diff} maxHeightClass="max-h-[70vh]" /> : <p className="rounded-xl bg-muted/50 px-3 py-6 text-center text-[13px] text-muted-foreground">{view.empty}</p>}
+          {view.diff ? <TextDiff diffText={view.diff} maxHeightClass="max-h-[70vh]" /> : <p className="rounded-[16px] bg-well px-3 py-6 text-center text-sm text-muted-foreground">{view.empty}</p>}
         </>
       )}
     </div>

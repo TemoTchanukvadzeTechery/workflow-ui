@@ -26,7 +26,7 @@ export interface InboxDetailProps {
 
 function PrimaryLink({ href, children }: { href: string; children: ReactNode }) {
   return (
-    <Button asChild className="rounded-full">
+    <Button asChild size="lg">
       <Link href={href}>
         {children}
         <ArrowRight aria-hidden />
@@ -38,10 +38,10 @@ function PrimaryLink({ href, children }: { href: string; children: ReactNode }) 
 function Bullets({ title, items, icon: Icon, tone }: { title: string; items: string[]; icon: typeof CircleX; tone: "danger" | "attention" }) {
   return (
     <div className="space-y-1.5">
-      <h3 className="text-xs font-medium text-muted-foreground">{title}</h3>
+      <h3 className="text-[13px] font-medium text-muted-foreground">{title}</h3>
       <ul className="space-y-1">
         {items.map((b) => (
-          <li key={b} className="flex gap-2 text-[13px] leading-5">
+          <li key={b} className="flex gap-2 text-sm leading-5">
             <Icon aria-hidden className={cn("mt-0.5 size-4 shrink-0", tone === "danger" ? "text-status-danger-fg" : "text-status-attention-fg")} />
             <span className="min-w-0">{b}</span>
           </li>
@@ -60,13 +60,13 @@ function Body({ item, onAnswered }: { item: InboxItem; onAnswered?: () => void }
         <div className="space-y-4">
           <HumanRequestCard key={item.id} runId={item.entry.runId} request={item.entry} workflow={item.entry.workflow} projectId={item.projectId} onAnswered={onAnswered} />
           <div className="flex flex-wrap items-center gap-2">
-            <Button asChild variant="outline" className="rounded-full">
+            <Button asChild variant="secondary">
               <Link href={item.href}>
                 {toTask ? `Open task ${item.taskId ?? ""}`.trim() : `Open in ${def.title}`}
                 <ArrowRight aria-hidden />
               </Link>
             </Button>
-            <Button asChild variant="ghost" className="rounded-full text-muted-foreground">
+            <Button asChild variant="ghost" className="text-muted-foreground">
               <Link href={`/runs/${item.entry.runId}`}>
                 <ExternalLink aria-hidden />
                 Run {item.entry.runId}
@@ -79,23 +79,23 @@ function Body({ item, onAnswered }: { item: InboxItem; onAnswered?: () => void }
     case "stage-gate":
       return (
         <div className="space-y-4">
-          <h2 className="text-xl leading-7 font-medium tracking-[-0.01em] text-foreground">{item.title}</h2>
-          <p className="text-[13px] text-muted-foreground">
+          <h2 className="text-[22px] leading-7 font-medium tracking-[-0.015em] text-heading">{item.title}</h2>
+          <p className="text-sm text-muted-foreground">
             Stage {def.n} of 5 · {def.title} · owned by {def.owner}. No roles yet: anyone can approve, and the decision records your name.
           </p>
           {item.blockers.length ? <Bullets title="Blockers: the gate stays disabled until these are resolved" items={item.blockers} icon={CircleX} tone="danger" /> : null}
           {item.warnings.length ? <Bullets title="Warnings: tick each one at the gate to approve anyway" items={item.warnings} icon={TriangleAlert} tone="attention" /> : null}
-          {!item.blockers.length && !item.warnings.length ? <p className="text-[13px] text-foreground/90">Nothing blocks the gate. It is ready for a decision.</p> : null}
+          {!item.blockers.length && !item.warnings.length ? <p className="text-sm text-foreground/90">Nothing blocks the gate. It is ready for a decision.</p> : null}
           <PrimaryLink href={item.href}>Open the gate</PrimaryLink>
         </div>
       );
     case "epics":
       return (
         <div className="space-y-4">
-          <h2 className="text-xl leading-7 font-medium tracking-[-0.01em] text-foreground">
+          <h2 className="text-[22px] leading-7 font-medium tracking-[-0.015em] text-heading">
             {item.count} {item.count === 1 ? "epic" : "epics"} to accept
           </h2>
-          <p className="text-[13px] leading-5 text-foreground/90">
+          <p className="text-sm leading-6 text-foreground/90">
             {item.stage === "architecture"
               ? "architect-aad updated epics from the accepted AAD. Review the changes and accept them before approving Architecture."
               : "po-brd proposed epics from the accepted BRD. Review, edit and accept them, then create them in Jira (mock) before approving Requirements."}
@@ -106,8 +106,8 @@ function Body({ item, onAnswered }: { item: InboxItem; onAnswered?: () => void }
     case "action":
       return (
         <div className="space-y-4">
-          <h2 className="text-xl leading-7 font-medium tracking-[-0.01em] text-foreground">{item.title}</h2>
-          <p className="text-[13px] leading-5 text-foreground/90">
+          <h2 className="text-[22px] leading-7 font-medium tracking-[-0.015em] text-heading">{item.title}</h2>
+          <p className="text-sm leading-6 text-foreground/90">
             Stage {def.n} of 5 · {def.title}. Nothing runs until someone starts it; the {def.owner} usually does.
           </p>
           <PrimaryLink href={item.href}>Open {def.title}</PrimaryLink>
@@ -127,24 +127,24 @@ function Body({ item, onAnswered }: { item: InboxItem; onAnswered?: () => void }
 export function InboxDetail({ item, onBack, onAnswered, className }: InboxDetailProps) {
   const tier = inboxGroupMeta(itemGroup(item));
   return (
-    <article aria-label="Selected item" className={cn("card-surface flex min-w-0 flex-col gap-4 rounded-2xl p-5", className)}>
+    <article aria-label="Selected item" className={cn("card-surface flex min-w-0 flex-col gap-5 rounded-[28px] p-5 sm:p-7", className)}>
       {onBack ? (
-        <Button variant="ghost" size="sm" onClick={onBack} className="-ml-2 self-start rounded-full text-muted-foreground @4xl:hidden">
+        <Button variant="secondary" size="sm" onClick={onBack} className="self-start @4xl:hidden">
           <ArrowLeft aria-hidden />
           Back to the inbox
         </Button>
       ) : null}
-      <header className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
-        <StatusPill tone={tier.tone} icon={tier.icon} label={tier.label} size="sm" />
-        <Link href={`/projects/${encodeURIComponent(item.projectId)}`} className="min-w-0 truncate text-[13px] font-medium text-foreground underline-offset-2 hover:underline">
+      <header className="flex flex-wrap items-center gap-x-2.5 gap-y-2">
+        <StatusPill tone={tier.tone} icon={tier.icon} label={tier.label} />
+        <Link href={`/projects/${encodeURIComponent(item.projectId)}`} className="min-w-0 truncate text-sm font-medium text-heading underline-offset-2 hover:underline">
           {item.projectName}
         </Link>
         <StageChip stage={item.stage} numbered />
         <span className="flex-1" />
         {item.kind === "human" ? null : item.tier === "fyi" ? (
-          <RelativeTime at={itemSince(item)} className="text-xs text-muted-foreground" />
+          <RelativeTime at={itemSince(item)} className="text-[13px] text-muted-foreground" />
         ) : (
-          <WaitingFor since={itemSince(item)} prefix="Waiting" className="text-xs text-muted-foreground" />
+          <WaitingFor since={itemSince(item)} prefix="Waiting" className="text-[13px] text-muted-foreground" />
         )}
       </header>
       <Body item={item} onAnswered={onAnswered} />

@@ -46,13 +46,13 @@ export function AcChips({ item, onSelect, active }: { item: Evidence; onSelect?:
           </>
         );
         const cls = cn(
-          "inline-flex h-5 items-center gap-1 rounded-full border px-1.5 text-[11px] leading-none text-foreground",
-          active === c.criterionId ? "border-primary bg-primary-soft" : "border-border bg-background",
+          "inline-flex h-6 items-center gap-1 rounded-full border px-2 text-xs leading-none text-heading",
+          active === c.criterionId ? "border-primary bg-primary-soft" : "border-circle-border bg-transparent",
         );
         return (
           <li key={c.criterionId} title={c.detail ? `${c.criterionId} ${meta.label.toLowerCase()}: ${c.detail}` : `${c.criterionId} ${meta.label.toLowerCase()}`}>
             {onSelect ? (
-              <button type="button" onClick={() => onSelect(c.criterionId)} className={cn(cls, "hover:border-primary/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none")} aria-pressed={active === c.criterionId}>
+              <button type="button" onClick={() => onSelect(c.criterionId)} className={cn(cls, "hover:border-primary/60 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none")} aria-pressed={active === c.criterionId}>
                 {body}
               </button>
             ) : (
@@ -76,11 +76,11 @@ export function EvidenceFacts({ item, className, wrap }: { item: Evidence; class
     <dl className={cn("flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground", className)}>
       <div className="flex min-w-0 max-w-full items-center gap-1">
         <dt className="sr-only">Environment</dt>
-        <dd className={cn("min-w-0 font-mono text-[11px]", mono)}>{item.environment}</dd>
+        <dd className={cn("min-w-0 font-mono text-xs", mono)}>{item.environment}</dd>
       </div>
       <div className={cn("flex min-w-0 max-w-full gap-1", wrap ? "items-baseline" : "items-center")}>
         <dt className="shrink-0">build</dt>
-        <dd className={cn("min-w-0 font-mono text-[11px] text-foreground", mono)} title={item.build}>
+        <dd className={cn("min-w-0 font-mono text-xs text-foreground", mono)} title={item.build}>
           {item.build}
         </dd>
       </div>
@@ -127,20 +127,20 @@ export function EvidenceItem({ item, children, actions, onSelectAc, activeAc, on
       id={evidenceDomId(item.id)}
       aria-label={`${item.id}: ${item.title}`}
       className={cn(
-        "min-w-0 scroll-mt-24 rounded-xl border bg-card transition-shadow duration-150",
-        highlighted && "ring-2 ring-primary",
+        "min-w-0 scroll-mt-24 rounded-[20px] bg-field shadow-[0_0_0_1px_var(--rule),0_1px_2px_rgb(0_0_0/0.04)] transition-shadow duration-150",
+        highlighted && "shadow-[0_0_0_2px_var(--ring),0_10px_24px_-14px_rgb(27_111_252/0.5)]",
         item.supersededBy && "opacity-75",
         className,
       )}
     >
-      <header className="flex flex-col gap-2 px-3 pt-3 pb-2">
-        <div className="flex min-w-0 items-start gap-2">
-          <span className="mt-0.5 inline-flex size-6 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-            <Icon aria-hidden className="size-3.5" />
+      <header className="flex flex-col gap-2.5 px-4 pt-4 pb-3">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-well text-heading">
+            <Icon aria-hidden className="size-4" />
           </span>
           <div className="min-w-0 flex-1">
-            <h4 className="text-[13px] leading-5 font-medium break-words text-foreground">{item.title}</h4>
-            <p className="flex flex-wrap items-center gap-x-1.5 text-[11px] text-muted-foreground">
+            <h4 className="text-[15px] leading-[22px] font-medium break-words text-heading">{item.title}</h4>
+            <p className="flex flex-wrap items-center gap-x-1.5 text-xs text-muted-foreground">
               <span className="font-mono">{item.id}</span>
               <span aria-hidden>·</span>
               <span>{KIND_LABEL[item.kind]}</span>
@@ -171,7 +171,7 @@ export function EvidenceItem({ item, children, actions, onSelectAc, activeAc, on
             <History aria-hidden className="size-3.5" />
             Superseded by
             {onJumpTo ? (
-              <button type="button" onClick={() => onJumpTo(item.supersededBy!)} className="font-mono text-[11px] text-primary underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
+              <button type="button" onClick={() => onJumpTo(item.supersededBy!)} className="font-mono text-xs text-primary underline-offset-2 hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none">
                 {item.supersededBy}
               </button>
             ) : (
@@ -181,8 +181,8 @@ export function EvidenceItem({ item, children, actions, onSelectAc, activeAc, on
           </p>
         ) : null}
       </header>
-      {children ? <div className="min-w-0 px-3 pb-3">{children}</div> : null}
-      <footer className="border-t px-3 py-2">
+      {children ? <div className="min-w-0 px-4 pb-4">{children}</div> : null}
+      <footer className="border-t border-rule px-4 py-2.5">
         <EvidenceFacts item={item} />
       </footer>
     </article>

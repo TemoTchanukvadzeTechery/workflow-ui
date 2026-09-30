@@ -68,7 +68,7 @@ export function RequestList({ runIds = [], requests = [], projectId, emptyText =
   if (loading) {
     return (
       <div className={cn("space-y-3", className)} aria-busy="true">
-        <Skeleton className="h-28 w-full rounded-2xl" />
+        <Skeleton className="h-28 w-full rounded-[20px]" />
       </div>
     );
   }
@@ -80,8 +80,10 @@ export function RequestList({ runIds = [], requests = [], projectId, emptyText =
         </p>
       ) : null}
       {items.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-border px-4 py-8 text-center text-[13px] text-muted-foreground">
-          <Inbox aria-hidden className="size-5" />
+        <div className="flex flex-col items-center gap-2.5 rounded-[20px] bg-well/60 px-4 py-8 text-center text-[13px] text-muted-foreground">
+          <span aria-hidden className="circle-btn size-10 text-muted-foreground">
+            <Inbox className="size-[18px]" strokeWidth={1.75} />
+          </span>
           {emptyText}
         </div>
       ) : (

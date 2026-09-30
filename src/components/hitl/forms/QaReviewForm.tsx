@@ -15,6 +15,7 @@ import { optionsOf, splitLines } from "@/lib/weft/schema-form";
 import type { JsonSchema } from "@/lib/weft/types";
 import type { QaReviewAnswer } from "@/lib/weft/workflows";
 import { Markdown } from "../../docs/Markdown";
+import { FloatingChip } from "@/components/common";
 import { TonePill, type Tone } from "../bits";
 import { BlobContent } from "../BlobContent";
 import { FormRow, OptionCards } from "../controls";
@@ -69,9 +70,9 @@ export function QaReviewForm({ request, projectId, onAnswered }: RequestFormProp
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-        {facts.taskKey ? <span className="font-mono">{facts.taskKey}</span> : null}
-        <span className="rounded-full bg-muted px-2.5 py-1 font-medium text-foreground">Attempt {attempt}</span>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-[13px] text-muted-foreground">
+        {facts.taskKey ? <span className="font-mono text-xs text-heading">{facts.taskKey}</span> : null}
+        <FloatingChip label="Attempt" value={String(attempt)} tone="running" />
         {facts.total !== undefined ? (
           <span>
             {facts.met}/{facts.total} acceptance criteria met · {facts.evidence} evidence items ({facts.automated} automated, {facts.manual} manual)
@@ -82,14 +83,14 @@ export function QaReviewForm({ request, projectId, onAnswered }: RequestFormProp
       {file || testPlan ? (
         <Tabs defaultValue={file ? "evidence" : "plan"} className="min-w-0 gap-3">
           <div className="-mx-1 overflow-x-auto px-1 pb-1">
-            <TabsList variant="line" className="h-auto flex-nowrap justify-start gap-1">
+            <TabsList className="justify-start">
               {file ? (
-                <TabsTrigger value="evidence" className="h-8 flex-none rounded-full px-3 text-[13px] data-active:bg-muted">
+                <TabsTrigger value="evidence" className="h-9 flex-none px-3.5">
                   Evidence report
                 </TabsTrigger>
               ) : null}
               {testPlan ? (
-                <TabsTrigger value="plan" className="h-8 flex-none rounded-full px-3 text-[13px] data-active:bg-muted">
+                <TabsTrigger value="plan" className="h-9 flex-none px-3.5">
                   Test plan
                 </TabsTrigger>
               ) : null}
@@ -97,8 +98,8 @@ export function QaReviewForm({ request, projectId, onAnswered }: RequestFormProp
           </div>
           {file ? (
             <TabsContent value="evidence" className="min-w-0">
-              <p className="mb-2 font-mono text-[11px] text-muted-foreground">{file.path}</p>
-              <div className="relative max-h-[60vh] overflow-y-auto rounded-xl border border-border px-4 py-3">
+              <p className="mb-2 font-mono text-xs text-muted-foreground">{file.path}</p>
+              <div className="relative max-h-[60vh] overflow-y-auto rounded-[20px] bg-field px-5 py-4 shadow-[0_0_0_1px_var(--rule)]">
                 <BlobContent blobRef={file.ref}>{(t) => <Markdown source={t} size="sm" />}</BlobContent>
               </div>
             </TabsContent>

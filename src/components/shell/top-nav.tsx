@@ -4,6 +4,7 @@ import { Menu, Search, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { CircleIconButton } from "@/components/common/circle-icon-button";
 import { Kbd } from "@/components/ui/kbd";
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useSettings } from "@/lib/api/queries";
@@ -12,13 +13,13 @@ import { ActingAs } from "./acting-as";
 import { Brand } from "./brand";
 import { InboxBell, LiveIndicator, SearchButton, useInboxAttentionCount } from "./nav-actions";
 import { NAV_ITEMS, type NavItem } from "./nav";
-import { CIRCLE_BTN, NAV_COUNT, NAV_COUNT_IDLE, NAV_COUNT_ON_INK, NAV_ITEM, NAV_ITEM_ACTIVE } from "./nav-styles";
+import { CIRCLE_SIZE, NAV_COUNT, NAV_COUNT_IDLE, NAV_COUNT_ON_INK, NAV_ITEM, NAV_ITEM_ACTIVE, NAV_ITEM_IDLE } from "./nav-styles";
 import { openCommandPalette } from "./palette-store";
 import { useIsMac } from "./use-is-mac";
 
 function NavLink({ item, active, count, onNavigate, className }: { item: NavItem; active: boolean; count?: number; onNavigate?: () => void; className?: string }) {
   return (
-    <Link href={item.href} onClick={onNavigate} aria-current={active ? "page" : undefined} className={cn(NAV_ITEM, active && NAV_ITEM_ACTIVE, className)}>
+    <Link href={item.href} onClick={onNavigate} aria-current={active ? "page" : undefined} className={cn(NAV_ITEM, active ? NAV_ITEM_ACTIVE : NAV_ITEM_IDLE, className)}>
       {item.title}
       {count != null && count > 0 && (
         <span className={cn(NAV_COUNT, active ? NAV_COUNT_ON_INK : NAV_COUNT_IDLE)}>
@@ -39,19 +40,15 @@ function MobileMenu({ pathname, inboxCount }: { pathname: string; inboxCount: nu
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <button type="button" aria-label="Open menu" className={cn(CIRCLE_BTN, "min-[900px]:hidden")}>
-          <Menu aria-hidden strokeWidth={1.75} />
-        </button>
+        <CircleIconButton icon={Menu} label="Open menu" className={cn(CIRCLE_SIZE, "min-[900px]:hidden")} />
       </SheetTrigger>
-      <SheetContent side="right" showCloseButton={false} className="w-[min(20rem,86vw)] gap-0 border-0 bg-background p-0 shadow-[0_0_0_1px_rgba(0,0,0,.05),0_24px_60px_-20px_rgba(0,0,0,.35)] dark:shadow-[0_0_0_1px_rgba(255,255,255,.08)]">
+      <SheetContent side="right" showCloseButton={false} className="w-[min(20rem,86vw)] gap-0 bg-background p-0">
         <SheetHeader className="h-[76px] flex-row items-center justify-between gap-3 px-5 py-0">
           <SheetTitle className="sr-only">Menu</SheetTitle>
           <SheetDescription className="sr-only">Pages of Delivery Flow</SheetDescription>
           <Brand onNavigate={close} className="[&>span:nth-child(2)]:text-[20px]" />
           <SheetClose asChild>
-            <button type="button" aria-label="Close menu" className={CIRCLE_BTN}>
-              <X aria-hidden strokeWidth={1.75} />
-            </button>
+            <CircleIconButton icon={X} label="Close menu" size="md" />
           </SheetClose>
         </SheetHeader>
         <div className="flex flex-col gap-5 px-4 pb-6">
@@ -61,11 +58,11 @@ function MobileMenu({ pathname, inboxCount }: { pathname: string; inboxCount: nu
               close();
               openCommandPalette();
             }}
-            className="flex h-11 items-center gap-2.5 rounded-[14px] border border-[#E6E6E6] bg-white px-3.5 text-left text-[15px] text-[#6E6E6E] outline-none focus-visible:ring-3 focus-visible:ring-ring/50 dark:border-white/10 dark:bg-white/5 dark:text-[#A1A1AA]"
+            className="flex h-11 items-center gap-2.5 rounded-[14px] border border-input bg-field px-3.5 text-left text-[15px] text-muted-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
           >
             <Search aria-hidden className="size-4" strokeWidth={1.75} />
             <span className="flex-1">Search or jump to...</span>
-            <Kbd className="h-5 rounded-md bg-[#EAEAEA] px-1.5 font-mono text-[10.5px] dark:bg-white/10">{isMac ? "⌘K" : "Ctrl K"}</Kbd>
+            <Kbd>{isMac ? "⌘K" : "Ctrl K"}</Kbd>
           </button>
           <nav aria-label="Primary" className="flex flex-col gap-1">
             {NAV_ITEMS.map((item) => (
@@ -85,7 +82,7 @@ function MobileMenu({ pathname, inboxCount }: { pathname: string; inboxCount: nu
               <Link
                 href="/settings"
                 onClick={close}
-                className="rounded-[10px] px-0.5 py-1 text-[13px] text-[#6E6E6E] outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 dark:text-[#A1A1AA]"
+                className="rounded-[10px] px-0.5 py-1 text-[13px] text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
               >
                 Demo speed {settings.data.speed} · data source {settings.data.dataSource}
               </Link>

@@ -31,8 +31,8 @@ export function Brand({ onNavigate, className }: { onNavigate?: () => void; clas
       className={cn("group/brand inline-flex min-w-0 items-center gap-2.5 rounded-[14px] outline-none focus-visible:ring-3 focus-visible:ring-ring/50", className)}
     >
       <BrandMark />
-      <span className="truncate text-[20px] leading-none font-medium tracking-[-0.035em] text-[#0B0B0B] sm:text-[26px] dark:text-[#F4F4F5]">Delivery Flow</span>
-      <span className="mt-1.5 hidden shrink-0 text-[12px] leading-none whitespace-nowrap text-[#6E6E6E] 2xl:inline dark:text-[#9A9AA0]">on weft · mock</span>
+      <span className="truncate text-[20px] leading-none font-medium tracking-[-0.035em] text-heading sm:text-[26px]">Delivery Flow</span>
+      <span className="mt-1.5 hidden shrink-0 text-[12px] leading-none whitespace-nowrap text-muted-foreground 2xl:inline">on weft · mock</span>
     </Link>
   );
 }

@@ -56,7 +56,7 @@ export function ToolbarButton({ raised = true, className, type = "button", ...pr
       type={type}
       data-slot="toolbar-button"
       className={cn(
-        "inline-flex h-9 shrink-0 items-center gap-2 rounded-[12px] px-3 text-sm font-medium whitespace-nowrap outline-none transition-[color,background-color,box-shadow] focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "inline-flex h-9 shrink-0 items-center gap-2 rounded-[12px] px-3 text-sm whitespace-nowrap outline-none transition-[color,background-color,box-shadow] focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         raised ? "bg-raised text-heading shadow-(--raised-shadow) hover:bg-(--chip-bg)" : "text-muted-foreground hover:text-heading",
         className,
       )}

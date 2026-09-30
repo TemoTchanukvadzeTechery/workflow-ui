@@ -1,10 +1,11 @@
 "use client";
 
 import type { LucideIcon } from "lucide-react";
-import { useRef, type KeyboardEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, type KeyboardEvent, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import type { Tone } from "@/lib/weft/labels";
 import { toneClasses } from "./tone";
+import { revealInScroller, useScrollFade } from "./use-scroll-fade";
 
 export interface SegmentedItem<V extends string = string> {
   value: V;
@@ -46,6 +47,8 @@ const SEGMENT = { sm: "rounded-[9px] px-3 text-[13px]", md: "rounded-[12px] px-3
 
 /**
  * The reference's segmented control (STYLE.md 3): a well track with the selected segment raised.
+ * Always one row: when the segments do not fit, the track scrolls sideways (no scrollbar), fades
+ * out at the edge that has more, and keeps the selected segment in view.
  * Keyboard: one tab stop; arrow keys, Home and End move and select (skipping disabled items).
  */
 export function SegmentedControl<V extends string = string>({
@@ -60,8 +63,26 @@ export function SegmentedControl<V extends string = string>({
   ...aria
 }: SegmentedControlProps<V>) {
   const refs = useRef<Array<HTMLButtonElement | null>>([]);
+  const trackRef = useRef<HTMLDivElement | null>(null);
+  const fadeRef = useScrollFade<HTMLDivElement>();
+  const setTrack = useCallback(
+    (el: HTMLDivElement | null) => {
+      trackRef.current = el;
+      const cleanup = fadeRef(el);
+      return () => {
+        cleanup?.();
+        trackRef.current = null;
+      };
+    },
+    [fadeRef],
+  );
   const tabs = role === "tablist";
   const selectedIndex = items.findIndex((i) => i.value === value);
+
+  // A selection made elsewhere (a link, a keyboard shortcut) can land on a hidden segment.
+  useEffect(() => {
+    if (trackRef.current) revealInScroller(trackRef.current, refs.current[selectedIndex]);
+  }, [selectedIndex]);
   // The tab stop is the selected segment, else the first enabled one.
   const focusIndex = selectedIndex >= 0 && !items[selectedIndex]?.disabled ? selectedIndex : items.findIndex((i) => !i.disabled);
 
@@ -83,10 +104,11 @@ export function SegmentedControl<V extends string = string>({
 
   return (
     <div
+      ref={setTrack}
       role={role}
       aria-orientation={tabs ? "horizontal" : undefined}
       data-slot="segmented-control"
-      className={cn("inline-flex max-w-full items-center gap-1 overflow-x-auto bg-well [scrollbar-width:none]", TRACK[size], fullWidth && "flex w-full", className)}
+      className={cn("row-scroll-x inline-flex max-w-full min-w-0 items-center gap-1 bg-well", TRACK[size], fullWidth && "flex w-full", className)}
       {...aria}
     >
       {items.map((it, i) => {

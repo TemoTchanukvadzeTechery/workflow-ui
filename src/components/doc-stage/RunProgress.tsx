@@ -1,15 +1,14 @@
 "use client";
 
 /**
- * Live progress of a po-brd / architect-aad run: a mini stepper of the weft phases (Preflight →
- * Memory → Discover → Draft N → Update memory), discovery counters (sources fetched, searches
+ * Live progress of a po-brd / architect-aad run: the weft phases (Preflight → Memory → Discover →
+ * Draft N → Update memory) as labelled striped segments, discovery counters (sources fetched, searches
  * run, rejected commands), a spend ticker against the budget, elapsed time, and a compact ledger
  * of the latest steps. Everything re-renders from useRun, which live.ts invalidates over SSE.
  */
 import { ArrowUpRight, Ban, Check, CircleAlert, Hourglass, Minus } from "lucide-react";
-import Link from "next/link";
 import { useState } from "react";
-import { Elapsed, ErrorState, FactCell, FactStrip, Money, StatusDot, StatusPill } from "@/components/common";
+import { CircleIconButton, Elapsed, ErrorState, FactCell, FactStrip, Money, StatusDot, StatusPill, toneClasses } from "@/components/common";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDuration, formatUsd } from "@/lib/format";
 import { runStatusMeta, type Tone } from "@/lib/weft/labels";
@@ -59,28 +58,33 @@ export function runHeadline(run: RunDetail, docLabel: string): string {
   return "Preparing the run";
 }
 
-const PHASE_STYLE: Record<PhaseItem["state"], { cls: string; icon?: typeof Check; tone?: Tone; pulse?: boolean; label: string }> = {
-  done: { cls: "bg-status-success-bg text-status-success-fg", icon: Check, label: "done" },
-  current: { cls: "bg-status-running-bg text-status-running-fg", tone: "running", pulse: true, label: "running" },
-  waiting: { cls: "bg-status-attention-bg text-status-attention-fg", icon: Hourglass, label: "waiting on you" },
-  failed: { cls: "bg-status-danger-bg text-status-danger-fg", icon: CircleAlert, label: "failed" },
-  future: { cls: "border border-dashed border-border text-muted-foreground", label: "not reached" },
-  skipped: { cls: "bg-muted text-muted-foreground line-through decoration-muted-foreground/60", icon: Minus, label: "skipped" },
+/** Each phase as a label over a striped segment (STYLE 5): full stripes when done, 60% while live. */
+const PHASE_STYLE: Record<PhaseItem["state"], { tone: Tone; fill: "full" | "partial" | "none"; icon?: typeof Check; pulse?: boolean; label: string }> = {
+  done: { tone: "success", fill: "full", icon: Check, label: "done" },
+  current: { tone: "running", fill: "partial", pulse: true, label: "running" },
+  waiting: { tone: "attention", fill: "partial", icon: Hourglass, label: "waiting on you" },
+  failed: { tone: "danger", fill: "full", icon: CircleAlert, label: "failed" },
+  future: { tone: "neutral", fill: "none", label: "not reached" },
+  skipped: { tone: "neutral", fill: "none", icon: Minus, label: "skipped" },
 };
 
 export function PhaseStepper({ phases, className }: { phases: PhaseItem[]; className?: string }) {
   return (
-    <ol aria-label="Workflow phases" className={cn("flex flex-wrap items-center gap-x-1 gap-y-1.5", className)}>
-      {phases.map((p, i) => {
+    <ol aria-label="Workflow phases" className={cn("flex flex-wrap gap-x-2 gap-y-3", className)}>
+      {phases.map((p) => {
         const st = PHASE_STYLE[p.state];
+        const t = toneClasses(st.tone);
         const Icon = st.icon;
+        const active = p.state === "current" || p.state === "waiting";
         return (
-          <li key={p.name} className="flex items-center gap-1">
-            {i > 0 ? <span aria-hidden className={cn("h-px w-3 @md:w-5", p.state === "future" ? "bg-border" : "bg-foreground/25")} /> : null}
-            <span className={cn("inline-flex h-7 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium whitespace-nowrap", st.cls)} aria-current={p.state === "current" || p.state === "waiting" ? "step" : undefined}>
-              {st.pulse ? <StatusDot tone="running" pulse size="sm" /> : Icon ? <Icon aria-hidden className="size-3.5" strokeWidth={2.25} /> : <span aria-hidden className="size-1.5 rounded-full bg-current opacity-50" />}
-              {p.name}
+          <li key={p.name} className="flex min-w-[7rem] flex-1 flex-col gap-2" aria-current={active ? "step" : undefined}>
+            <span className={cn("flex min-w-0 items-center gap-1.5 text-[13px] whitespace-nowrap", p.state === "future" || p.state === "skipped" ? "text-muted-foreground" : "font-medium text-heading", p.state === "skipped" && "line-through decoration-muted-foreground/60")}>
+              {st.pulse ? <StatusDot tone="running" pulse size="sm" /> : Icon ? <Icon aria-hidden className={cn("size-3.5 shrink-0", t.text)} strokeWidth={2.5} /> : <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-current opacity-40" />}
+              <span className="truncate">{p.name}</span>
               <span className="sr-only">: {st.label}</span>
+            </span>
+            <span aria-hidden className="bar-track block h-2.5 overflow-hidden rounded-full">
+              {st.fill !== "none" ? <span className={cn("block h-full rounded-full", t.stripe, st.fill === "partial" && "w-3/5 opacity-60")} /> : null}
             </span>
           </li>
         );
@@ -95,14 +99,14 @@ const LINE_LABEL: Record<LedgerLine["status"], string> = { running: "running", o
 export function RunLedger({ lines, className, label = "Latest steps" }: { lines: LedgerLine[]; className?: string; label?: string }) {
   if (lines.length === 0) return <p className={cn("text-[13px] text-muted-foreground", className)}>No steps yet.</p>;
   return (
-    <ol aria-label={label} className={cn("divide-y divide-border rounded-xl border border-border", className)}>
+    <ol aria-label={label} className={cn("divide-y divide-rule border-y border-rule", className)}>
       {lines.map((l) => (
-        <li key={`${l.seq}-${l.status}`} className="flex min-w-0 items-center gap-2.5 px-3 py-1.5 text-[13px]">
+        <li key={`${l.seq}-${l.status}`} className="flex min-h-11 min-w-0 items-center gap-3 px-1 py-2 text-sm">
           <StatusDot tone={LINE_TONE[l.status]} pulse={l.status === "running"} label={LINE_LABEL[l.status]} />
           <span className={cn("min-w-0 flex-1 truncate", l.status === "waiting" && "font-medium text-status-attention-fg", l.status === "warn" && "text-status-attention-fg")} title={l.text}>
             {l.text}
           </span>
-          <span className="shrink-0 font-mono text-[11px] text-muted-foreground tabular-nums">
+          <span className="shrink-0 font-mono text-xs text-muted-foreground tabular-nums">
             {l.status === "running" ? <Elapsed since={l.startedAt} /> : l.endedAt ? formatDuration(l.endedAt - l.startedAt, "human") : null}
             {l.usd ? <span className="ml-2">{formatUsd(l.usd)}</span> : null}
           </span>
@@ -123,7 +127,7 @@ export function RunProgress({ runId, run, isPending, error, onRetry, docLabel, c
   }
   if (isPending || !run) {
     return (
-      <div className={cn("card-surface space-y-3 rounded-2xl p-4", className)} aria-busy="true" aria-label="Loading run progress">
+      <div className={cn("card-surface space-y-4 rounded-2xl p-5", className)} aria-busy="true" aria-label="Loading run progress">
         <Skeleton className="h-4 w-1/3" />
         <Skeleton className="h-7 w-full" />
         {!compact ? <Skeleton className="h-14 w-full" /> : null}
@@ -141,10 +145,10 @@ export function RunProgress({ runId, run, isPending, error, onRetry, docLabel, c
   const waiting = run.status === "waiting_for_human";
 
   return (
-    <section aria-label="Run progress" className={cn("@container card-surface space-y-3 rounded-2xl p-4", className)}>
-      <div className="flex flex-wrap items-start gap-x-3 gap-y-2">
-        <div className="min-w-0 flex-1 basis-64 space-y-1">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[11px] text-muted-foreground">
+    <section aria-label="Run progress" className={cn("@container card-surface space-y-5 rounded-2xl p-5", className)}>
+      <div className="flex items-start gap-3">
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-xs text-muted-foreground">
             <span>{run.workflow}</span>
             <span aria-hidden>·</span>
             <span>{run.runId}</span>
@@ -155,23 +159,18 @@ export function RunProgress({ runId, run, isPending, error, onRetry, docLabel, c
               </>
             ) : null}
           </div>
-          <h3 className="text-[15px] leading-snug font-medium">{runHeadline(run, docLabel)}</h3>
+          <h3 className="text-[18px] leading-7 font-medium tracking-[-0.015em] text-heading @xl:text-[20px]">{runHeadline(run, docLabel)}</h3>
         </div>
         {/* The headline already says "Waiting on you: …"; a "Needs your input" pill would repeat it. */}
-        {!waiting ? <StatusPill {...meta} /> : null}
-        <Link
-          href={`/runs/${run.runId}`}
-          className="inline-flex h-6 items-center gap-1 rounded-full px-1 text-xs font-medium text-primary hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-        >
-          Open run inspector
-          <ArrowUpRight aria-hidden className="size-3.5" />
-        </Link>
+        {!waiting ? <StatusPill {...meta} variant="chip" className="mt-1 hidden @md:inline-flex" /> : null}
+        <CircleIconButton href={`/runs/${run.runId}`} icon={ArrowUpRight} label="Open run inspector" title="Open run inspector" />
       </div>
+      {!waiting ? <StatusPill {...meta} variant="chip" className="-mt-2 @md:hidden" /> : null}
 
       <PhaseStepper phases={phaseItems(run)} />
 
       {run.status === "failed" && run.error ? (
-        <p role="alert" className="flex items-start gap-2 rounded-lg bg-status-danger-bg px-3 py-2 text-[13px] text-status-danger-fg">
+        <p role="alert" className="flex items-start gap-2.5 rounded-[16px] bg-status-danger-bg px-4 py-3 text-[13px] text-status-danger-fg">
           <CircleAlert aria-hidden className="mt-0.5 size-4 shrink-0" />
           <span className="min-w-0 break-words">{run.error.message}</span>
         </p>
@@ -199,10 +198,10 @@ export function RunProgress({ runId, run, isPending, error, onRetry, docLabel, c
               }
               hint={`${run.budget.tokens.toLocaleString()} tok`}
             />
-            <FactCell label="Elapsed" mono value={<Elapsed since={run.createdAt} until={terminal ? run.updatedAt : undefined} />} />
+            <FactCell label="Elapsed" numeric value={<Elapsed since={run.createdAt} until={terminal ? run.updatedAt : undefined} />} />
           </FactStrip>
           {ledger.length > lines ? (
-            <div className="-mb-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+            <div className="-mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-muted-foreground">
               <span>
                 {hidden ? `Latest ${shown.length} of ${ledger.length} ${ledgerPhases ? "discovery " : ""}steps` : `All ${ledger.length} ${ledgerPhases ? "discovery " : ""}steps`}
                 {ledgerPhases && DISCOVERY_ACTIVE(run) && !waiting ? "; more appear as discovery runs" : ""}
@@ -211,7 +210,7 @@ export function RunProgress({ runId, run, isPending, error, onRetry, docLabel, c
                 type="button"
                 onClick={() => setAllSteps((a) => !a)}
                 aria-expanded={allSteps}
-                className="rounded font-medium text-primary hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                className="rounded font-medium text-primary hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
               >
                 {allSteps ? "Show the latest only" : `See all ${ledger.length} steps`}
               </button>

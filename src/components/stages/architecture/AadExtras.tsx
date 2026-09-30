@@ -37,14 +37,14 @@ function untracedId(line: string): string | undefined {
 
 function TraceChip({ brId, text, onClick }: { brId: string; text?: string; onClick?: (id: string) => void }) {
   const label = `B1 §Requirements ${brNumber(brId)}`;
-  if (!onClick) return <span className="inline-flex h-5 items-center rounded-md bg-primary-soft px-1.5 font-mono text-[11px] whitespace-nowrap text-primary">[{label}]</span>;
+  if (!onClick) return <span className="token-chip h-6 font-mono text-[11.5px]">[{label}]</span>;
   return (
     <button
       type="button"
       onClick={() => onClick(brId)}
       title={text ? `${brId}: ${text}` : `Show ${brId} in the BRD`}
       aria-label={`Show ${brId} in the BRD${text ? `: ${text}` : ""}`}
-      className="inline-flex h-5 items-center rounded-md bg-primary-soft px-1.5 font-mono text-[11px] whitespace-nowrap text-primary hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+      className="token-chip h-6 font-mono text-[11.5px] transition-[filter] hover:brightness-95 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none dark:hover:brightness-125"
     >
       [{label}]
     </button>
@@ -85,11 +85,11 @@ export function FrTrace({ frs, requirements, untraced = [], onTraceClick, classN
     >
       <div className="@container space-y-3">
         {missing.length > 0 ? (
-          <div className="flex flex-wrap items-center gap-1.5 rounded-lg bg-status-attention-bg px-3 py-2 text-[13px] text-status-attention-fg">
+          <div className="flex flex-wrap items-center gap-1.5 rounded-[16px] bg-status-attention-bg px-4 py-2.5 text-[13px] text-status-attention-fg">
             <Route aria-hidden className="size-4 shrink-0" />
             <span className="font-medium">No FR traces</span>
             {missing.map((r) => (
-              <span key={r.id} className="inline-flex h-5 items-center rounded-md bg-card/70 px-1.5 font-mono text-[11px]" title={r.text}>
+              <span key={r.id} className="inline-flex h-6 items-center rounded-[6px] bg-raised/80 px-1.5 font-mono text-[11.5px]" title={r.text}>
                 {r.id}
                 {r.candidate ? " (candidate)" : ""}
               </span>
@@ -97,29 +97,29 @@ export function FrTrace({ frs, requirements, untraced = [], onTraceClick, classN
           </div>
         ) : null}
         {untraced.length > 0 ? (
-          <div className="rounded-lg border border-border px-3 py-2 text-[13px]">
-            <p className="flex items-center gap-1.5 font-medium">
+          <div className="rounded-[16px] bg-well/60 px-4 py-3 text-[13px]">
+            <p className="flex items-center gap-1.5 font-medium text-heading">
               <Route aria-hidden className="size-4 shrink-0 text-status-attention-fg" />
               Flagged as not traced in the draft report
             </p>
-            <ul className="mt-1 list-disc space-y-0.5 pl-5 text-xs text-muted-foreground">
+            <ul className="mt-1.5 list-disc space-y-0.5 pl-5 text-muted-foreground">
               {untraced.map((u) => (
                 <li key={u}>{u}</li>
               ))}
             </ul>
           </div>
         ) : null}
-        <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border" aria-label="Functional requirements">
+        <ul className="divide-y divide-rule border-y border-rule" aria-label="Functional requirements">
           {frs.map((f) => (
-            <li key={f.id} className="grid gap-1.5 px-3 py-2.5 @2xl:grid-cols-[3.5rem_minmax(0,1.4fr)_minmax(0,1fr)] @2xl:gap-3">
-              <span className="font-mono text-xs font-medium">{f.id}</span>
-              <div className="min-w-0 space-y-1">
-                <p className="text-[13px] leading-snug">{f.text}</p>
+            <li key={f.id} className="grid gap-1.5 px-1 py-3.5 @2xl:grid-cols-[3.5rem_minmax(0,1.4fr)_minmax(0,1fr)] @2xl:gap-4">
+              <span className="font-mono text-xs font-medium text-heading @2xl:pt-0.5">{f.id}</span>
+              <div className="min-w-0 space-y-1.5">
+                <p className="text-sm leading-5 text-heading">{f.text}</p>
                 <div className="flex flex-wrap gap-1">
-                  {f.traces.length ? f.traces.map((t) => <TraceChip key={t} brId={t} text={texts[t]} onClick={onTraceClick} />) : <span className="text-[11px] text-status-attention-fg">No BRD trace</span>}
+                  {f.traces.length ? f.traces.map((t) => <TraceChip key={t} brId={t} text={texts[t]} onClick={onTraceClick} />) : <span className="text-xs text-status-attention-fg">No BRD trace</span>}
                 </div>
               </div>
-              <p className="min-w-0 text-xs leading-snug break-words text-muted-foreground">
+              <p className="min-w-0 text-[13px] leading-5 break-words text-muted-foreground">
                 <span className="sr-only">Design element: </span>
                 {f.designElement || "No design element yet"}
               </p>
@@ -205,23 +205,23 @@ export function AcceptanceChecklist({ markdown, className }: { markdown: string;
         {counts.map((c) => (
           <StatusPill key={c.label} tone={c.tone} icon={null} label={`${c.n} ${c.label}`} size="sm" />
         ))}
-        <Button variant="ghost" size="sm" className="ml-auto rounded-full" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+        <Button variant="secondary" size="sm" className="ml-auto" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
           <ChevronDown aria-hidden className={cn("transition-transform duration-150", !open && "-rotate-90")} />
           {open ? "Hide departments" : "Show departments"}
         </Button>
       </div>
       {open ? (
-      <ul className="@container mt-3 divide-y divide-border overflow-hidden rounded-xl border border-border" aria-label="Departments">
+      <ul className="@container mt-4 divide-y divide-rule border-y border-rule" aria-label="Departments">
         {rows.map((r) => {
           const st = statusOf(r.status);
           return (
-            <li key={r.department} className="grid gap-1 px-3 py-2 @xl:grid-cols-[minmax(0,14rem)_8.5rem_minmax(0,1fr)] @xl:items-center @xl:gap-3">
+            <li key={r.department} className="grid gap-1.5 px-1 py-3 @xl:grid-cols-[minmax(0,14rem)_8.5rem_minmax(0,1fr)] @xl:items-center @xl:gap-4">
               <div className="min-w-0">
-                <p className="text-[13px] font-medium">{r.department}</p>
-                {r.representative ? <p className="text-[11px] text-muted-foreground">{r.representative}</p> : null}
+                <p className="text-sm font-medium text-heading">{r.department}</p>
+                {r.representative ? <p className="text-xs text-muted-foreground">{r.representative}</p> : null}
               </div>
               <StatusPill tone={st.tone} icon={st.icon} label={st.label} size="sm" className="w-fit" />
-              <p className={cn("min-w-0 text-xs leading-snug break-words text-muted-foreground", !r.notes && "hidden @xl:block")}>{r.notes || "—"}</p>
+              <p className={cn("min-w-0 text-[13px] leading-5 break-words text-muted-foreground", !r.notes && "hidden @xl:block")}>{r.notes || "—"}</p>
             </li>
           );
         })}

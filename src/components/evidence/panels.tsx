@@ -25,7 +25,7 @@ interface PanelProps {
 export function CommandLine({ command }: { command: string }) {
   const { copied, copy } = useCopy();
   return (
-    <div className="flex min-w-0 items-start gap-2 rounded-lg bg-muted px-2.5 py-2">
+    <div className="flex min-w-0 items-start gap-2 rounded-[12px] bg-well px-3 py-2.5">
       <span aria-hidden className="shrink-0 font-mono text-xs text-muted-foreground select-none">
         $
       </span>
@@ -34,7 +34,7 @@ export function CommandLine({ command }: { command: string }) {
         type="button"
         onClick={() => void copy(command, "Command")}
         aria-label={copied ? "Copied command" : "Copy command"}
-        className="inline-flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-background hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+        className="inline-flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-raised hover:text-heading focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
       >
         {copied ? <Check aria-hidden className="size-3.5 text-status-success-fg" /> : <Copy aria-hidden className="size-3.5" />}
       </button>
@@ -45,7 +45,7 @@ export function CommandLine({ command }: { command: string }) {
 function ExitCode({ code }: { code: number }) {
   const ok = code === 0;
   return (
-    <span className={cn("inline-flex h-5 items-center gap-1 rounded-md px-1.5 font-mono text-[11px]", ok ? "bg-status-success-bg text-status-success-fg" : "bg-status-danger-bg text-status-danger-fg")}>
+    <span className={cn("inline-flex h-6 items-center gap-1 rounded-full px-2 font-mono text-xs", ok ? "bg-status-success-bg text-status-success-fg" : "bg-status-danger-bg text-status-danger-fg")}>
       exit {code}
     </span>
   );
@@ -57,13 +57,13 @@ export function CountsBar({ counts }: { counts: { passed: number; failed: number
   const pct = (n: number) => (total ? (n / total) * 100 : 0);
   return (
     <div className="min-w-0 space-y-1">
-      <div className="flex h-1.5 w-full gap-0.5 overflow-hidden rounded-full bg-foreground/[0.08]" aria-hidden>
-        {counts.passed ? <span className="h-full bg-status-success-fg" style={{ width: `${pct(counts.passed)}%` }} /> : null}
-        {counts.failed ? <span className="h-full bg-status-danger-fg" style={{ width: `${pct(counts.failed)}%` }} /> : null}
-        {counts.skipped ? <span className="h-full bg-muted-foreground/60" style={{ width: `${pct(counts.skipped)}%` }} /> : null}
+      <div className="bar-track flex h-3.5 w-full gap-[3px] overflow-hidden rounded-full" aria-hidden>
+        {counts.passed ? <span className="stripes h-full rounded-full [--c:var(--status-success-solid)]" style={{ width: `${pct(counts.passed)}%` }} /> : null}
+        {counts.failed ? <span className="stripes h-full rounded-full [--c:var(--status-danger-solid)]" style={{ width: `${pct(counts.failed)}%` }} /> : null}
+        {counts.skipped ? <span className="stripes h-full rounded-full [--c:var(--status-neutral-solid)]" style={{ width: `${pct(counts.skipped)}%` }} /> : null}
       </div>
-      <p className="text-xs text-muted-foreground tabular-nums">
-        <span className="text-foreground">{counts.passed}</span> passed · <span className={counts.failed ? "font-medium text-status-danger-fg" : "text-foreground"}>{counts.failed}</span> failed ·{" "}
+      <p className="text-[13px] text-muted-foreground tabular-nums">
+        <span className="text-heading">{counts.passed}</span> passed · <span className={counts.failed ? "font-medium text-status-danger-fg" : "text-foreground"}>{counts.failed}</span> failed ·{" "}
         <span className="text-foreground">{counts.skipped}</span> skipped
       </p>
     </div>
@@ -73,7 +73,7 @@ export function CountsBar({ counts }: { counts: { passed: number; failed: number
 function Excerpt({ text, toneLines }: { text: string; toneLines?: boolean }) {
   const lines = text.split("\n");
   return (
-    <pre className="relative max-h-72 min-w-0 overflow-auto rounded-lg border bg-background px-3 py-2 font-mono text-xs leading-5">
+    <pre className="relative max-h-72 min-w-0 overflow-auto rounded-[12px] bg-well px-3.5 py-2.5 font-mono text-xs leading-5">
       {lines.map((l, i) => {
         const level = toneLines ? lineLevel(l, false) : null;
         return (
@@ -125,10 +125,10 @@ export function LogsTab({ items, onSelectAc, activeAc, highlightId, onJumpTo }: 
             All
           </ToggleGroupItem>
           <ToggleGroupItem value="warn" className="px-2.5 text-xs">
-            Warnings+ <span className="font-mono text-[10.5px] text-status-attention-fg">{counts.warn + counts.error}</span>
+            Warnings+ <span className="font-mono text-xs text-status-attention-fg">{counts.warn + counts.error}</span>
           </ToggleGroupItem>
           <ToggleGroupItem value="error" className="px-2.5 text-xs">
-            Errors <span className="font-mono text-[10.5px] text-status-danger-fg">{counts.error}</span>
+            Errors <span className="font-mono text-xs text-status-danger-fg">{counts.error}</span>
           </ToggleGroupItem>
         </ToggleGroup>
       </div>
@@ -143,9 +143,9 @@ export function LogsTab({ items, onSelectAc, activeAc, highlightId, onJumpTo }: 
               {lines.length === 0 ? (
                 <p className="text-xs text-muted-foreground">No log lines captured.</p>
               ) : shown.length === 0 ? (
-                <p className="rounded-lg border border-dashed px-3 py-3 text-center text-xs text-muted-foreground">No {filter === "error" ? "errors" : "warnings or errors"} in this log.</p>
+                <p className="rounded-[14px] border border-dashed border-circle-border px-3 py-3 text-center text-[13px] text-muted-foreground">No {filter === "error" ? "errors" : "warnings or errors"} in this log.</p>
               ) : (
-                <pre className="relative max-h-72 min-w-0 overflow-auto rounded-lg border bg-background px-3 py-2 font-mono text-xs leading-5" aria-label={`${e.title} log lines`}>
+                <pre className="relative max-h-72 min-w-0 overflow-auto rounded-[12px] bg-well px-3.5 py-2.5 font-mono text-xs leading-5" aria-label={`${e.title} log lines`}>
                   {shown.map((l, i) => {
                     const lvl = lineLevel(l);
                     return (
@@ -175,17 +175,17 @@ export function DataTab({ items, onSelectAc, activeAc, highlightId, onJumpTo }: 
         <EvidenceItem key={e.id} item={e} onSelectAc={onSelectAc} activeAc={activeAc} highlighted={highlightId === e.id} onJumpTo={onJumpTo}>
           <div className="space-y-2">
             {e.kind === "metric" && isMetric(e.data) ? (
-              <div className="flex flex-wrap items-end gap-x-6 gap-y-2 rounded-lg bg-muted px-3 py-2.5">
+              <div className="flex flex-wrap items-end gap-x-8 gap-y-3 rounded-[16px] bg-well px-4 py-3.5">
                 <div>
-                  <div className="kicker">{e.data.name}</div>
-                  <div className={cn("text-2xl tabular-nums", e.result === "fail" ? "text-status-danger-fg" : "text-foreground")}>
+                  <div className="text-[13px] text-muted-foreground">{e.data.name}</div>
+                  <div className={cn("text-[32px] leading-none tracking-[-0.03em] tabular-nums", e.result === "fail" ? "text-status-danger-fg" : "text-heading")}>
                     {e.data.actual.toLocaleString("en-US")} <span className="text-sm text-muted-foreground">{e.data.unit}</span>
                   </div>
                 </div>
                 {e.data.expected !== undefined ? (
                   <div>
-                    <div className="kicker">Budget</div>
-                    <div className="text-2xl text-muted-foreground tabular-nums">
+                    <div className="text-[13px] text-muted-foreground">Budget</div>
+                    <div className="text-[32px] leading-none tracking-[-0.03em] text-muted-numeral tabular-nums">
                       {e.data.expected.toLocaleString("en-US")} <span className="text-sm">{e.data.unit}</span>
                     </div>
                   </div>
@@ -194,7 +194,7 @@ export function DataTab({ items, onSelectAc, activeAc, highlightId, onJumpTo }: 
             ) : null}
             {e.command ? <CommandLine command={e.command} /> : null}
             {e.data !== undefined ? (
-              <div className="rounded-lg border bg-background py-2 pr-2">
+              <div className="rounded-[12px] bg-well py-2 pr-2">
                 <JsonView value={e.data} collapsed={2} />
               </div>
             ) : (

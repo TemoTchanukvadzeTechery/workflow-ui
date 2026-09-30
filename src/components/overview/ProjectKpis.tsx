@@ -34,47 +34,43 @@ export function ProjectKpis({ bundle, className }: { bundle: ProjectBundle; clas
   const runs = Object.values(bundle.stages).reduce((n, s) => n + s.runs.length, 0);
 
   return (
-    <div className={cn("grid grid-cols-2 gap-4 @3xl:grid-cols-3 @5xl:grid-cols-6", className)}>
+    <div className={cn("grid grid-cols-2 gap-4 @3xl:grid-cols-3 @7xl:grid-cols-6", className)}>
       <KpiTile
-        size="md"
         label="Requirements"
         value={brs.length}
         href={brd ? `${base}/docs/${encodeURIComponent(brd.id)}` : `${base}/requirements`}
         hint={brd ? `BR in the BRD${candidates ? ` · ${candidates} candidate` : ""}${frs ? ` · ${frs} FRs` : ""}` : "No BRD yet"}
       />
       <KpiTile
-        size="md"
         label="Epics"
         value={epics.length}
         href={`${base}/requirements?step=epics`}
         hint={epics.length ? `${synced} in Jira · ${accepted} accepted` : "Proposed from the BRD"}
       />
       <KpiTile
-        size="md"
         label="Tasks approved"
         value={
           <span>
             {approved}
-            <span className="text-muted-foreground">/{tasks.length}</span>
+            <span className="text-muted-numeral">/{tasks.length}</span>
           </span>
         }
         href={`${base}/implementation`}
         hint={tasks.length ? `${inFlight} in flight` : "Tasks come with the plan"}
       />
       <KpiTile
-        size="md"
         label="ACs met"
         value={
           <span>
             {met}
-            <span className="text-muted-foreground">/{acs.length}</span>
+            <span className="text-muted-numeral">/{acs.length}</span>
           </span>
         }
         href={`${base}/qa?step=traceability`}
         hint={acs.length ? "Acceptance criteria with evidence" : "No acceptance criteria yet"}
       />
-      <KpiTile size="md" label="Evidence" value={evidence.length} href={`${base}/qa`} hint={evidence.length ? `${pass} pass · ${fail} fail` : "Attached by qa-verify"} />
-      <KpiTile size="md" label="Spend" value={<Money usd={bundle.spendUsd} />} href="/runs" hint={plural(runs, "agent run")} />
+      <KpiTile label="Evidence" value={evidence.length} href={`${base}/qa`} hint={evidence.length ? `${pass} pass · ${fail} fail` : "Attached by qa-verify"} />
+      <KpiTile label="Spend" value={<Money usd={bundle.spendUsd} />} href="/runs" hint={plural(runs, "agent run")} className="col-span-2 @3xl:col-span-1" />
     </div>
   );
 }

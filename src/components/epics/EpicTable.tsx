@@ -39,12 +39,12 @@ export interface EpicTableProps {
 }
 
 function InScope({ items }: { items: string[] }) {
-  if (items.length === 0) return <span className="text-xs text-muted-foreground">—</span>;
+  if (items.length === 0) return <span className="text-[13px] text-muted-foreground">—</span>;
   return (
     <TooltipProvider delayDuration={150}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span tabIndex={0} className="inline-flex h-6 items-center rounded-full bg-muted px-2 text-xs whitespace-nowrap tabular-nums focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none" aria-label={`${items.length} in scope: ${items.join("; ")}`}>
+          <span tabIndex={0} className="inline-flex h-6 items-center rounded-full bg-well px-2.5 text-xs whitespace-nowrap text-heading tabular-nums focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none" aria-label={`${items.length} in scope: ${items.join("; ")}`}>
             {items.length} {items.length === 1 ? "item" : "items"}
           </span>
         </TooltipTrigger>
@@ -65,7 +65,7 @@ function DeleteEpic({ projectId, epic }: { projectId: string; epic: Epic }) {
   const del = useDeleteEpic(projectId);
   return (
     <>
-      <Button variant="ghost" size="icon-sm" aria-label={`Delete epic ${epic.title}`} onClick={() => setOpen(true)} className="text-muted-foreground hover:text-destructive">
+      <Button variant="ghost" size="icon-sm" aria-label={`Delete epic ${epic.title}`} onClick={() => setOpen(true)} className="rounded-full text-muted-foreground hover:text-destructive">
         <Trash2 aria-hidden />
       </Button>
       <AlertDialog open={open} onOpenChange={setOpen}>
@@ -77,10 +77,9 @@ function DeleteEpic({ projectId, epic }: { projectId: string; epic: Epic }) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-full">Keep it</AlertDialogCancel>
+            <AlertDialogCancel>Keep it</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
-              className="rounded-full"
               disabled={del.isPending}
               onClick={(e) => {
                 e.preventDefault();
@@ -100,7 +99,7 @@ function RowActions({ projectId, epic, onEdit, readOnly }: { projectId: string; 
   if (readOnly) return null;
   return (
     <div className="flex items-center justify-end gap-0.5">
-      <Button variant="ghost" size="icon-sm" aria-label={`Edit epic ${epic.title}`} onClick={() => onEdit?.(epic)}>
+      <Button variant="ghost" size="icon-sm" className="rounded-full" aria-label={`Edit epic ${epic.title}`} onClick={() => onEdit?.(epic)}>
         <Pencil aria-hidden />
       </Button>
       <DeleteEpic projectId={projectId} epic={epic} />
@@ -112,32 +111,32 @@ export function EpicTable({ projectId, epics, brTexts, frTexts, showArchitecture
   return (
     <div className={cn("@container min-w-0", className)}>
       {/* Wide: a real table. */}
-      <div className="relative hidden overflow-x-auto rounded-xl border border-border @2xl:block">
-        <table className="w-full border-collapse text-[13px]">
+      <div className="relative hidden overflow-x-auto @2xl:block">
+        <table className="w-full border-collapse text-sm">
           <caption className="sr-only">Epics</caption>
-          <thead className="bg-muted/60 text-left text-xs text-muted-foreground">
-            <tr>
-              <th scope="col" className="w-28 px-3 py-2 font-medium">Key</th>
-              <th scope="col" className="px-3 py-2 font-medium">
-                Title <span className="font-normal">· Objective</span>
+          <thead className="text-left text-[13px] text-muted-foreground">
+            <tr className="border-b border-rule">
+              <th scope="col" className="h-11 w-32 py-0 pr-3 pl-1 font-normal">Key</th>
+              <th scope="col" className="h-11 px-3 font-normal">
+                Title · Objective
               </th>
-              <th scope="col" className="w-32 px-3 py-2 font-medium">{showArchitecture ? "BR / FR" : "Requirements"}</th>
-              <th scope="col" className="w-20 px-3 py-2 font-medium">In scope</th>
-              <th scope="col" className="w-28 px-3 py-2 font-medium">Status</th>
-              {!readOnly ? <th scope="col" className="w-[4.5rem] px-2 py-2"><span className="sr-only">Actions</span></th> : null}
+              <th scope="col" className="h-11 w-36 px-3 font-normal">{showArchitecture ? "BR / FR" : "Requirements"}</th>
+              <th scope="col" className="h-11 w-24 px-3 font-normal">In scope</th>
+              <th scope="col" className="h-11 w-32 px-3 font-normal">Status</th>
+              {!readOnly ? <th scope="col" className="h-11 w-[5rem] px-2"><span className="sr-only">Actions</span></th> : null}
             </tr>
           </thead>
           <tbody>
             {epics.map((e) => (
-              <tr key={e.id} className="h-10 border-t border-border align-top">
-                <td className="px-3 py-2.5">
+              <tr key={e.id} className="h-12 border-b border-rule align-top transition-colors last:border-b-0 hover:bg-foreground/[0.025]">
+                <td className="py-3.5 pr-3 pl-1">
                   <EpicKey epic={e} />
                 </td>
-                <td className="px-3 py-2.5">
+                <td className="px-3 py-3.5">
                   <div className="space-y-1">
-                    <p className="font-medium leading-snug">{e.title}</p>
+                    <p className="leading-5 font-medium text-heading">{e.title}</p>
                     {e.objective ? (
-                      <p className="line-clamp-2 text-xs leading-snug text-muted-foreground" title={e.objective}>
+                      <p className="line-clamp-2 text-[13px] leading-5 text-muted-foreground" title={e.objective}>
                         {e.objective}
                       </p>
                     ) : null}
@@ -149,23 +148,23 @@ export function EpicTable({ projectId, epics, brTexts, frTexts, showArchitecture
                     ) : null}
                   </div>
                 </td>
-                <td className="px-3 py-2.5">
+                <td className="px-3 py-3.5">
                   <div className="space-y-1">
                     <RefChips refs={e.brdRequirementRefs} texts={brTexts} />
                     {showArchitecture && e.aadRefs.length ? <RefChips refs={e.aadRefs} texts={frTexts} tone="primary" /> : null}
                   </div>
                 </td>
-                <td className="px-3 py-2.5">
+                <td className="px-3 py-3.5">
                   <InScope items={e.inScope} />
                 </td>
-                <td className="px-3 py-2.5">
+                <td className="px-3 py-3.5">
                   <div className="flex flex-col items-start gap-1">
                     <StatusPill status={{ kind: "epic", value: e.status }} size="sm" />
                     <BlockedBy ids={e.blockedBy} />
                   </div>
                 </td>
                 {!readOnly ? (
-                  <td className="px-2 py-1.5">
+                  <td className="px-2 py-2.5">
                     <RowActions projectId={projectId} epic={e} onEdit={onEdit} readOnly={readOnly} />
                   </td>
                 ) : null}
@@ -176,9 +175,9 @@ export function EpicTable({ projectId, epics, brTexts, frTexts, showArchitecture
       </div>
 
       {/* Narrow: stacked cards. */}
-      <ul className="space-y-2 @2xl:hidden" aria-label="Epics">
+      <ul className="divide-y divide-rule border-y border-rule @2xl:hidden" aria-label="Epics">
         {epics.map((e) => (
-          <li key={e.id} className="space-y-2 rounded-xl border border-border p-3">
+          <li key={e.id} className="space-y-2 px-1 py-3.5">
             <div className="flex items-start gap-2">
               <div className="min-w-0 flex-1 space-y-1">
                 <div className="flex flex-wrap items-center gap-1.5">
@@ -186,11 +185,11 @@ export function EpicTable({ projectId, epics, brTexts, frTexts, showArchitecture
                   <StatusPill status={{ kind: "epic", value: e.status }} size="sm" />
                   <BlockedBy ids={e.blockedBy} />
                 </div>
-                <p className="text-[13px] leading-snug font-medium">{e.title}</p>
+                <p className="text-sm leading-5 font-medium text-heading">{e.title}</p>
               </div>
               <RowActions projectId={projectId} epic={e} onEdit={onEdit} readOnly={readOnly} />
             </div>
-            {e.objective ? <p className="text-xs leading-snug text-muted-foreground">{e.objective}</p> : null}
+            {e.objective ? <p className="text-[13px] leading-5 text-muted-foreground">{e.objective}</p> : null}
             <div className="flex flex-wrap items-center gap-1.5">
               <RefChips refs={e.brdRequirementRefs} texts={brTexts} empty={null} />
               {showArchitecture ? <RefChips refs={e.aadRefs} texts={frTexts} tone="primary" empty={null} /> : null}

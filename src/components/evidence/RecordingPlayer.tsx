@@ -20,7 +20,7 @@ const SEGMENT_CLASS: Record<SegmentLabel, string> = {
 };
 
 export function SegmentChip({ label, className }: { label: SegmentLabel; className?: string }) {
-  return <span className={cn("inline-flex h-5 items-center rounded-md px-1.5 font-mono text-[10.5px] font-semibold tracking-[0.08em]", SEGMENT_CLASS[label], className)}>{label}</span>;
+  return <span className={cn("inline-flex h-5 items-center rounded-full px-2 font-mono text-[11px] font-semibold tracking-[0.06em]", SEGMENT_CLASS[label], className)}>{label}</span>;
 }
 
 /** The segment a marker belongs to, read from its text ("(AFTER only)", "(parity)"). */
@@ -56,12 +56,12 @@ export function RecordingPlayer({ item, taskLabel, compact, className }: Recordi
   };
 
   if (!item.url) {
-    return <p className="rounded-lg border border-dashed px-3 py-6 text-center text-[13px] text-muted-foreground">The recording file is not available.</p>;
+    return <p className="rounded-[16px] border border-dashed border-circle-border px-3 py-6 text-center text-sm text-muted-foreground">The recording file is not available.</p>;
   }
 
   return (
     <div className={cn("min-w-0 space-y-3", className)}>
-      <div className="relative overflow-hidden rounded-lg bg-black">
+      <div className="relative overflow-hidden rounded-[16px] bg-black shadow-[0_0_0_1px_rgb(0_0_0/0.08),0_14px_30px_-16px_rgb(0_0_0/0.55)]">
         <video
           ref={ref}
           src={item.url}
@@ -76,10 +76,10 @@ export function RecordingPlayer({ item, taskLabel, compact, className }: Recordi
             if (Number.isFinite(d) && d > 0) setDuration(d);
           }}
         />
-        <div className="pointer-events-none absolute top-2 left-2 flex max-w-[calc(100%-1rem)] flex-wrap gap-1 font-mono text-[10.5px] leading-none text-white">
-          {taskLabel ? <span className="rounded bg-black/65 px-1.5 py-1">{taskLabel}</span> : null}
-          <span className="max-w-full truncate rounded bg-black/65 px-1.5 py-1">{item.environment}</span>
-          {!compact ? <span className="max-w-full truncate rounded bg-black/65 px-1.5 py-1">build {item.build}</span> : null}
+        <div className="pointer-events-none absolute top-2.5 left-2.5 flex max-w-[calc(100%-1.25rem)] flex-wrap gap-1.5 font-mono text-[11px] leading-none text-white">
+          {taskLabel ? <span className="rounded-full bg-black/55 px-2.5 py-1.5 ring-1 ring-white/15 backdrop-blur-md">{taskLabel}</span> : null}
+          <span className="max-w-full truncate rounded-full bg-black/55 px-2.5 py-1.5 ring-1 ring-white/15 backdrop-blur-md">{item.environment}</span>
+          {!compact ? <span className="max-w-full truncate rounded-full bg-black/55 px-2.5 py-1.5 ring-1 ring-white/15 backdrop-blur-md">build {item.build}</span> : null}
         </div>
       </div>
 
@@ -88,8 +88,8 @@ export function RecordingPlayer({ item, taskLabel, compact, className }: Recordi
           {item.segments.map((s) => (
             <li key={`${s.label}-${s.host}`} className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
               <SegmentChip label={s.label} />
-              <span className="min-w-0 truncate font-mono text-[11px] text-foreground">{s.host}</span>
-              <span className="min-w-0 truncate font-mono text-[11px] text-muted-foreground" title={s.build}>
+              <span className="min-w-0 truncate font-mono text-xs text-foreground">{s.host}</span>
+              <span className="min-w-0 truncate font-mono text-xs text-muted-foreground" title={s.build}>
                 {s.build}
               </span>
             </li>
@@ -100,8 +100,8 @@ export function RecordingPlayer({ item, taskLabel, compact, className }: Recordi
       {markers.length > 0 ? (
         <div className="space-y-2">
           <div className="relative h-6" aria-hidden={compact ? undefined : true}>
-            <div className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-foreground/[0.08]" />
-            <div className="absolute top-1/2 left-0 h-1 -translate-y-1/2 rounded-full bg-primary" style={{ width: duration ? `${Math.min(100, (time / duration) * 100)}%` : 0 }} />
+            <div className="bar-track absolute inset-x-0 top-1/2 h-2 -translate-y-1/2 rounded-full" />
+            <div className="stripes absolute top-1/2 left-0 h-2 -translate-y-1/2 rounded-full [--c:var(--status-running-solid)]" style={{ width: duration ? `${Math.min(100, (time / duration) * 100)}%` : 0 }} />
             {markers.map((m, i) => (
               <button
                 key={`${m.t}-${i}`}
@@ -111,8 +111,8 @@ export function RecordingPlayer({ item, taskLabel, compact, className }: Recordi
                 title={`${m.t} ${m.text}`}
                 aria-label={`Seek to ${m.t}: ${m.text}`}
                 className={cn(
-                  "absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-card transition-transform duration-150 hover:scale-125 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
-                  i <= activeIdx ? "bg-primary" : "bg-muted-foreground",
+                  "absolute top-1/2 size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-field shadow-[0_1px_3px_rgb(0_0_0/0.3)] transition-transform duration-150 hover:scale-125 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
+                  i <= activeIdx ? "bg-status-running-solid" : "bg-status-neutral-solid",
                 )}
                 style={{ left: duration ? `${Math.min(100, (m.sec / duration) * 100)}%` : `${((i + 1) / (markers.length + 1)) * 100}%` }}
               />
@@ -127,22 +127,22 @@ export function RecordingPlayer({ item, taskLabel, compact, className }: Recordi
                     onClick={() => seek(m.sec)}
                     aria-current={i === activeIdx ? "true" : undefined}
                     className={cn(
-                      "flex w-full items-start gap-2 rounded-md px-2 py-1.5 text-left text-[13px] transition-colors duration-150 hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
-                      i === activeIdx && "bg-primary-soft",
+                      "flex w-full items-start gap-2.5 rounded-[12px] px-2.5 py-2 text-left text-sm transition-colors duration-150 hover:bg-foreground/[0.04] focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
+                      i === activeIdx && "bg-status-running-bg hover:bg-status-running-bg",
                     )}
                   >
                     <span className="inline-flex shrink-0 items-center gap-1 font-mono text-xs text-primary tabular-nums">
                       <Play aria-hidden className="size-3" />
                       {m.t}
                     </span>
-                    <span className="min-w-0 flex-1 text-foreground">{m.text}</span>
+                    <span className="min-w-0 flex-1 text-heading">{m.text}</span>
                     {m.segment ? <SegmentChip label={m.segment} className="shrink-0" /> : null}
                   </button>
                 </li>
               ))}
             </ol>
           ) : (
-            <p className="font-mono text-[11px] text-muted-foreground tabular-nums">
+            <p className="font-mono text-xs text-muted-foreground tabular-nums">
               {clock(time)} / {clock(duration)} · {markers.length} markers
             </p>
           )}

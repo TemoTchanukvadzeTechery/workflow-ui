@@ -19,22 +19,22 @@ export function ProjectCard({ project: p, className }: { project: ProjectSummary
     <Link
       href={`/projects/${p.id}`}
       className={cn(
-        "card-surface group flex min-w-0 flex-col gap-4 rounded-2xl p-5 transition-shadow duration-150 hover:shadow-md focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
+        "card-surface group flex min-w-0 flex-col gap-4 rounded-[28px] p-5 transition-shadow duration-150 hover:shadow-[var(--card-edge),0_20px_40px_-18px_rgb(0_0_0/0.18)] focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none sm:p-6",
         className,
       )}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="font-mono text-[11px] text-muted-foreground">{p.key}</div>
-          <h3 className="mt-0.5 line-clamp-2 text-[16px] leading-snug font-medium text-foreground group-hover:underline group-hover:underline-offset-2">{p.name}</h3>
+          <div className="font-mono text-xs text-muted-foreground">{p.key}</div>
+          <h3 className="mt-1 line-clamp-2 text-[18px] leading-6 font-medium tracking-[-0.01em] text-heading group-hover:underline group-hover:underline-offset-2">{p.name}</h3>
         </div>
         {!p.done ? <HealthPill health={p.health} reason={p.healthReason} interactive={false} /> : null}
       </div>
-      {p.summary ? <p className="line-clamp-2 text-[13px] text-muted-foreground">{p.summary}</p> : null}
-      {!p.done && p.health !== "on_track" ? <p className={cn("-mt-2 line-clamp-2 text-xs", p.health === "off_track" ? "text-status-danger-fg" : "text-status-attention-fg")}>{healthReasonText(p.health, p.healthReason)}</p> : null}
+      {p.summary ? <p className="line-clamp-2 text-sm leading-5 text-muted-foreground">{p.summary}</p> : null}
+      {!p.done && p.health !== "on_track" ? <p className={cn("-mt-2 line-clamp-2 text-[13px]", p.health === "off_track" ? "text-status-danger-fg" : "text-status-attention-fg")}>{healthReasonText(p.health, p.healthReason)}</p> : null}
 
       {/* The stage chip below names the current stage, so the bar needs no per-stage labels. */}
-      <SegmentBar size="md" segments={stageSegments(p.stageStatuses)} />
+      <SegmentBar size="lg" segments={stageSegments(p.stageStatuses)} />
 
       <div className="flex flex-wrap items-center gap-2">
         {!p.done ? <StageChip stage={p.currentStage} numbered /> : null}
@@ -42,18 +42,18 @@ export function ProjectCard({ project: p, className }: { project: ProjectSummary
       </div>
 
       {p.nextStep ? (
-        <p className="flex items-start gap-1.5 text-[13px] leading-snug text-foreground">
-          <ArrowRight aria-hidden className="mt-0.5 size-3.5 shrink-0 text-primary" />
+        <p className="flex items-start gap-2 text-sm leading-5 text-heading">
+          <ArrowRight aria-hidden className="mt-0.5 size-4 shrink-0 text-primary" />
           <span className="line-clamp-2">{p.nextStep}</span>
         </p>
       ) : null}
 
-      <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1 border-t pt-3 text-xs text-muted-foreground">
+      <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-rule pt-4 text-[13px] text-muted-foreground">
         <span className={cn("inline-flex items-center gap-1", p.waitingCount > 0 && "font-medium text-status-attention-fg")}>
           <Hand aria-hidden className="size-3.5" />
           {p.waitingCount === 0 ? "Nothing waiting" : `${p.waitingCount} waiting on people`}
         </span>
-        <Money usd={p.spendUsd} />
+        <Money usd={p.spendUsd} className="text-heading" />
         <RelativeTime at={p.updatedAt} prefix="updated" className="ml-auto" />
       </div>
     </Link>

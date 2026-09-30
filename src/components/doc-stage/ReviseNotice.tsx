@@ -46,7 +46,7 @@ export function ReviseNotice({ projectId, kind, cause, doc, onStartAnother, onIm
           ) : (
             <p className="font-medium">The {label} may need to follow the change upstream.</p>
           )}
-          <p className="text-xs opacity-90">
+          <p className="opacity-90">
             {revised
               ? `The ${label} has changed since (now v${latest}). Check it, then approve the stage again.`
               : `Revise the ${label}: start another ${workflow} run (the ${cause.kind === "reopened" ? "reopen comment" : "reason"} and the current ${label} go with it as notes), or import a new version. Then approve the stage again.`}
@@ -54,7 +54,7 @@ export function ReviseNotice({ projectId, kind, cause, doc, onStartAnother, onIm
         </div>
         <div className="flex flex-wrap gap-2">
           {!hideStart && onStartAnother ? (
-            <Button type="button" size="sm" variant={revised ? "outline" : "default"} className="rounded-full" onClick={onStartAnother}>
+            <Button type="button" size="sm" variant={revised ? "secondary" : "default"} onClick={onStartAnother}>
               <RotateCcw aria-hidden />
               Start another run
             </Button>
@@ -64,7 +64,7 @@ export function ReviseNotice({ projectId, kind, cause, doc, onStartAnother, onIm
             stage={kind === "brd" ? "requirements" : "architecture"}
             onImported={onImported ? () => onImported() : undefined}
             trigger={
-              <Button type="button" size="sm" variant="outline" className="rounded-full bg-card">
+              <Button type="button" size="sm" variant="secondary" className="bg-raised shadow-(--raised-shadow) hover:bg-(--chip-bg)">
                 <Import aria-hidden />
                 Import new version
               </Button>

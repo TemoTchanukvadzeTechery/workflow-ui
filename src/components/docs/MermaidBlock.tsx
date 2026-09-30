@@ -48,7 +48,7 @@ export function MermaidBlock({ code, className }: { code: string; className?: st
   if (current?.svg) {
     return (
       <figure
-        className={cn("my-4 overflow-x-auto rounded-lg border border-border bg-card p-3 [&_svg]:mx-auto [&_svg]:h-auto [&_svg]:max-w-full", className)}
+        className={cn("my-5 overflow-x-auto rounded-[20px] bg-field p-4 shadow-[0_0_0_1px_var(--rule)] [&_svg]:mx-auto [&_svg]:h-auto [&_svg]:max-w-full", className)}
         role="img"
         aria-label="Diagram"
         // securityLevel "strict" makes mermaid sanitize labels and drop scripts and click handlers.
@@ -63,7 +63,7 @@ export function MermaidBlock({ code, className }: { code: string; className?: st
       ) : (
         <figcaption className="text-xs text-muted-foreground">Rendering diagram…</figcaption>
       )}
-      <pre className="overflow-x-auto rounded-lg border border-border bg-muted/50 p-3 font-mono text-xs leading-5">
+      <pre className="overflow-x-auto rounded-[16px] bg-well/60 p-4 font-mono text-xs leading-5">
         <code>{code}</code>
       </pre>
     </figure>

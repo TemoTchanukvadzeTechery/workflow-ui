@@ -8,7 +8,7 @@
 import { AlertTriangle, Bot, FolderGit2, ListChecks, OctagonPause, RotateCcw, Undo2 } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { StatusDot, StatusPill } from "@/components/common";
+import { SegmentedControl, StatusDot, StatusPill } from "@/components/common";
 import type { DeliveryTask } from "@/lib/delivery/types";
 import { cn } from "@/lib/utils";
 import { taskStatusMeta } from "@/lib/weft/labels";
@@ -96,8 +96,8 @@ export function latestChecks(checks: readonly CheckState[]): CheckState[] {
 /** "T-4 · CP-52153" in mono. */
 export function TaskIdLabel({ task, className }: { task: Pick<DeliveryTask, "id" | "jiraKey">; className?: string }) {
   return (
-    <span className={cn("inline-flex min-w-0 items-center gap-1 font-mono text-[11px] text-muted-foreground tabular-nums", className)}>
-      <span className="shrink-0 whitespace-nowrap text-foreground">{task.id}</span>
+    <span className={cn("inline-flex min-w-0 items-center gap-1 font-mono text-xs text-muted-foreground tabular-nums", className)}>
+      <span className="shrink-0 font-medium whitespace-nowrap text-heading">{task.id}</span>
       {task.jiraKey ? (
         <>
           <span aria-hidden className="shrink-0">·</span>
@@ -122,7 +122,7 @@ export function ScopedTitle({ title, hideScope, className }: { title: string; hi
 
 export function RepoChip({ repo, className }: { repo: string; className?: string }) {
   return (
-    <span title={repo} className={cn("inline-flex h-5 max-w-full min-w-0 items-center gap-1 rounded-md bg-muted px-1.5 font-mono text-[11px] text-muted-foreground", className)}>
+    <span title={repo} className={cn("inline-flex h-6 max-w-full min-w-0 items-center gap-1 rounded-full bg-well px-2 font-mono text-[11px] text-muted-foreground", className)}>
       <FolderGit2 aria-hidden className="size-3 shrink-0" />
       <span className="truncate">{repo}</span>
     </span>
@@ -131,7 +131,7 @@ export function RepoChip({ repo, className }: { repo: string; className?: string
 
 export function MiniChip({ children, className, title }: { children: ReactNode; className?: string; title?: string }) {
   return (
-    <span title={title} className={cn("inline-flex h-5 shrink-0 items-center rounded-md border border-border px-1.5 font-mono text-[11px] leading-none text-muted-foreground", className)}>
+    <span title={title} className={cn("inline-flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full px-1.5 font-mono text-[11px] leading-none text-muted-foreground shadow-[inset_0_0_0_1px_var(--circle-border)]", className)}>
       {children}
     </span>
   );
@@ -147,7 +147,7 @@ export function TraceChips({ traces, max, className }: { traces: readonly string
   return (
     <span className={cn("inline-flex flex-wrap items-center gap-1", className)} aria-label={`Traces ${traces.join(", ")}`}>
       {shown.map((t) => (
-        <span key={t} className="inline-flex h-5 items-center rounded-md bg-primary-soft px-1.5 font-mono text-[11px] text-primary">
+        <span key={t} className="inline-flex h-6 items-center rounded-full bg-status-running-bg px-2 font-mono text-[11px] text-status-running-fg">
           {t}
         </span>
       ))}
@@ -161,7 +161,7 @@ export function DepChips({ deps, tasks, projectId, className }: { deps: readonly
   if (deps.length === 0) return null;
   return (
     <span className={cn("inline-flex flex-wrap items-center gap-1", className)}>
-      <span className="text-[11px] text-muted-foreground">after</span>
+      <span className="text-xs text-muted-foreground">after</span>
       {deps.map((d) => {
         const dep = tasks?.find((t) => t.id === d);
         const meta = dep ? taskStatusMeta(dep.status) : undefined;
@@ -175,12 +175,12 @@ export function DepChips({ deps, tasks, projectId, className }: { deps: readonly
           <Link
             key={d}
             href={taskHref(projectId, d)}
-            className="inline-flex h-5 items-center gap-1 rounded-md border border-border px-1.5 font-mono text-[11px] text-foreground hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            className="inline-flex h-6 items-center gap-1 rounded-full px-2 font-mono text-[11px] text-heading shadow-[inset_0_0_0_1px_var(--circle-border)] hover:bg-foreground/[0.04] focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
           >
             {body}
           </Link>
         ) : (
-          <span key={d} className="inline-flex h-5 items-center gap-1 rounded-md border border-border px-1.5 font-mono text-[11px] text-muted-foreground">
+          <span key={d} className="inline-flex h-6 items-center gap-1 rounded-full px-2 font-mono text-[11px] text-muted-foreground shadow-[inset_0_0_0_1px_var(--circle-border)]">
             {body}
           </span>
         );
@@ -197,7 +197,7 @@ export function ChecksStat({ checks, className }: { checks: readonly CheckState[
   const ok = passed === latest.length;
   return (
     <span
-      className={cn("inline-flex items-center gap-1 font-mono text-[11px] tabular-nums", ok ? "text-status-success-fg" : "text-status-danger-fg", className)}
+      className={cn("inline-flex items-center gap-1 text-xs tabular-nums", ok ? "text-status-success-fg" : "text-status-danger-fg", className)}
       title={`${passed} of ${latest.length} checks passed`}
     >
       <ListChecks aria-hidden className="size-3.5" />
@@ -210,7 +210,7 @@ export function ChecksStat({ checks, className }: { checks: readonly CheckState[
 export function DiffStat({ stats, className }: { stats?: { adds: number; dels: number; files?: number }; className?: string }) {
   if (!stats) return null;
   return (
-    <span className={cn("inline-flex items-center gap-1 font-mono text-[11px] tabular-nums", className)} title={`${stats.adds} lines added, ${stats.dels} removed${stats.files !== undefined ? ` in ${stats.files} files` : ""}`}>
+    <span className={cn("inline-flex items-center gap-1 font-mono text-xs tabular-nums", className)} title={`${stats.adds} lines added, ${stats.dels} removed${stats.files !== undefined ? ` in ${stats.files} files` : ""}`}>
       <span className="text-status-success-fg">+{stats.adds}</span>
       <span className="text-status-danger-fg">−{stats.dels}</span>
     </span>
@@ -232,63 +232,52 @@ export function QaReworkBadge() {
 
 export function BlockedLine({ reason, className }: { reason?: string; className?: string }) {
   return (
-    <p className={cn("flex items-start gap-1.5 text-xs text-status-attention-fg", className)}>
+    <p className={cn("flex items-start gap-1.5 text-[13px] leading-5 text-status-attention-fg", className)}>
       <OctagonPause aria-hidden className="mt-0.5 size-3.5 shrink-0" />
       <span className="min-w-0 break-words">Blocked{reason ? `: ${reason}` : ""}</span>
     </p>
   );
 }
 
-/** A weft agent working the task: bot avatar + model id. */
+/** A weft agent working the task: a bot avatar in the reference's gradient ring + model id. */
 export function AgentAvatar({ model = DEFAULT_AGENT_MODEL, live, className }: { model?: string; live?: boolean; className?: string }) {
   return (
-    <span className={cn("inline-flex min-w-0 items-center gap-1.5", className)} title={`Agent: ${model}`}>
-      <span className={cn("relative inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary")}>
-        <Bot aria-hidden className="size-3" />
+    <span className={cn("inline-flex min-w-0 items-center gap-2", className)} title={`Agent: ${model}`}>
+      <span className="relative inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-[conic-gradient(from_200deg,#ffb547,#f26a1b,#7c5cff,#1b6ffc,#ffb547)] p-[2px]">
+        <span className="inline-flex size-full items-center justify-center rounded-full bg-card text-status-running-fg ring-1 ring-background">
+          <Bot aria-hidden className="size-3.5" strokeWidth={2} />
+        </span>
         {live ? <StatusDot tone="running" pulse size="sm" className="absolute -right-0.5 -bottom-0.5 ring-2 ring-card" /> : null}
       </span>
-      <span className="truncate font-mono text-[11px] text-muted-foreground">{model}</span>
+      <span className="truncate font-mono text-xs text-muted-foreground">{model}</span>
     </span>
   );
 }
 
-/** Segmented pill toggle (Board | Table, filters). */
+/** Segmented toggle (Board | Table, filters): the reference's well track with a raised segment. */
 export function Segmented<T extends string>({
   value,
   onChange,
   options,
   label,
+  size = "sm",
   className,
 }: {
   value: T;
   onChange: (v: T) => void;
   options: ReadonlyArray<{ value: T; label: ReactNode; icon?: typeof Bot; count?: number }>;
   label: string;
+  size?: "sm" | "md";
   className?: string;
 }) {
   return (
-    <div role="radiogroup" aria-label={label} className={cn("inline-flex items-center gap-0.5 rounded-full bg-muted p-0.5", className)}>
-      {options.map((o) => {
-        const on = o.value === value;
-        const Icon = o.icon;
-        return (
-          <button
-            key={o.value}
-            type="button"
-            role="radio"
-            aria-checked={on}
-            onClick={() => onChange(o.value)}
-            className={cn(
-              "inline-flex h-7 items-center gap-1.5 rounded-full px-3 text-xs font-medium whitespace-nowrap transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring",
-              on ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {Icon ? <Icon aria-hidden className="size-3.5" /> : null}
-            {o.label}
-            {o.count !== undefined ? <span className="font-mono text-[10.5px] text-muted-foreground tabular-nums">{o.count}</span> : null}
-          </button>
-        );
-      })}
-    </div>
+    <SegmentedControl
+      value={value}
+      onValueChange={onChange}
+      items={options.map((o) => ({ value: o.value, label: o.label, icon: o.icon, count: o.count }))}
+      size={size}
+      aria-label={label}
+      className={className}
+    />
   );
 }

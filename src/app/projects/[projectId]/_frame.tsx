@@ -1,8 +1,9 @@
 "use client";
 
 /**
- * The compact header on every project page: name, key, health (with why, when not on track),
- * Done badge, the summary on the overview, and one tab row (Overview + the five stages, each with
+ * The header on every project page: name (a big title on the overview), key and health chips
+ * (health says why when not on track), Done badge, the summary on the overview, a compact
+ * five-segment striped stepper, and one segmented tab row (Overview + the five stages, each with
  * its status dot) that is the project's only stage navigation. Stage, task and document pages
  * render their own h1; only the overview uses the project name as its h1.
  */
@@ -10,13 +11,13 @@ import { BadgeCheck, Compass, FolderKanban } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-import { actorText, EmptyState, ErrorState, HealthPill, IdChip, StatusDot, StatusPill } from "@/components/common";
+import { actorText, EmptyState, ErrorState, HealthPill, IdChip, SegmentBar, stageSegment, StatusDot, StatusPill } from "@/components/common";
 import { taskSection } from "@/components/shell/breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApiError } from "@/lib/api/client";
 import { useProject } from "@/lib/api/queries";
-import { isStageId, STAGES, type DocumentKind, type ProjectBundle, type StageId } from "@/lib/delivery/types";
+import { isStageId, stageDef, STAGES, type DocumentKind, type ProjectBundle, type StageId } from "@/lib/delivery/types";
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { stageStatusMeta } from "@/lib/weft/labels";
@@ -51,13 +52,13 @@ export function ProjectFrame({ projectId, children }: { projectId: string; child
 
   if (q.error instanceof ApiError && q.error.status === 404) {
     return (
-      <div className="card-surface rounded-2xl">
+      <div className="card-surface rounded-[28px]">
         <EmptyState
           icon={Compass}
           title="Project not found"
           body={`No project with the id "${projectId}". It may have been deleted, or the demo data was reset.`}
           action={
-            <Button asChild variant="outline" className="rounded-full">
+            <Button asChild variant="secondary">
               <Link href="/projects">
                 <FolderKanban aria-hidden />
                 All projects
@@ -70,7 +71,7 @@ export function ProjectFrame({ projectId, children }: { projectId: string; child
   }
   if (q.error && !bundle) {
     return (
-      <div className="card-surface rounded-2xl">
+      <div className="card-surface rounded-[28px]">
         <ErrorState title="Could not load the project" error={q.error} onRetry={() => void q.refetch()} />
       </div>
     );
@@ -79,55 +80,73 @@ export function ProjectFrame({ projectId, children }: { projectId: string; child
   const section = sectionOf(pathname, base, bundle);
   const overview = section === "overview";
   const TitleTag = overview ? "h1" : "p";
+  const current = bundle ? stageDef(bundle.project.currentStage) : undefined;
 
   return (
-    <div className={cn("flex min-w-0 flex-1 flex-col", overview ? "gap-6" : "gap-4")}>
-      <header className={cn("flex min-w-0 flex-col", overview ? "gap-4" : "gap-2")}>
+    <div className={cn("flex min-w-0 flex-1 flex-col", overview ? "gap-6" : "gap-5")}>
+      <header className={cn("flex min-w-0 flex-col", overview ? "gap-5" : "gap-4")}>
         {!bundle ? (
           <FrameSkeleton overview={overview} />
         ) : (
-          <div className="min-w-0 space-y-1.5">
-            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
-              {/* Stage, task and document pages carry their own h1, so the project name steps down there. */}
-              <TitleTag className={cn("min-w-0 font-normal tracking-[-0.015em] text-foreground", overview ? "text-[22px] leading-7 sm:text-[26px] sm:leading-8" : "text-[17px] leading-6")}>
-                {overview ? (
-                  bundle.project.name
-                ) : (
-                  <Link href={base} className="underline-offset-4 hover:underline focus-visible:underline focus-visible:outline-none">
-                    {bundle.project.name}
-                  </Link>
-                )}
-              </TitleTag>
-              <IdChip id={bundle.project.key} size="sm" copy={false} />
-              {/* A done project's health says nothing new; the Done badge carries it. */}
-              {!bundle.project.done ? <HealthPill health={bundle.health} reason={bundle.healthReason} /> : null}
-              {bundle.project.done ? (
-                <StatusPill
-                  tone="success"
-                  icon={BadgeCheck}
-                  size="sm"
-                  label={`Done · accepted by ${doneBy(bundle) ?? "the Product Owner"}${bundle.project.doneAt ? ` on ${formatDate(bundle.project.doneAt)}` : ""}`}
-                  className="max-w-full"
-                />
-              ) : null}
+          <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-end lg:justify-between lg:gap-8">
+            <div className="min-w-0 space-y-2.5">
+              <div className={cn("flex flex-wrap gap-x-3 gap-y-2", overview ? "items-start" : "items-center")}>
+                {/* Stage, task and document pages carry their own h1, so the project name steps down there. */}
+                <TitleTag
+                  className={cn(
+                    "min-w-0 font-normal break-words text-heading",
+                    overview ? "text-[34px] leading-[1.1] tracking-[-0.03em] sm:text-[44px] sm:leading-[1.05] sm:tracking-[-0.035em] xl:text-[48px]" : "text-[17px] leading-6 tracking-[-0.01em]",
+                  )}
+                >
+                  {overview ? (
+                    bundle.project.name
+                  ) : (
+                    <Link href={base} className="rounded-sm underline-offset-4 hover:underline focus-visible:underline focus-visible:outline-none">
+                      {bundle.project.name}
+                    </Link>
+                  )}
+                </TitleTag>
+                <span className={cn("flex flex-wrap items-center gap-2", overview && "sm:pt-2.5")}>
+                  <IdChip id={bundle.project.key} copy={false} className="h-7 rounded-full bg-well px-2.5 text-[13px]" />
+                  {/* A done project's health says nothing new; the Done badge carries it. */}
+                  {!bundle.project.done ? <HealthPill health={bundle.health} reason={bundle.healthReason} size={overview ? "md" : "sm"} /> : null}
+                  {bundle.project.done ? (
+                    <StatusPill
+                      tone="success"
+                      icon={BadgeCheck}
+                      size={overview ? "md" : "sm"}
+                      label={`Done · accepted by ${doneBy(bundle) ?? "the Product Owner"}${bundle.project.doneAt ? ` on ${formatDate(bundle.project.doneAt)}` : ""}`}
+                      className="max-w-full"
+                    />
+                  ) : null}
+                </span>
+              </div>
+              {overview && bundle.project.summary ? <p className="max-w-3xl text-[15px] leading-6 text-muted-foreground">{bundle.project.summary}</p> : null}
             </div>
-            {overview && bundle.project.summary ? <p className="max-w-3xl text-[13px] text-muted-foreground">{bundle.project.summary}</p> : null}
+            {/* The compact stepper: five striped segments, done in full stripes and the current stage lighter. */}
+            <div className={cn("w-full max-w-sm shrink-0 flex-col gap-2 lg:w-72", overview ? "flex" : "hidden sm:flex")}>
+              <div className="flex items-baseline justify-between gap-3 text-[13px] leading-5">
+                <span className="text-muted-foreground">{bundle.project.done ? "All stages approved" : "Current stage"}</span>
+                <span className="truncate text-heading">{bundle.project.done ? "Done" : `${current?.n} of 5 · ${current?.title}`}</span>
+              </div>
+              <SegmentBar size="lg" segments={STAGES.map((st) => stageSegment(st.id, bundle.stages[st.id]?.status))} />
+            </div>
           </div>
         )}
 
-        <nav aria-label="Project sections" className="-mx-4 overflow-x-auto border-b px-4 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
-          <ul className="flex min-w-max items-end gap-1">
+        <nav aria-label="Project sections" className="relative -mx-5 overflow-x-auto px-5 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
+          <ul className="inline-flex min-w-max items-center gap-1 rounded-[16px] bg-well p-1">
             <FrameTab href={base} active={section === "overview"}>
               Overview
             </FrameTab>
-            {STAGES.map((s) => {
-              const status = bundle?.stages[s.id]?.status;
+            {STAGES.map((st) => {
+              const status = bundle?.stages[st.id]?.status;
               const meta = status ? stageStatusMeta(status) : undefined;
               return (
-                <FrameTab key={s.id} href={`${base}/${s.id}`} active={section === s.id} muted={status === "locked"}>
-                  {meta ? <StatusDot tone={meta.tone} pulse={meta.pulse} size="sm" /> : <span aria-hidden className="size-1.5 rounded-full bg-muted" />}
-                  <span className="font-mono text-[10.5px] text-muted-foreground tabular-nums">{s.n}</span>
-                  {s.title}
+                <FrameTab key={st.id} href={`${base}/${st.id}`} active={section === st.id}>
+                  {meta ? <StatusDot tone={meta.tone} pulse={meta.pulse} size="md" /> : <span aria-hidden className="size-2 rounded-full bg-muted-foreground/30" />}
+                  <span className="font-mono text-xs text-muted-foreground tabular-nums">{st.n}</span>
+                  {st.title}
                   {meta ? <span className="sr-only">({meta.label})</span> : null}
                 </FrameTab>
               );
@@ -140,15 +159,15 @@ export function ProjectFrame({ projectId, children }: { projectId: string; child
   );
 }
 
-function FrameTab({ href, active, muted, children }: { href: string; active: boolean; muted?: boolean; children: ReactNode }) {
+function FrameTab({ href, active, children }: { href: string; active: boolean; children: ReactNode }) {
   return (
     <li>
       <Link
         href={href}
         aria-current={active ? "page" : undefined}
         className={cn(
-          "relative inline-flex h-10 items-center gap-1.5 rounded-t-lg px-3 text-[13px] font-medium whitespace-nowrap transition-colors duration-150 outline-none focus-visible:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
-          active ? "text-foreground after:absolute after:inset-x-2 after:bottom-[-1px] after:h-0.5 after:rounded-full after:bg-primary" : muted ? "text-muted-foreground/70 hover:text-foreground" : "text-muted-foreground hover:text-foreground",
+          "relative inline-flex h-9 items-center gap-2 rounded-[12px] px-3.5 text-sm font-medium whitespace-nowrap transition-[color,background-color,box-shadow] duration-150 outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+          active ? "bg-raised text-heading shadow-(--raised-shadow)" : "text-muted-foreground hover:text-heading",
         )}
       >
         {children}
@@ -161,11 +180,11 @@ function FrameSkeleton({ overview }: { overview: boolean }) {
   return (
     <div className="min-w-0 space-y-2" aria-busy="true" aria-label="Loading the project">
       <div className="flex items-center gap-2">
-        <Skeleton className={cn("w-80 max-w-[70%]", overview ? "h-7" : "h-5")} />
-        <Skeleton className="h-5 w-12" />
-        <Skeleton className="h-5 w-16 rounded-full" />
+        <Skeleton className={cn("w-96 max-w-[70%]", overview ? "h-11" : "h-6")} />
+        <Skeleton className="h-7 w-14 rounded-full" />
+        <Skeleton className="h-7 w-20 rounded-full" />
       </div>
-      {overview ? <Skeleton className="h-4 w-96 max-w-full" /> : null}
+      {overview ? <Skeleton className="h-5 w-[28rem] max-w-full" /> : null}
     </div>
   );
 }

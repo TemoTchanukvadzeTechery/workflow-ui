@@ -15,6 +15,7 @@ import type { DocReviewAnswer } from "@/lib/weft/workflows";
 import { DocViewer } from "../../docs/DocViewer";
 import { DraftReportTabs } from "../../docs/DraftReportTabs";
 import { changedLineCount, TextDiff } from "../../docs/TextDiff";
+import { CircleIconButton, FloatingChip } from "@/components/common";
 import { Notice, TonePill } from "../bits";
 import { BlobContent } from "../BlobContent";
 import { FormRow, PillChoice } from "../controls";
@@ -65,11 +66,8 @@ export function DocReviewForm({ request, run, projectId, compact, onAnswered }: 
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-        <span className="rounded-full bg-muted px-2.5 py-1 font-medium text-foreground">
-          Round {round}
-          {maxRounds ? ` of ${maxRounds}` : ""}
-        </span>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-[13px] text-muted-foreground">
+        <FloatingChip label="Round" value={maxRounds ? `${round} of ${maxRounds}` : String(round)} tone="running" />
         {/* Counts from the question text; the question itself is shown verbatim elsewhere (po-brd main.ts). */}
         {facts.blockingQuestions !== undefined ? <span>{facts.blockingQuestions} blocking {facts.blockingQuestions === 1 ? "question" : "questions"}</span> : null}
         {facts.conflicts !== undefined ? <span>· {facts.conflicts} {facts.conflicts === 1 ? "conflict" : "conflicts"}</span> : null}
@@ -86,11 +84,11 @@ export function DocReviewForm({ request, run, projectId, compact, onAnswered }: 
           <button
             type="button"
             onClick={() => setDocOpen(true)}
-            className="flex w-full items-center gap-2 rounded-xl border border-border px-3 py-2 text-left text-[13px] hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            className="flex min-h-11 w-full items-center gap-2 rounded-[16px] bg-well px-3.5 py-2 text-left text-sm text-heading transition-colors hover:bg-well-hover focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
           >
             <ChevronRight aria-hidden className="size-4" />
             <span className="flex-1">Open {docLabel} to read or edit</span>
-            <span className="font-mono text-[11px] text-muted-foreground">{file.path}</span>
+            <span className="truncate font-mono text-xs text-muted-foreground">{file.path}</span>
           </button>
         ) : (
           <DocViewer
@@ -107,12 +105,11 @@ export function DocReviewForm({ request, run, projectId, compact, onAnswered }: 
             compareText={edited !== undefined && edited !== base ? base : undefined}
             compareLabel="the agent's draft"
             toc={!compact}
+            variant="panel"
             bodyClassName={compact ? "max-h-[50vh]" : "max-h-[70vh]"}
             headerExtra={
               compact ? (
-                <button type="button" onClick={() => setDocOpen(false)} className="text-xs text-muted-foreground hover:text-foreground" aria-label="Collapse document">
-                  <ChevronDown aria-hidden className="size-4" />
-                </button>
+                <CircleIconButton size="sm" icon={ChevronDown} label="Collapse document" onClick={() => setDocOpen(false)} />
               ) : undefined
             }
           />
@@ -121,8 +118,8 @@ export function DocReviewForm({ request, run, projectId, compact, onAnswered }: 
       {original.isError ? <Notice tone="danger" role="alert">Could not load {file?.path}: {original.error.message}</Notice> : null}
 
       {report ? (
-        <section aria-label="Draft report" className="space-y-2">
-          <h4 className="text-[13px] font-medium">Draft report</h4>
+        <section aria-label="Draft report" className="space-y-3">
+          <h4 className="text-sm font-medium text-heading">Draft report</h4>
           <BlobContent blobRef={report.ref}>{(text) => <DraftReportTabs markdown={text} />}</BlobContent>
         </section>
       ) : null}
@@ -142,9 +139,9 @@ export function DocReviewForm({ request, run, projectId, compact, onAnswered }: 
           ]}
         />
         {decision === "accept" ? (
-          <p className="text-xs text-muted-foreground">Accept ends drafting. The workflow then proposes a shared-memory update for you to review.{editedLines > 0 ? " Your edits are saved as the accepted text." : ""}</p>
+          <p className="text-[13px] text-muted-foreground">Accept ends drafting. The workflow then proposes a shared-memory update for you to review.{editedLines > 0 ? " Your edits are saved as the accepted text." : ""}</p>
         ) : decision === "revise" ? (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-[13px] text-muted-foreground">
             Revise runs round {round + 1}
             {lastRound ? ", but this is the last round: the run will end with the document not accepted and memory left unchanged" : ""}.
           </p>
@@ -164,7 +161,7 @@ export function DocReviewForm({ request, run, projectId, compact, onAnswered }: 
 
       {editedLines > 0 && base !== undefined && edited !== undefined ? (
         <div className="space-y-2">
-          <button type="button" onClick={() => setShowEdits((s) => !s)} aria-expanded={showEdits} className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+          <button type="button" onClick={() => setShowEdits((s) => !s)} aria-expanded={showEdits} className="inline-flex h-8 items-center gap-1 rounded-[10px] px-1.5 text-[13px] text-muted-foreground hover:text-heading focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none">
             {showEdits ? <ChevronDown aria-hidden className="size-3.5" /> : <ChevronRight aria-hidden className="size-3.5" />}
             {showEdits ? "Hide my edits" : "Preview my edits"}
           </button>

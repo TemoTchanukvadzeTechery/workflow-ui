@@ -24,16 +24,16 @@ export interface ProjectsTableProps {
 export function ProjectsTable({ rows, showNextStep, className }: ProjectsTableProps) {
   const router = useRouter();
   return (
-    <Table className={cn("text-[13px]", className)}>
+    <Table className={cn("text-sm", className)}>
       <TableHeader>
         <TableRow className="hover:bg-transparent">
-          <TableHead className="pl-5">Project</TableHead>
-          <TableHead className="hidden w-40 sm:table-cell">Stages</TableHead>
+          <TableHead className="pl-5 sm:pl-7">Project</TableHead>
+          <TableHead className="hidden w-44 sm:table-cell">Stages</TableHead>
           <TableHead>Current stage</TableHead>
           <TableHead className="text-right">Waiting</TableHead>
           <TableHead className="hidden md:table-cell">Health</TableHead>
           <TableHead className="hidden text-right lg:table-cell">Spend</TableHead>
-          <TableHead className="hidden pr-5 text-right md:table-cell">Updated</TableHead>
+          <TableHead className="hidden pr-5 text-right sm:pr-7 md:table-cell">Updated</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -50,17 +50,17 @@ export function ProjectsTable({ rows, showNextStep, className }: ProjectsTablePr
                 router.push(href);
               }}
             >
-              <TableCell className="max-w-[18rem] py-2.5 pl-5 sm:max-w-[22rem]">
+              <TableCell className="max-w-[18rem] py-3 pl-5 sm:max-w-[24rem] sm:pl-7">
                 <div className="flex min-w-0 items-baseline gap-2">
-                  <Link href={href} className="min-w-0 truncate font-medium text-foreground underline-offset-2 hover:underline focus-visible:underline focus-visible:outline-none">
+                  <Link href={href} className="min-w-0 truncate font-medium text-heading underline-offset-2 hover:underline focus-visible:underline focus-visible:outline-none">
                     {p.name}
                   </Link>
-                  <span className="shrink-0 font-mono text-[11px] text-muted-foreground">{p.key}</span>
+                  <span className="shrink-0 font-mono text-xs text-muted-foreground">{p.key}</span>
                 </div>
-                {showNextStep && p.nextStep ? <div className="mt-0.5 truncate text-xs text-muted-foreground">{p.nextStep}</div> : null}
+                {showNextStep && p.nextStep ? <div className="mt-1 truncate text-[13px] text-muted-foreground">{p.nextStep}</div> : null}
               </TableCell>
               <TableCell className="hidden sm:table-cell">
-                <SegmentBar size="sm" segments={stageSegments(p.stageStatuses)} />
+                <SegmentBar size="md" segments={stageSegments(p.stageStatuses)} />
               </TableCell>
               <TableCell>
                 <div className="flex min-w-0 items-center gap-2">
@@ -76,9 +76,9 @@ export function ProjectsTable({ rows, showNextStep, className }: ProjectsTablePr
                 {p.done ? <span className="text-muted-foreground">-</span> : <HealthPill health={p.health} reason={p.healthReason} variant="plain" />}
               </TableCell>
               <TableCell className="hidden text-right lg:table-cell">
-                <Money usd={p.spendUsd} />
+                <Money usd={p.spendUsd} className="text-heading" />
               </TableCell>
-              <TableCell className="hidden pr-5 text-right text-muted-foreground md:table-cell">
+              <TableCell className="hidden pr-5 text-right text-muted-foreground sm:pr-7 md:table-cell">
                 <RelativeTime at={p.updatedAt} />
               </TableCell>
             </TableRow>

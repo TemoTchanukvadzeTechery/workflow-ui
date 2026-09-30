@@ -181,7 +181,7 @@ export function PlanEditor({ tasks, onChange, proposal, epics, repos, disabled }
               Filter by epic
             </label>
             <Select value={epicFilter} onValueChange={setEpicFilter}>
-              <SelectTrigger id={filterId} size="sm" className="max-w-full min-w-40 rounded-full">
+              <SelectTrigger id={filterId} size="sm" className="max-w-full min-w-40">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -199,7 +199,6 @@ export function PlanEditor({ tasks, onChange, proposal, epics, repos, disabled }
           <Button
             size="sm"
             variant="ghost"
-            className="rounded-full"
             disabled={disabled}
             onClick={() => {
               const before = tasks;
@@ -231,31 +230,31 @@ export function PlanEditor({ tasks, onChange, proposal, epics, repos, disabled }
               }
             }}
             onDrop={(e) => onDropAt(e, wave, drop?.wave === wave ? drop.before : null)}
-            className={cn("rounded-2xl border border-border bg-card transition-colors", dragId && "border-dashed", dropHere && drop?.before === null && "border-primary bg-primary-soft/40")}
+            className={cn("rounded-[20px] bg-well p-1.5 transition-[background-color,box-shadow]", dragId && "shadow-[inset_0_0_0_1.5px_var(--circle-border)]", dropHere && drop?.before === null && "bg-status-running-bg shadow-[inset_0_0_0_1.5px_var(--ring)]")}
           >
             <header
-              className="flex items-center gap-2 border-b border-border px-3 py-2"
+              className="flex min-h-10 items-center gap-2 py-1 pr-1 pl-2.5"
               onDragOver={(e) => {
                 if (!dragId) return;
                 e.preventDefault();
                 setDrop({ wave, before: lane[0]?.id ?? null });
               }}
             >
-              <h3 className="text-[13px] font-medium">Wave {wave}</h3>
-              <span className="text-xs text-muted-foreground tabular-nums">
+              <h3 className="text-[13px] font-medium text-heading">Wave {wave}</h3>
+              <span className="text-[13px] text-muted-foreground tabular-nums">
                 {epicFilter !== ALL ? `${shown.length} of ${lane.length}` : plural(lane.length, "task")}
               </span>
-              {wave > 1 ? <span className="hidden text-xs text-muted-foreground @md:inline">· starts after Wave {wave - 1} tasks it depends on</span> : null}
+              {wave > 1 ? <span className="hidden text-[13px] text-muted-foreground @md:inline">· starts after Wave {wave - 1} tasks it depends on</span> : null}
               <span className="flex-1" />
-              <Button size="sm" variant="ghost" className="h-7 rounded-full" onClick={() => add(wave)} disabled={disabled}>
+              <Button size="sm" variant="ghost" onClick={() => add(wave)} disabled={disabled}>
                 <Plus aria-hidden />
                 Add task
               </Button>
             </header>
-            <ol className="flex flex-col">
+            <ol className="flex flex-col gap-1.5">
               {shown.length === 0 ? (
                 <li
-                  className="px-3 py-5 text-center text-xs text-muted-foreground"
+                  className="rounded-[14px] border border-dashed border-circle-border px-3 py-5 text-center text-[13px] text-muted-foreground"
                   onDragOver={(e) => {
                     if (!dragId) return;
                     e.preventDefault();
@@ -333,7 +332,7 @@ export function PlanEditor({ tasks, onChange, proposal, epics, repos, disabled }
           if (id) onChange(moveTask(tasks, id, (waves.at(-1) ?? 0) + 1));
           onDragEnd();
         }}
-        className="flex items-center justify-center gap-1.5 rounded-2xl border border-dashed border-border px-3 py-2.5 text-xs text-muted-foreground transition-colors outline-none hover:bg-muted/50 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+        className="flex min-h-11 items-center justify-center gap-1.5 rounded-[20px] border border-dashed border-circle-border px-3 py-2.5 text-[13px] text-muted-foreground transition-colors outline-none hover:bg-foreground/[0.03] hover:text-heading focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
       >
         <Plus aria-hidden className="size-3.5" />
         {dragId ? `Drop here to start Wave ${(waves.at(-1) ?? 0) + 1}` : `Add Wave ${(waves.at(-1) ?? 0) + 1}`}
@@ -381,11 +380,11 @@ function PlanRow(props: PlanRowProps) {
       onDragStart={props.onDragStart}
       onDragEnd={props.onDragEnd}
       onDragOver={props.onDragOverRow}
-      className={cn("relative border-b border-border last:border-b-0", dragging && "opacity-40", editing && "bg-muted/30")}
+      className={cn("relative rounded-[14px] bg-raised shadow-(--raised-shadow)", dragging && "opacity-40", editing && "shadow-[var(--raised-shadow),0_0_0_1.5px_var(--circle-border)]")}
       aria-label={`${t.id} ${t.title || "untitled"}`}
     >
-      {dropBefore ? <span aria-hidden className="absolute inset-x-2 -top-px h-0.5 rounded-full bg-primary" /> : null}
-      <div className="flex items-start gap-1.5 px-2 py-2">
+      {dropBefore ? <span aria-hidden className="absolute inset-x-2 -top-1 h-0.5 rounded-full bg-primary" /> : null}
+      <div className="flex items-start gap-1.5 px-2.5 py-2.5">
         <span aria-hidden title="Drag to reorder or move to another wave" className={cn("mt-0.5 hidden cursor-grab text-muted-foreground/60 @md:pointer-fine:inline-flex", (editing || disabled) && "invisible")}>
           <GripVertical className="size-4" />
         </span>
@@ -395,14 +394,14 @@ function PlanRow(props: PlanRowProps) {
           aria-expanded={expanded}
           aria-controls={acsId}
           aria-label={`${expanded ? "Collapse" : "Expand"} ${t.id}`}
-          className="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          className="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-foreground/[0.05] hover:text-heading focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
         >
           {expanded ? <ChevronDown aria-hidden className="size-4" /> : <ChevronRight aria-hidden className="size-4" />}
         </button>
         <div className="min-w-0 flex-1 space-y-1.5">
           <div className="flex items-start gap-2">
-            <span className="mt-px shrink-0 font-mono text-xs text-muted-foreground">{t.id}</span>
-            <span className="min-w-0 flex-1 text-[13px] leading-snug font-medium">{t.title ? <ScopedTitle title={t.title} /> : <span className="text-muted-foreground italic">Untitled task</span>}</span>
+            <span className="mt-px shrink-0 font-mono text-xs font-medium text-heading">{t.id}</span>
+            <span className="min-w-0 flex-1 text-sm leading-5 font-medium text-heading">{t.title ? <ScopedTitle title={t.title} /> : <span className="text-muted-foreground italic">Untitled task</span>}</span>
             <SizeChip size={t.size} />
           </div>
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -414,22 +413,22 @@ function PlanRow(props: PlanRowProps) {
               onClick={props.onToggle}
               aria-expanded={expanded}
               aria-controls={acsId}
-              className="inline-flex h-5 items-center gap-1 rounded-md px-1 text-[11px] text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+              className="inline-flex h-6 items-center gap-1 rounded-full px-2 text-xs text-muted-foreground hover:bg-foreground/[0.05] hover:text-heading focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
             >
               {plural(t.acceptanceCriteria.length, "AC")}
             </button>
-            {t.blockedBy ? <span className="text-[11px] text-status-attention-fg">Blocked by {t.blockedBy}</span> : null}
+            {t.blockedBy ? <span className="text-xs text-status-attention-fg">Blocked by {t.blockedBy}</span> : null}
           </div>
           {errors.length || warnings.length ? (
             <ul className="space-y-0.5">
               {errors.map((i) => (
-                <li key={i.text} className="flex items-center gap-1 text-[11px] text-status-danger-fg">
+                <li key={i.text} className="flex items-center gap-1 text-xs text-status-danger-fg">
                   <CircleAlert aria-hidden className="size-3" />
                   {t.id} {i.text}
                 </li>
               ))}
               {warnings.map((i) => (
-                <li key={i.text} className="flex items-center gap-1 text-[11px] text-status-attention-fg">
+                <li key={i.text} className="flex items-center gap-1 text-xs text-status-attention-fg">
                   <TriangleAlert aria-hidden className="size-3" />
                   {t.id} {i.text}
                 </li>
@@ -481,7 +480,7 @@ function PlanRow(props: PlanRowProps) {
       </div>
 
       {expanded ? (
-        <div id={acsId} className="px-2 pb-3 @md:pl-[3.25rem]">
+        <div id={acsId} className="px-2.5 pb-3 @md:pl-[3.4rem]">
           {editing ? (
             <RowEditor task={t} tasks={tasks} epics={epics} waves={waves} repos={props.repos} onPatch={props.onPatch} onDone={() => props.onEdit(false)} />
           ) : (
@@ -490,7 +489,7 @@ function PlanRow(props: PlanRowProps) {
               <ul className="space-y-1">
                 {t.acceptanceCriteria.map((ac) => (
                   <li key={ac.id} className="flex gap-2">
-                    <span className="shrink-0 font-mono text-[11px] leading-5 text-muted-foreground">{ac.id}</span>
+                    <span className="shrink-0 font-mono text-xs leading-5 text-muted-foreground">{ac.id}</span>
                     <span className="leading-5">{ac.text || <span className="text-muted-foreground italic">empty</span>}</span>
                   </li>
                 ))}
@@ -532,16 +531,16 @@ function RowEditor({
   const others = tasks.filter((x) => x.id !== t.id);
 
   return (
-    <div className="space-y-3 rounded-xl border border-border bg-card p-3">
+    <div className="space-y-3 rounded-[14px] bg-well p-3.5">
       <div className="grid gap-3 @lg:grid-cols-[minmax(0,1fr)_minmax(0,14rem)]">
         <div className="space-y-1.5">
-          <label htmlFor={`${base}-title`} className="text-xs font-medium">
+          <label htmlFor={`${base}-title`} className="text-[13px] font-medium text-heading">
             Title
           </label>
           <Input id={`${base}-title`} value={t.title} onChange={(e) => onPatch({ title: e.target.value })} placeholder="[repo] What this task delivers" aria-invalid={!t.title.trim() || undefined} autoFocus />
         </div>
         <div className="space-y-1.5">
-          <label htmlFor={`${base}-repo`} className="text-xs font-medium">
+          <label htmlFor={`${base}-repo`} className="text-[13px] font-medium text-heading">
             Repo
           </label>
           <Input id={`${base}-repo`} list={listId} value={t.repo} onChange={(e) => onPatch({ repo: e.target.value })} className="font-mono text-xs" aria-invalid={!t.repo.trim() || undefined} />
@@ -555,7 +554,7 @@ function RowEditor({
 
       <div className="grid grid-cols-2 gap-3 @lg:grid-cols-4">
         <div className="space-y-1.5">
-          <span id={`${base}-size`} className="text-xs font-medium">
+          <span id={`${base}-size`} className="text-[13px] font-medium text-heading">
             Size
           </span>
           <Select value={t.size} onValueChange={(v) => onPatch({ size: v as PlannedTask["size"] })}>
@@ -572,7 +571,7 @@ function RowEditor({
           </Select>
         </div>
         <div className="space-y-1.5">
-          <span id={`${base}-wave`} className="text-xs font-medium">
+          <span id={`${base}-wave`} className="text-[13px] font-medium text-heading">
             Wave
           </span>
           <Select value={String(t.wave)} onValueChange={(v) => onPatch({ wave: Number(v) })}>
@@ -590,7 +589,7 @@ function RowEditor({
           </Select>
         </div>
         <div className="col-span-2 space-y-1.5">
-          <span id={`${base}-epic`} className="text-xs font-medium">
+          <span id={`${base}-epic`} className="text-[13px] font-medium text-heading">
             Epic
           </span>
           <Select value={t.epicId || "__none"} onValueChange={(v) => onPatch({ epicId: v === "__none" ? "" : v })}>
@@ -610,7 +609,7 @@ function RowEditor({
       </div>
 
       <div className="space-y-1.5">
-        <label htmlFor={`${base}-desc`} className="text-xs font-medium">
+        <label htmlFor={`${base}-desc`} className="text-[13px] font-medium text-heading">
           Description
         </label>
         <Textarea id={`${base}-desc`} rows={3} value={t.description} onChange={(e) => onPatch({ description: e.target.value })} />
@@ -618,7 +617,7 @@ function RowEditor({
 
       {others.length > 0 ? (
         <div className="space-y-1.5">
-          <span className="text-xs font-medium">Depends on</span>
+          <span className="text-[13px] font-medium text-heading">Depends on</span>
           <ChipToggles
             ariaLabel={`${t.id} depends on`}
             values={t.dependencies}
@@ -629,7 +628,7 @@ function RowEditor({
       ) : null}
 
       <div className="space-y-1.5">
-        <label htmlFor={`${base}-traces`} className="text-xs font-medium">
+        <label htmlFor={`${base}-traces`} className="text-[13px] font-medium text-heading">
           Traces <span className="font-normal text-muted-foreground">comma separated, e.g. BR-3, FR3</span>
         </label>
         <Input
@@ -644,12 +643,12 @@ function RowEditor({
       </div>
 
       <fieldset className="space-y-1.5">
-        <legend className="mb-1.5 text-xs font-medium">Acceptance criteria</legend>
+        <legend className="mb-1.5 text-[13px] font-medium text-heading">Acceptance criteria</legend>
         <ol className="space-y-1.5">
           {t.acceptanceCriteria.map((ac, i) => (
             <li key={i} className="flex items-center gap-2">
-              <span className="w-10 shrink-0 font-mono text-[11px] text-muted-foreground">AC-{i + 1}</span>
-              <Input value={ac.text} onChange={(e) => setAc(i, e.target.value)} aria-label={`${t.id} AC-${i + 1}`} aria-invalid={!ac.text.trim() || undefined} className="h-8 text-[13px]" />
+              <span className="w-10 shrink-0 font-mono text-xs text-muted-foreground">AC-{i + 1}</span>
+              <Input value={ac.text} onChange={(e) => setAc(i, e.target.value)} aria-label={`${t.id} AC-${i + 1}`} aria-invalid={!ac.text.trim() || undefined} className="h-9 text-sm" />
               <Button
                 size="icon-xs"
                 variant="ghost"
@@ -664,7 +663,6 @@ function RowEditor({
         <Button
           size="sm"
           variant="ghost"
-          className="h-7 rounded-full"
           onClick={() => onPatch({ acceptanceCriteria: renumberAcs([...t.acceptanceCriteria, { id: "", text: "" }]) })}
         >
           <Plus aria-hidden />
@@ -673,7 +671,7 @@ function RowEditor({
       </fieldset>
 
       <div className="flex justify-end">
-        <Button size="sm" className="rounded-full" onClick={onDone}>
+        <Button size="sm" onClick={onDone}>
           Done
         </Button>
       </div>

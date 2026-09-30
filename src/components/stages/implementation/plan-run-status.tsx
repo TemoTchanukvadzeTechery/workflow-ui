@@ -50,7 +50,7 @@ export function PlanRunStatus({ runId, className }: { runId: string; className?:
   const q = useRun(runId);
   if (q.isPending) {
     return (
-      <div className={cn("card-surface space-y-3 rounded-2xl p-4", className)} aria-busy="true">
+      <div className={cn("card-surface space-y-3 rounded-2xl p-5", className)} aria-busy="true">
         <Skeleton className="h-4 w-48" />
         <Skeleton className="h-8 w-full" />
       </div>
@@ -68,26 +68,26 @@ export function PlanRunStatus({ runId, className }: { runId: string; className?:
   return (
     <SectionCard
       density="dense"
-      kicker="dev-plan"
       title={title}
+      description="dev-plan"
       className={className}
       actions={<RunChip runId={run.runId} workflow={run.workflow} status={run.status} />}
     >
       <div className="space-y-3">
-        <ol className="flex flex-wrap items-center gap-1.5" aria-label="Run phases">
+        <ol className="flex flex-wrap items-center gap-1.5 rounded-[16px] bg-well p-1.5" aria-label="Run phases">
           {phases.map((p, i) => {
             const Icon = PHASE_ICON[p.state];
             return (
               <li key={p.name} className="flex items-center gap-1.5">
-                {i > 0 ? <span aria-hidden className="h-px w-4 bg-border" /> : null}
+                {i > 0 ? <span aria-hidden className="h-px w-3 bg-circle-border" /> : null}
                 <span
                   className={cn(
-                    "inline-flex h-7 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium",
+                    "inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[13px] font-medium",
                     p.state === "done" && "bg-status-success-bg text-status-success-fg",
                     p.state === "running" && "bg-status-running-bg text-status-running-fg",
                     p.state === "waiting" && "bg-status-attention-bg text-status-attention-fg",
                     p.state === "failed" && "bg-status-danger-bg text-status-danger-fg",
-                    p.state === "todo" && "bg-muted text-muted-foreground",
+                    p.state === "todo" && "bg-raised text-muted-foreground shadow-(--raised-shadow)",
                   )}
                 >
                   {p.state === "running" ? <StatusDot tone="running" pulse size="sm" /> : <Icon aria-hidden className="size-3.5" />}
@@ -99,8 +99,8 @@ export function PlanRunStatus({ runId, className }: { runId: string; className?:
           })}
           {!terminal && !waiting ? (
             <li className="flex items-center gap-1.5">
-              <span aria-hidden className="h-px w-4 bg-border" />
-              <span className="inline-flex h-7 items-center gap-1.5 rounded-full border border-dashed border-border px-2.5 text-xs text-muted-foreground">
+              <span aria-hidden className="h-px w-3 bg-circle-border" />
+              <span className="inline-flex h-8 items-center gap-1.5 rounded-full border border-dashed border-circle-border px-3 text-[13px] text-muted-foreground">
                 <UserRound aria-hidden className="size-3.5" />
                 Your review
               </span>
@@ -109,18 +109,18 @@ export function PlanRunStatus({ runId, className }: { runId: string; className?:
         </ol>
 
         {running ? (
-          <p className="flex min-w-0 items-center gap-2 text-[13px]" aria-live="polite">
+          <p className="flex min-w-0 items-center gap-2 text-sm" aria-live="polite">
             <StatusDot tone="running" pulse />
             <span className="min-w-0 truncate">{planStepText(running)}</span>
             <Elapsed since={running.startedAt} className="ml-auto shrink-0 font-mono text-xs text-muted-foreground" />
           </p>
         ) : waiting ? (
-          <p className="text-[13px] text-muted-foreground">The run is paused until you approve the plan or ask for a revision.</p>
+          <p className="text-sm text-muted-foreground">The run is paused until you approve the plan or ask for a revision.</p>
         ) : run.status === "failed" ? (
-          <p className="text-[13px] text-status-danger-fg">{run.error?.message ?? "The run failed."}</p>
+          <p className="text-sm text-status-danger-fg">{run.error?.message ?? "The run failed."}</p>
         ) : null}
 
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-muted-foreground">
           <StatusPill {...meta} size="sm" />
           <span className="tabular-nums">{plural(run.steps.length, "step")}</span>
           <span className="font-mono tabular-nums">

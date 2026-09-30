@@ -90,8 +90,8 @@ export function ItemIcon({ item, className }: { item: InboxItem; className?: str
   const { icon: Icon, tone } = itemIcon(item);
   const t = toneClasses(tone);
   return (
-    <span aria-hidden className={cn("inline-flex size-7 shrink-0 items-center justify-center rounded-full", t.bg, t.text, className)}>
-      <Icon className="size-3.5" strokeWidth={2} />
+    <span aria-hidden className={cn("inline-flex size-9 shrink-0 items-center justify-center rounded-full", t.bg, t.text, className)}>
+      <Icon className="size-4" strokeWidth={1.9} />
     </span>
   );
 }
@@ -115,7 +115,7 @@ export function WaitingFor({ since, prefix, className }: { since: number; prefix
 /** The mono "workflow · runId · phase" line of a human item. */
 export function RunLine({ item, className }: { item: Extract<InboxItem, { kind: "human" }>; className?: string }) {
   return (
-    <span className={cn("block truncate font-mono text-[11px] text-muted-foreground", className)}>
+    <span className={cn("block truncate font-mono text-xs text-muted-foreground", className)}>
       {item.entry.workflow} · {item.entry.runId}
       {item.phase ? ` · ${item.phase}` : ""}
       {item.key ? ` · ${item.key}` : ""}

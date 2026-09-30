@@ -10,6 +10,7 @@ import Link from "next/link";
 import { EmptyState, SectionCard, StatusPill } from "@/components/common";
 import { Markdown } from "@/components/docs";
 import { Notice, parseChangeItem } from "@/components/hitl";
+import { Button } from "@/components/ui/button";
 import type { DocumentArtifact, ProjectBundle } from "@/lib/delivery/types";
 import type { RunDetail } from "@/lib/weft/types";
 import { hasOpenRequest, InlineRequests } from "./InlineRequests";
@@ -33,14 +34,14 @@ export interface MemoryPanelProps {
 }
 
 export function ChangeList({ changes }: { changes: string[] }) {
-  if (changes.length === 0) return <p className="rounded-lg bg-muted/50 px-3 py-4 text-center text-[13px] text-muted-foreground">No changes.</p>;
+  if (changes.length === 0) return <p className="rounded-[16px] bg-well/60 px-4 py-6 text-center text-[13px] text-muted-foreground">No changes.</p>;
   return (
-    <ul className="@container space-y-1.5">
+    <ul className="@container divide-y divide-rule border-y border-rule">
       {changes.map((item, i) => {
         const c = parseChangeItem(item);
         return (
-          <li key={i} className="flex flex-col gap-1 rounded-lg border border-border px-3 py-2 @lg:flex-row @lg:items-start @lg:gap-3">
-            {c.kind ? <span className="inline-flex h-5 w-fit shrink-0 items-center rounded-full bg-muted px-2 font-mono text-[11px] text-muted-foreground">{c.kind}</span> : null}
+          <li key={i} className="flex flex-col gap-1.5 px-1 py-3 @lg:flex-row @lg:items-start @lg:gap-3">
+            {c.kind ? <span className="inline-flex h-6 w-fit shrink-0 items-center rounded-full bg-status-neutral-bg px-2.5 font-mono text-[11.5px] text-status-neutral-fg">{c.kind}</span> : null}
             <Markdown source={c.summary} size="sm" className="[&_p]:my-0" />
           </li>
         );
@@ -61,7 +62,7 @@ export function MemoryPanel({ projectId, bundle, kind, doc, runId, run, runPendi
       {running && runId ? <RunProgress runId={runId} run={run} isPending={runPending} error={runError} onRetry={onRetry} docLabel={label} compact /> : null}
       {reviewing && runId ? (
         <>
-          <p className="text-[13px] text-muted-foreground">
+          <p className="px-1 text-sm text-muted-foreground">
             You accepted the {label}. Before the run finishes (and the {label} is marked accepted), the agent proposes an update to the shared memory, memory/memory.md, so future BRD and AAD runs see what this {label} settled. Nothing is written until you apply it.
           </p>
           <InlineRequests projectId={projectId} runId={runId} run={run} prefix="memory:review" focus={focus} onAnswered={onAnswered} memoryStale={memory?.stale} />
@@ -72,17 +73,19 @@ export function MemoryPanel({ projectId, bundle, kind, doc, runId, run, runPendi
           title="Shared memory update"
           description={`From the ${label} run${runId ? ` ${runId}` : ""}. Memory is shared by every BRD and AAD run.`}
           actions={memDoc ? (
-            <Link href={`/projects/${encodeURIComponent(projectId)}/docs/${encodeURIComponent(memDoc.id)}`} className="inline-flex h-7 items-center gap-1 rounded-full px-2 text-xs font-medium text-primary hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
-              <History aria-hidden className="size-3.5" />
-              Open memory
-            </Link>
+            <Button asChild variant="secondary" size="sm">
+              <Link href={`/projects/${encodeURIComponent(projectId)}/docs/${encodeURIComponent(memDoc.id)}`}>
+                <History aria-hidden />
+                Open memory
+              </Link>
+            </Button>
           ) : null}
         >
           <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-2">
               <StatusPill status={{ kind: "memory", value: memory.status }} />
               {memory.status !== "skipped" && memory.status !== "unchanged" ? <StatusPill tone={memory.major ? "attention" : "neutral"} icon={null} label={memory.major ? "Major update" : "Minor update"} /> : null}
-              <span className="text-xs text-muted-foreground">
+              <span className="text-[13px] text-muted-foreground">
                 {memory.status === "updated"
                   ? "Applied: future runs read it."
                   : memory.status === "discarded"
@@ -95,7 +98,7 @@ export function MemoryPanel({ projectId, bundle, kind, doc, runId, run, runPendi
             {memory.stale.length > 0 ? (
               <Notice tone="attention" icon={TriangleAlert}>
                 <p className="font-medium">Recorded documents changed since memory was written</p>
-                <ul className="mt-1 list-disc pl-4 text-xs">
+                <ul className="mt-1 list-disc pl-4">
                   {memory.stale.map((s) => (
                     <li key={s}>{s}</li>
                   ))}
@@ -104,7 +107,9 @@ export function MemoryPanel({ projectId, bundle, kind, doc, runId, run, runPendi
             ) : null}
             {memory.changes.length > 0 ? (
               <div className="space-y-1.5">
-                <h4 className="text-xs font-medium text-muted-foreground">Changes ({memory.changes.length})</h4>
+                <h4 className="text-sm font-medium text-heading">
+                  Changes <span className="font-normal text-muted-foreground tabular-nums">{memory.changes.length}</span>
+                </h4>
                 <ChangeList changes={memory.changes} />
               </div>
             ) : null}

@@ -37,39 +37,42 @@ export function isRepoName(name: string): boolean {
   return /^[a-z0-9]+(?:-[a-z0-9]+)+$/.test(name);
 }
 
+/** A nested 20px panel on the card: the well surface (STYLE.md 1). */
+const TILE = "flex min-w-0 flex-col gap-2 rounded-[20px] bg-well p-4";
+
 function DocTile({ projectId, label, icon: Icon, doc, facts, imported }: { projectId: string; label: string; icon: typeof FileText; doc?: DocWithExtras; facts: string[]; imported?: boolean }) {
   const version = doc?.versions.at(-1)?.n;
   return (
-    <div className="flex min-w-0 flex-col gap-2 rounded-xl bg-muted/50 p-3">
+    <div className={TILE}>
       <div className="flex items-center gap-2">
         <Icon aria-hidden className="size-4 text-muted-foreground" />
-        <span className="text-[13px] font-medium">
+        <span className="text-[15px] font-medium text-heading">
           {label}
-          {version ? <span className="font-mono text-xs text-muted-foreground"> v{version}</span> : null}
+          {version ? <span className="text-[13px] font-normal text-muted-foreground"> v{version}</span> : null}
         </span>
         <span className="flex-1" />
         {doc ? <StatusPill status={{ kind: "doc", value: doc.status }} size="sm" /> : <StatusPill tone="neutral" label="Missing" size="sm" icon={null} />}
       </div>
       {doc ? (
         <>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-[13px] text-muted-foreground">
             {doc.status === "accepted" && doc.acceptedBy ? `Accepted by ${actorText(doc.acceptedBy)}` : doc.status === "accepted" ? "Accepted" : "Not accepted yet"}
             {imported ? " · imported" : ""}
           </p>
           {facts.length > 0 ? (
-            <ul className="space-y-0.5 text-xs text-foreground">
+            <ul className="space-y-0.5 text-[13px] leading-5 text-foreground">
               {facts.map((f) => (
                 <li key={f}>{f}</li>
               ))}
             </ul>
           ) : null}
-          <Link href={docHref(projectId, doc)} className="mt-auto inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
+          <Link href={docHref(projectId, doc)} className="mt-auto inline-flex items-center gap-1 pt-1 text-[13px] font-medium text-primary hover:underline focus-visible:rounded-sm focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none">
             Open {label}
             <ArrowUpRight aria-hidden className="size-3.5" />
           </Link>
         </>
       ) : (
-        <p className="text-xs text-muted-foreground">Accept it in its stage first.</p>
+        <p className="text-[13px] text-muted-foreground">Accept it in its stage first.</p>
       )}
     </div>
   );
@@ -89,12 +92,11 @@ export function PlanInputs({ projectId, bundle, compact }: { projectId: string; 
   return (
     <SectionCard
       density="dense"
-      kicker="Inputs"
       title="What the planner reads"
       description={compact ? undefined : "dev-plan reads the accepted documents, your developer notes and the accepted epics, then proposes tasks in waves. Nothing starts until you approve the plan."}
     >
       <div className="@container">
-        <div className="grid gap-2 @xl:grid-cols-3">
+        <div className="grid gap-3 @xl:grid-cols-3">
           <DocTile
             projectId={projectId}
             label="BRD"
@@ -111,26 +113,26 @@ export function PlanInputs({ projectId, bundle, compact }: { projectId: string; 
             imported={!!bundle.project.stages.architecture.imported}
             facts={[aad?.frs?.length ? plural(aad.frs.length, "functional requirement") : "", changed !== undefined ? `${plural(changed, "system")} changed` : "", aadOpen ? plural(aadOpen, "open question") : ""].filter(Boolean)}
           />
-          <div className="flex min-w-0 flex-col gap-2 rounded-xl bg-muted/50 p-3">
+          <div className={TILE}>
             <div className="flex items-center gap-2">
               <Layers aria-hidden className="size-4 text-muted-foreground" />
-              <span className="text-[13px] font-medium">Epics</span>
-              <span className="font-mono text-xs text-muted-foreground tabular-nums">{usable.length}</span>
+              <span className="text-[15px] font-medium text-heading">Epics</span>
+              <span className="text-[13px] text-muted-foreground tabular-nums">{usable.length}</span>
               <span className="flex-1" />
               {usable.length > 0 && usable.every((e) => e.status !== "draft") ? <StatusPill status={{ kind: "epic", value: synced === usable.length ? "synced" : "accepted" }} size="sm" /> : null}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[13px] text-muted-foreground">
               {synced ? `${synced} created in Jira (mock)` : "Not created in Jira yet"}
               {parked.length ? ` · ${parked.length} parked` : ""}
             </p>
             <ul className="flex flex-col gap-1">
               {usable.slice(0, 5).map((e) => (
-                <li key={e.id} className="flex min-w-0 items-baseline gap-1.5 text-xs">
-                  <span className="shrink-0 font-mono text-[11px] text-muted-foreground">{e.key ?? e.id}</span>
+                <li key={e.id} className="flex min-w-0 items-baseline gap-1.5 text-[13px]">
+                  <span className="shrink-0 font-mono text-xs text-muted-foreground">{e.key ?? e.id}</span>
                   <span className="truncate">{e.title}</span>
                 </li>
               ))}
-              {usable.length > 5 ? <li className="text-xs text-muted-foreground">+{usable.length - 5} more</li> : null}
+              {usable.length > 5 ? <li className="text-[13px] text-muted-foreground">+{usable.length - 5} more</li> : null}
             </ul>
           </div>
         </div>
@@ -179,16 +181,15 @@ export function SystemRepoMap({ bundle }: { bundle: ProjectBundle }) {
   return (
     <SectionCard
       density="dense"
-      kicker="Read-only"
       title="Systems and repos"
-      description="From the AAD's system changes and the epics. Tasks are planned per repo."
+      description="Read-only. From the AAD's system changes and the epics; tasks are planned per repo."
       actions={
         unchanged.length > 0 ? (
           <button
             type="button"
             onClick={() => setShowAll((s) => !s)}
             aria-expanded={showAll}
-            className="rounded-full px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            className="inline-flex h-8 items-center rounded-[12px] bg-well px-3 text-[13px] text-heading hover:bg-well-hover focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
           >
             {showAll ? "Hide unchanged" : `+${unchanged.length} unchanged`}
           </button>
@@ -197,39 +198,39 @@ export function SystemRepoMap({ bundle }: { bundle: ProjectBundle }) {
       flush
     >
       <div className="relative overflow-x-auto">
-        <table className="w-full min-w-[620px] border-collapse text-[13px]">
-          <thead className="text-left text-xs text-muted-foreground">
-            <tr className="border-y border-border">
-              <th scope="col" className="w-56 px-4 py-2 font-medium">
+        <table className="w-full min-w-[620px] border-collapse text-sm">
+          <thead className="text-left text-[13px] text-muted-foreground">
+            <tr className="h-11 border-y border-rule">
+              <th scope="col" className="w-56 px-5 py-2 font-normal">
                 System
               </th>
-              <th scope="col" className="px-3 py-2 font-medium">
+              <th scope="col" className="px-3 py-2 font-normal">
                 Change (AAD)
               </th>
-              <th scope="col" className="w-48 px-3 py-2 font-medium">
+              <th scope="col" className="w-48 px-3 py-2 font-normal">
                 Repo
               </th>
-              <th scope="col" className="w-28 px-4 py-2 text-right font-medium">
+              <th scope="col" className="w-32 px-5 py-2 text-right font-normal whitespace-nowrap">
                 Epics · tasks
               </th>
             </tr>
           </thead>
           <tbody>
             {shown.map((r) => (
-              <tr key={r.system} className={cn("border-b border-border align-top last:border-b-0", !r.changed && "text-muted-foreground")}>
-                <th scope="row" className="px-4 py-2 text-left font-medium">
+              <tr key={r.system} className={cn("h-12 border-b border-rule align-top transition-colors last:border-b-0 hover:bg-foreground/[0.025]", !r.changed && "text-muted-foreground")}>
+                <th scope="row" className="px-5 py-3 text-left font-medium text-heading">
                   <div className="flex flex-col gap-0.5">
                     <span className={cn(isRepoName(r.system) && "font-mono text-xs")}>{r.system}</span>
-                    <span className="text-[11px] font-normal text-muted-foreground">{r.status}</span>
+                    <span className="text-xs font-normal text-muted-foreground">{r.status}</span>
                   </div>
                 </th>
-                <td className="px-3 py-2 text-xs leading-relaxed">
+                <td className="px-3 py-3 text-[13px] leading-5">
                   <span className="line-clamp-2" title={r.change || undefined}>
                     {r.change || <span className="text-muted-foreground">-</span>}
                   </span>
                 </td>
-                <td className="px-3 py-2">{isRepoName(r.system) ? <RepoChip repo={r.system} /> : <span className="text-xs text-muted-foreground">No code repo</span>}</td>
-                <td className="px-4 py-2 text-right font-mono text-xs tabular-nums">
+                <td className="px-3 py-3">{isRepoName(r.system) ? <RepoChip repo={r.system} /> : <span className="text-[13px] text-muted-foreground">No code repo</span>}</td>
+                <td className="px-5 py-3 text-right text-[13px] tabular-nums">
                   {r.epics.length} · {r.tasks.length}
                 </td>
               </tr>

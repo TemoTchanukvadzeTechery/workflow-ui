@@ -109,7 +109,7 @@ function NumberInput({ label, value, min, max, onChange, disabled, hint }: { lab
   const id = useId();
   return (
     <div className="space-y-1">
-      <label htmlFor={id} className="block text-xs font-medium">
+      <label htmlFor={id} className="block text-[13px] font-medium text-heading">
         {label}
       </label>
       <Input
@@ -124,7 +124,7 @@ function NumberInput({ label, value, min, max, onChange, disabled, hint }: { lab
         disabled={disabled}
         className="block w-28"
       />
-      <p className="text-[11px] text-muted-foreground">{hint ?? `${min} to ${max}`}</p>
+      <p className="text-xs text-muted-foreground">{hint ?? `${min} to ${max}`}</p>
     </div>
   );
 }
@@ -140,18 +140,18 @@ function NotesToSend({ notes, docLabels }: { notes: StageNote[]; docLabels: Reco
   const unsent = notes.filter((n) => !n.sentToRunId);
   return (
     <div className="space-y-1.5">
-      <h4 className="text-xs font-medium">
+      <h4 className="text-sm font-medium text-heading">
         Architect notes <span className="font-normal text-muted-foreground">{unsent.length ? `${unsent.length} will be sent with the run as ${unsent.length === 1 ? "note A1" : `notes A1…A${unsent.length}`}` : "none yet"}</span>
       </h4>
       {unsent.length === 0 ? (
-        <p className="text-[12px] text-muted-foreground">Select text in the BRD below and choose Add architect note, or add one from the Notes tab.</p>
+        <p className="text-[13px] text-muted-foreground">Select text in the BRD below and choose Add architect note, or add one from the Notes tab.</p>
       ) : (
         <ul className="space-y-1">
           {unsent.map((n) => {
             const anchor = anchorLabel(n.anchor, docLabels);
             return (
-              <li key={n.id} className="flex min-w-0 gap-2 rounded-lg bg-muted/50 px-2.5 py-1.5 text-[12px] leading-snug">
-                {anchor ? <span className="shrink-0 font-mono text-[11px] text-muted-foreground">[{anchor}]</span> : null}
+              <li key={n.id} className="flex min-w-0 items-start gap-2 rounded-[14px] bg-well/60 px-3 py-2 text-[13px] leading-5">
+                {anchor ? <span className="token-chip h-5 shrink-0 font-mono text-[11px]">[{anchor}]</span> : null}
                 <span className="min-w-0 break-words">{n.text}</span>
               </li>
             );
@@ -255,7 +255,6 @@ function ArchitectForm({ projectId, bundle, brd, run, restart, onRestart, onStar
           <Button
             variant="ghost"
             size="sm"
-            className="rounded-full"
             onClick={() => {
               writeArchitectDraft(projectId, true, undefined);
               onRestart(false);
@@ -274,7 +273,7 @@ function ArchitectForm({ projectId, bundle, brd, run, restart, onRestart, onStar
           void submit();
         }}
       >
-        <div className="flex flex-wrap items-center gap-2 rounded-xl bg-muted/50 px-3 py-2 font-mono text-xs">
+        <div className="flex min-h-11 flex-wrap items-center gap-2 rounded-[16px] bg-well/60 px-4 py-2 font-mono text-xs text-heading">
           <span className="text-muted-foreground">brd:</span>
           {brd ? (
             <span className="min-w-0 break-words">
@@ -283,28 +282,28 @@ function ArchitectForm({ projectId, bundle, brd, run, restart, onRestart, onStar
           ) : (
             <span className="text-status-attention-fg">no accepted BRD</span>
           )}
-          <span className="font-sans text-[11px] text-muted-foreground">cited as B1</span>
+          <span className="token-chip h-5 font-sans text-[11px]">cited as B1</span>
         </div>
 
         <div className="space-y-1.5">
-          <label htmlFor={requestId} className="block text-xs font-medium">
+          <label htmlFor={requestId} className="block text-[13px] font-medium text-heading">
             What should the architecture cover?
           </label>
           <Textarea id={requestId} rows={5} value={request} onChange={(e) => setRequest(e.target.value)} placeholder={ARCHITECT_PLACEHOLDER} disabled={start.isPending} className="min-h-28 placeholder:text-muted-foreground/60" />
-          <p className="text-[11px] text-muted-foreground">What you expect from the design, in your words: systems to reuse, constraints, where it should live.</p>
+          <p className="text-xs text-muted-foreground">What you expect from the design, in your words: systems to reuse, constraints, where it should live.</p>
           {detected.length > 0 ? (
             <div className="space-y-1 pt-1">
             <div className="flex flex-wrap items-center gap-1.5" aria-label="References detected in the request">
               <span className="text-xs text-muted-foreground">Detected:</span>
               {detected.map((ref) => (
-                <span key={ref} className="inline-flex h-7 items-center gap-1 rounded-full border border-border bg-muted/50 pr-1 pl-2.5 font-mono text-xs" title={refKind(ref) === "confluence" ? `Confluence page ${ref}` : `Jira issue ${ref}`}>
+                <span key={ref} className="inline-flex h-8 items-center gap-1 rounded-full bg-well pr-1 pl-3 font-mono text-xs text-heading" title={refKind(ref) === "confluence" ? `Confluence page ${ref}` : `Jira issue ${ref}`}>
                   {refKind(ref) === "confluence" ? <BookOpen aria-hidden className="size-3.5 shrink-0 text-muted-foreground" /> : <Ticket aria-hidden className="size-3.5 shrink-0 text-muted-foreground" />}
                   <span className="sr-only">{refKind(ref) === "confluence" ? "Confluence page" : "Jira issue"}</span>
                   {ref}
                   {known.has(ref) ? (
-                    <span className="px-1.5 font-sans text-[11px] text-muted-foreground">source</span>
+                    <span className="px-2 font-sans text-xs text-muted-foreground">source</span>
                   ) : (
-                    <Button type="button" variant="ghost" size="xs" className="rounded-full font-sans" onClick={() => setSources((s) => [...s, makeSource(refKind(ref), ref, actor)])} aria-label={`Add ${ref} as a source`}>
+                    <Button type="button" variant="ghost" size="xs" className="rounded-full bg-raised font-sans shadow-(--raised-shadow) hover:bg-(--chip-bg)" onClick={() => setSources((s) => [...s, makeSource(refKind(ref), ref, actor)])} aria-label={`Add ${ref} as a source`}>
                       <Plus aria-hidden />
                       Add as source
                     </Button>
@@ -312,13 +311,13 @@ function ArchitectForm({ projectId, bundle, brd, run, restart, onRestart, onStar
                 </span>
               ))}
             </div>
-            <p className="text-[11px] text-muted-foreground">architect-aad also finds these in the request; add one as a source to have discovery fetch it first.</p>
+            <p className="text-xs text-muted-foreground">architect-aad also finds these in the request; add one as a source to have discovery fetch it first.</p>
             </div>
           ) : null}
         </div>
 
         <section className="space-y-2" aria-label="Extra sources">
-          <h4 className="text-xs font-medium">
+          <h4 className="text-sm font-medium text-heading">
             Extra sources <span className="font-normal text-muted-foreground">Jira and Confluence become seeds; note files and pasted notes become notes</span>
           </h4>
           <SourcesPicker value={sources} onChange={setSources} disabled={start.isPending} docLabel="AAD" />
@@ -328,14 +327,14 @@ function ArchitectForm({ projectId, bundle, brd, run, restart, onRestart, onStar
 
         <Collapsible open={advanced} onOpenChange={setAdvanced}>
           <CollapsibleTrigger asChild>
-            <button type="button" className="inline-flex items-center gap-1.5 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
+            <button type="button" className="inline-flex h-9 items-center gap-1.5 rounded-[12px] bg-well px-3 text-[13px] font-medium text-heading transition-colors hover:bg-well-hover focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none">
               {advanced ? <ChevronDown aria-hidden className="size-3.5" /> : <ChevronRight aria-hidden className="size-3.5" />}
               <SlidersHorizontal aria-hidden className="size-3.5" />
               Advanced
             </button>
           </CollapsibleTrigger>
           <CollapsibleContent className="pt-3">
-            <div className="space-y-4 rounded-xl border border-border p-4">
+            <div className="space-y-5 rounded-[20px] bg-well/60 p-5">
               <div className="grid gap-4 @lg:grid-cols-3">
                 <NumberInput label="Max review rounds" value={options.maxRounds} min={1} max={5} onChange={(n) => set({ maxRounds: n })} />
                 <NumberInput label="Discovery rounds" value={options.discoveryRounds} min={1} max={5} onChange={(n) => set({ discoveryRounds: n })} disabled={!options.discover} />
@@ -349,16 +348,16 @@ function ArchitectForm({ projectId, bundle, brd, run, restart, onRestart, onStar
               </div>
               <div className="grid gap-4 @xl:grid-cols-2">
                 <div className="space-y-1">
-                  <label htmlFor={budgetId} className="block text-xs font-medium">
+                  <label htmlFor={budgetId} className="block text-[13px] font-medium text-heading">
                     Budget
                   </label>
                   <Input id={budgetId} value={options.budget ?? ""} onChange={(e) => set({ budget: e.target.value })} placeholder="$10" className="block w-32 font-mono" />
-                  <p className="text-[11px] text-muted-foreground">A run option, not workflow input: &quot;$10&quot;, &quot;500k&quot; or &quot;500k,$10&quot;.</p>
+                  <p className="text-xs text-muted-foreground">A run option, not workflow input: &quot;$10&quot;, &quot;500k&quot; or &quot;500k,$10&quot;.</p>
                 </div>
                 <div className="space-y-1">
-                  <span className="block text-xs font-medium">Output</span>
+                  <span className="block text-[13px] font-medium text-heading">Output</span>
                   <p className="flex min-h-8 items-center font-mono text-[13px] break-words text-muted-foreground">Writes {bundle.project.docPaths.aad}</p>
-                  <p className="text-[11px] text-muted-foreground">Memory stays shared: memory/memory.md.</p>
+                  <p className="text-xs text-muted-foreground">Memory stays shared: memory/memory.md.</p>
                 </div>
               </div>
             </div>
@@ -371,8 +370,8 @@ function ArchitectForm({ projectId, bundle, brd, run, restart, onRestart, onStar
           </p>
         ) : null}
 
-        <div className="flex flex-wrap items-center gap-2 border-t border-border pt-4">
-          <Button type="submit" className="rounded-full" disabled={start.isPending}>
+        <div className="flex flex-wrap items-center gap-2 border-t border-rule pt-4">
+          <Button type="submit" disabled={start.isPending}>
             <Play aria-hidden />
             {start.isPending ? "Starting…" : "Start architecture run"}
           </Button>
@@ -383,7 +382,7 @@ function ArchitectForm({ projectId, bundle, brd, run, restart, onRestart, onStar
               stage="architecture"
               onImported={onImported}
               trigger={
-                <Button type="button" variant="ghost" className="rounded-full">
+                <Button type="button" variant="ghost">
                   <Import aria-hidden />
                   Import existing AAD
                 </Button>
@@ -421,7 +420,7 @@ function ArchitectSummary({ projectId, bundle, brd, run, onRestart, onImported, 
           run={run}
           action={
             again ? (
-              <Button size="sm" className="rounded-full" onClick={() => onRestart(true)}>
+              <Button size="sm" onClick={() => onRestart(true)}>
                 <RotateCcw aria-hidden />
                 Start another run
               </Button>
@@ -434,7 +433,7 @@ function ArchitectSummary({ projectId, bundle, brd, run, onRestart, onImported, 
             <p className="min-w-0 flex-1">
               <span className="font-medium">The last architect-aad run {run?.status === "cancelled" ? "was cancelled" : "failed"}.</span> {run?.error?.message ?? (aad?.status === "accepted" ? "The accepted AAD is unchanged." : "No AAD was accepted.")}
             </p>
-            <Button size="sm" className="rounded-full" onClick={() => onRestart(true)}>
+            <Button size="sm" onClick={() => onRestart(true)}>
               <RotateCcw aria-hidden />
               Start another run
             </Button>
@@ -459,11 +458,11 @@ function ArchitectSummary({ projectId, bundle, brd, run, onRestart, onImported, 
           {runs.length ? (
             <>
               <div className="space-y-1.5">
-                <h4 className="text-xs font-medium text-muted-foreground">Request</h4>
+                <h4 className="text-sm font-medium text-heading">Request</h4>
                 <RequestText text={record.request} empty="No request text; the BRD and notes carry the ask." />
               </div>
               <div className="space-y-1.5">
-                <h4 className="text-xs font-medium text-muted-foreground">Extra sources</h4>
+                <h4 className="text-sm font-medium text-heading">Extra sources</h4>
                 <SourceChips sources={record.sources} />
               </div>
               <OptionsStrip
@@ -543,7 +542,7 @@ function NoteDialog({ open, onOpenChange, projectId, brd, initial, anchorOptions
         >
           {initial?.quote ? <blockquote className="max-h-28 overflow-y-auto border-l-2 border-primary/50 pl-3 text-[13px] text-muted-foreground italic">{initial.quote}</blockquote> : null}
           <div className="space-y-1">
-            <label htmlFor={sectionId} className="text-xs font-medium">
+            <label htmlFor={sectionId} className="text-[13px] font-medium text-heading">
               BRD section
             </label>
             <Select value={section || "none"} onValueChange={(v) => setSection(v === "none" ? "" : v)}>
@@ -561,16 +560,16 @@ function NoteDialog({ open, onOpenChange, projectId, brd, initial, anchorOptions
             </Select>
           </div>
           <div className="space-y-1">
-            <label htmlFor={textId} className="text-xs font-medium">
+            <label htmlFor={textId} className="text-[13px] font-medium text-heading">
               Note
             </label>
             <Textarea id={textId} rows={4} value={text} onChange={(e) => setText(e.target.value)} autoFocus placeholder="e.g. Keep this read-only; the gateway timeout is 30 s." />
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" className="rounded-full" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" className="rounded-full" disabled={!text.trim() || add.isPending}>
+            <Button type="submit" disabled={!text.trim() || add.isPending}>
               {add.isPending ? "Adding…" : "Add note"}
             </Button>
           </DialogFooter>
@@ -637,7 +636,7 @@ function BrdWithNotes({ projectId, brd, readOnly, jump, onJumped, anchorOptions,
       <div className="flex flex-wrap items-center gap-2 px-1">
         <div className="min-w-0 flex-1 basis-56">{header}</div>
         {!readOnly ? (
-          <Button size="sm" variant="outline" className="rounded-full" onClick={() => setDialog({ n: Date.now() })}>
+          <Button size="sm" variant="secondary" onClick={() => setDialog({ n: Date.now() })}>
             <MessageSquarePlus aria-hidden />
             Add architect note
           </Button>
@@ -655,7 +654,7 @@ function BrdWithNotes({ projectId, brd, readOnly, jump, onJumped, anchorOptions,
       {picked && !readOnly ? (
         <Button
           size="sm"
-          className="absolute z-10 rounded-full shadow-md"
+          className="absolute z-10 shadow-popover"
           style={{ top: picked.top, left: picked.left }}
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => {

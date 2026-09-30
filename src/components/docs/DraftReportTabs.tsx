@@ -86,17 +86,17 @@ export function DraftReportTabs({ markdown, className, onCitationClick, emptyTex
     <Tabs value={active} onValueChange={setTab} className={cn("min-w-0 gap-3", className)}>
       {/* Tabs wrap onto more rows instead of scrolling sideways, so no section is hidden off the edge. */}
       <div className="pb-1">
-        <TabsList variant="line" className="h-auto w-full flex-wrap justify-start gap-x-1 gap-y-2 group-data-horizontal/tabs:h-auto">
+        <TabsList className="h-auto max-w-full flex-wrap justify-start group-data-horizontal/tabs:h-auto">
           {sections.map((section, i) => {
             const count = section.items.length;
             const loud = count > 0 && ATTENTION.test(section.title);
             return (
-              <TabsTrigger key={i} value={`s${i}`} className="h-8 flex-none rounded-full px-3 text-[13px] data-active:bg-muted">
+              <TabsTrigger key={i} value={`s${i}`} className="h-9 flex-none px-3.5">
                 <span>{section.title}</span>
                 <span
                   className={cn(
-                    "ml-1 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 font-mono text-[10.5px] tabular-nums",
-                    loud ? "bg-status-attention-bg text-status-attention-fg" : "bg-muted text-muted-foreground",
+                    "inline-flex tabular-nums",
+                    loud ? "h-5 min-w-5 items-center justify-center rounded-full bg-status-attention-bg px-1.5 text-[11px] font-semibold text-status-attention-fg" : "text-xs font-normal text-muted-foreground",
                   )}
                   aria-label={`${count} items`}
                 >
@@ -110,15 +110,15 @@ export function DraftReportTabs({ markdown, className, onCitationClick, emptyTex
       {sections.map((section, i) => (
         <TabsContent key={i} value={`s${i}`} className="min-w-0">
           {section.items.length === 0 && !section.body ? (
-            <p className="rounded-lg bg-muted/50 px-3 py-4 text-center text-[13px] text-muted-foreground">None.</p>
+            <p className="rounded-[16px] bg-well/60 px-4 py-6 text-center text-[13px] text-muted-foreground">None.</p>
           ) : (
             <div className="space-y-2">
               {section.body ? <Markdown source={section.body} size="sm" onCitationClick={onCitationClick} /> : null}
               {section.items.length > 0 ? (
-                <ol className="space-y-1.5">
+                <ol className="divide-y divide-rule border-y border-rule">
                   {section.items.map((text, j) => (
-                    <li key={j} className="flex gap-2.5 rounded-lg border border-border px-3 py-2">
-                      <span className="mt-0.5 font-mono text-[11px] text-muted-foreground tabular-nums">{j + 1}</span>
+                    <li key={j} className="flex gap-3 px-1 py-3">
+                      <span className="mt-0.5 w-5 shrink-0 font-mono text-xs text-muted-foreground tabular-nums">{j + 1}</span>
                       <Markdown source={text} size="sm" className="[&_p]:my-0" onCitationClick={onCitationClick} />
                     </li>
                   ))}

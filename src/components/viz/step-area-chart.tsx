@@ -1,8 +1,8 @@
 "use client";
 
 import { useId, useState, type PointerEvent, type ReactNode } from "react";
+import { FloatingChip } from "@/components/common/floating-chip";
 import { cn } from "@/lib/utils";
-import { VizChip } from "./chips";
 import { useElementSize } from "./use-element-size";
 
 export interface StepAreaChartProps {
@@ -23,7 +23,6 @@ export interface StepAreaChartProps {
   className?: string;
 }
 
-const PINK = "#E8358A";
 const HEADROOM = 44;
 const STROKE = 2.5;
 
@@ -83,7 +82,7 @@ export function StepAreaChart({ data, highlightIndex, chipLabel, xLabels, height
           <svg aria-hidden width={W} height={H} className="absolute inset-0 block overflow-visible" onPointerMove={onMove} onPointerLeave={() => setHover(null)}>
             <defs>
               <pattern id={`${uid}-stripes`} width="6" height="8" patternUnits="userSpaceOnUse">
-                <rect width="2" height="8" fill={PINK} className="opacity-[.18] dark:opacity-[.3]" />
+                <rect width="2" height="8" className="fill-chart-pink opacity-[.18] dark:opacity-[.32]" />
               </pattern>
               <linearGradient id={`${uid}-fade`} gradientUnits="userSpaceOnUse" x1="0" y1={HEADROOM} x2="0" y2={bottom}>
                 <stop offset="0" stopColor="#fff" stopOpacity="1" />
@@ -91,21 +90,21 @@ export function StepAreaChart({ data, highlightIndex, chipLabel, xLabels, height
                 <stop offset="1" stopColor="#fff" stopOpacity="0.08" />
               </linearGradient>
               <linearGradient id={`${uid}-tint`} gradientUnits="userSpaceOnUse" x1="0" y1={HEADROOM} x2="0" y2={bottom}>
-                <stop offset="0" stopColor={PINK} stopOpacity="0.08" />
-                <stop offset="1" stopColor={PINK} stopOpacity="0" />
+                <stop offset="0" stopOpacity="0.08" className="[stop-color:var(--chart-pink)]" />
+                <stop offset="1" stopOpacity="0" className="[stop-color:var(--chart-pink)]" />
               </linearGradient>
               <mask id={`${uid}-mask`} maskUnits="userSpaceOnUse" x="0" y="0" width={W} height={H}>
                 <rect width={W} height={H} fill={`url(#${uid}-fade)`} />
               </mask>
             </defs>
-            <line x1="0" x2={W} y1={bottom + 0.5} y2={bottom + 0.5} className="stroke-[#E4E4E4] dark:stroke-white/10" strokeWidth="1" />
+            <line x1="0" x2={W} y1={bottom + 0.5} y2={bottom + 0.5} className="stroke-border" strokeWidth="1" />
             <path d={area} fill={`url(#${uid}-tint)`} />
             <path d={area} fill={`url(#${uid}-stripes)`} mask={`url(#${uid}-mask)`} />
-            <path d={line} fill="none" stroke={PINK} strokeWidth={STROKE} strokeLinejoin="miter" strokeLinecap="butt" />
+            <path d={line} fill="none" className="stroke-chart-pink" strokeWidth={STROKE} strokeLinejoin="miter" strokeLinecap="butt" />
             {point && (
               <>
-                <line x1={cx} x2={cx} y1={cy + 6} y2={bottom} stroke={PINK} strokeOpacity="0.25" strokeDasharray="2 3" className={hover == null ? "opacity-0" : ""} />
-                <circle cx={cx} cy={cy - 5} r="4.5" fill={PINK} className="stroke-white dark:stroke-[#16171A]" strokeWidth="2" />
+                <line x1={cx} x2={cx} y1={cy + 6} y2={bottom} strokeOpacity="0.3" strokeDasharray="2 3" className={cn("stroke-chart-pink", hover == null && "opacity-0")} />
+                <circle cx={cx} cy={cy - 5} r="4.5" className="fill-chart-pink stroke-card" strokeWidth="2" />
               </>
             )}
             {/* Transparent hit area so the pointer is tracked over the whole plot, not just the paths. */}
@@ -113,16 +112,13 @@ export function StepAreaChart({ data, highlightIndex, chipLabel, xLabels, height
           </svg>
         )}
         {point && chipText != null && (
-          <VizChip
-            value={chipText}
-            tone="pink"
-            className="pointer-events-none absolute -translate-x-1/2 transition-[left,top] duration-200 ease-out"
-            style={{ left: Math.min(Math.max(cx, 34), W - 34), top: Math.max(cy - 50, 0) }}
-          />
+          <span className="pointer-events-none absolute -translate-x-1/2 transition-[left,top] duration-200 ease-out" style={{ left: Math.min(Math.max(cx, 34), W - 34), top: Math.max(cy - 50, 0) }}>
+            <FloatingChip value={chipText} className="[--chip-glow:var(--chart-pink)]" />
+          </span>
         )}
       </div>
       {labels.length > 0 && (
-        <div aria-hidden className="mt-3 flex justify-between gap-2 text-[13px] leading-none text-[#6E6E6E] dark:text-[#A1A1AA]">
+        <div aria-hidden className="mt-3 flex justify-between gap-2 text-[13px] leading-none text-muted-foreground">
           {labels.map((l, i) => (
             <span key={`${i}:${l}`} className="min-w-0 truncate">
               {l}

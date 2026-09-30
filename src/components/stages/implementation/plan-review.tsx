@@ -51,10 +51,11 @@ export function PlanReview({ projectId, bundle, runId, request, focused }: { pro
 
   return (
     <section id={requestDomId(runId, request.id)} aria-label={`Plan review, round ${round}`} className={cn("scroll-mt-20 space-y-4 rounded-3xl", focused && "ring-2 ring-status-attention-fg/40 ring-offset-4 ring-offset-background")}>
-      <div className="card-surface space-y-2 rounded-2xl p-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="kicker">Your review · plan:review:{round}</span>
-          <span className="font-mono text-[11px] text-muted-foreground">
+      <div className="card-surface overflow-hidden rounded-2xl">
+        <div className="glass m-1.5 flex flex-wrap items-center gap-2 rounded-[22px] px-4 py-2.5">
+          <span className="text-[13px] font-medium text-heading">Your review</span>
+          <span className="font-mono text-xs text-muted-foreground">plan:review:{round}</span>
+          <span className="font-mono text-xs text-muted-foreground">
             dev-plan ·{" "}
             <Link href={`/runs/${runId}`} className="text-primary hover:underline">
               {runId}
@@ -62,17 +63,19 @@ export function PlanReview({ projectId, bundle, runId, request, focused }: { pro
             · {request.id}
           </span>
           <span className="flex-1" />
-          <span className="inline-flex items-center gap-1 text-xs text-status-attention-fg">
-            <Hourglass aria-hidden className="size-3.5" />
+          <span className="chip-float h-7! gap-1! px-2.5! text-xs! [--chip-glow:var(--status-attention-solid)]">
+            <Hourglass aria-hidden className="size-3.5 text-status-attention-fg" />
             <TimeAgo at={request.requestedAt} prefix="Waiting " elapsed />
           </span>
         </div>
-        <p className="text-[15px] leading-snug font-medium">{request.question}</p>
-        <p className="text-xs text-muted-foreground">The dev-plan run is paused until you answer. Edit the tasks below; your edited list replaces the proposal.</p>
+        <div className="space-y-1.5 px-5 pt-3 pb-5">
+          <p className="text-[18px] leading-[26px] font-medium tracking-[-0.01em] text-heading">{request.question}</p>
+          <p className="text-[13px] text-muted-foreground">The dev-plan run is paused until you answer. Edit the tasks below; your edited list replaces the proposal.</p>
+        </div>
       </div>
 
       {tasksText.isPending && tasksRef ? (
-        <div className="card-surface space-y-2 rounded-2xl p-4" aria-busy="true">
+        <div className="card-surface space-y-2 rounded-2xl p-5" aria-busy="true">
           {Array.from({ length: 6 }, (_, i) => (
             <Skeleton key={i} className="h-10 w-full" />
           ))}
@@ -155,10 +158,10 @@ function PlanReviewBody({ projectId, bundle, runId, request, proposal, round }: 
       />
       <SectionCard
         density="dense"
-        kicker={`Round ${round} · proposed by dev-plan`}
         title="Tasks by wave"
         description={
           <>
+            <span className="text-heading">Round {round}, proposed by dev-plan.</span>{" "}
             Edit titles, repos, sizes and acceptance criteria, add or delete tasks, and move tasks between waves with each row&apos;s menu
             <span className="hidden md:pointer-fine:inline"> or by dragging the grip</span>. Waves run in order; tasks inside a wave run in parallel when their dependencies are done.
           </>
@@ -173,21 +176,21 @@ function PlanReviewBody({ projectId, bundle, runId, request, proposal, round }: 
       </SectionCard>
 
       {report ? (
-        <SectionCard density="dense" kicker="Plan report" title="What the planner assumed and could not cover">
+        <SectionCard density="dense" title="What the planner assumed and could not cover" description="Plan report">
           <BlobContent blobRef={report.ref}>{(text) => <DraftReportTabs markdown={text} emptyText="The planner reported nothing." />}</BlobContent>
         </SectionCard>
       ) : null}
 
       {file ? (
         <Collapsible open={fileOpen} onOpenChange={setFileOpen} className="card-surface rounded-2xl">
-          <CollapsibleTrigger className="flex w-full items-center gap-2 rounded-2xl px-4 py-3 text-left text-[13px] outline-none hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring">
+          <CollapsibleTrigger className="flex min-h-14 w-full items-center gap-2 rounded-2xl px-5 py-3 text-left text-sm outline-none hover:bg-foreground/[0.025] focus-visible:ring-3 focus-visible:ring-ring/50">
             {fileOpen ? <ChevronDown aria-hidden className="size-4 text-muted-foreground" /> : <ChevronRight aria-hidden className="size-4 text-muted-foreground" />}
             <FileText aria-hidden className="size-4 text-muted-foreground" />
-            <span className="font-medium">Plan file</span>
+            <span className="font-medium text-heading">Plan file</span>
             <span className="min-w-0 truncate font-mono text-xs text-muted-foreground">{file.path}</span>
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <div className="relative max-h-[60vh] overflow-y-auto border-t border-border px-4 py-3">
+            <div className="relative max-h-[60vh] overflow-y-auto border-t border-rule px-5 py-4">
               {fileOpen ? <BlobContent blobRef={file.ref}>{(text) => <Markdown source={text} size="sm" />}</BlobContent> : null}
             </div>
           </CollapsibleContent>
@@ -261,9 +264,9 @@ function PlanDecision({
   ];
 
   return (
-    <section aria-label="Plan decision" className="card-surface space-y-4 rounded-2xl p-4">
-      <div className="space-y-0.5">
-        <h3 className="text-base font-medium">Decision</h3>
+    <section aria-label="Plan decision" className="card-surface space-y-5 rounded-2xl p-5">
+      <div className="space-y-1">
+        <h3 className="text-[20px] leading-7 font-medium tracking-[-0.015em] text-heading">Decision</h3>
         <p className="text-[13px] text-muted-foreground">
           {plural(tasks.length, "task")} in {plural(waves, "wave")}
           {edited ? " · your edits are sent with the answer" : " · the proposal as is"}
@@ -332,9 +335,9 @@ function PlanDecision({
         </Notice>
       ) : null}
 
-      <div className="flex flex-wrap items-center justify-end gap-3 border-t border-border pt-3">
-        {missing.length ? <p className="mr-auto text-xs text-muted-foreground">{missing[0]}</p> : <p className="mr-auto text-xs text-muted-foreground">Answers {request.id} and resumes run {runId}.</p>}
-        <Button className="rounded-full px-4" disabled={!answer || missing.length > 0 || locked} onClick={() => answer && submit(answer)}>
+      <div className="flex flex-wrap items-center justify-end gap-3 border-t border-rule pt-4">
+        {missing.length ? <p className="mr-auto text-[13px] text-muted-foreground">{missing[0]}</p> : <p className="mr-auto text-[13px] text-muted-foreground">Answers {request.id} and resumes run {runId}.</p>}
+        <Button disabled={!answer || missing.length > 0 || locked} onClick={() => answer && submit(answer)}>
           {pending ? <Spinner aria-hidden /> : null}
           {decision === "revise" ? "Send for revision" : decision === "approve" ? "Approve plan & start agents" : "Answer"}
           {decision === "approve" ? <ArrowRight aria-hidden /> : null}

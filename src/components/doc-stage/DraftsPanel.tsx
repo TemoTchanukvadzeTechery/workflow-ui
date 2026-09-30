@@ -9,7 +9,8 @@
  */
 import { CheckCircle2, CircleAlert, FileClock, FilePen, History, Import } from "lucide-react";
 import { useState, type ReactNode } from "react";
-import { actorText, EmptyState, SectionCard, StatusPill } from "@/components/common";
+import { actorText, EmptyState, FloatingChip, SectionCard, StatusPill, ToolbarGroup, ToolbarText } from "@/components/common";
+import { Button } from "@/components/ui/button";
 import { DraftReportTabs, TextDiff, versionLabels } from "@/components/docs";
 import { Notice, TimeAgo } from "@/components/hitl";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -55,7 +56,7 @@ export function NotAcceptedBanner({ kind, run, action, className }: { kind: DocK
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <p className="min-w-0 flex-1">
           <span className="font-medium">{note ?? `${DOC_LABEL[kind]} not accepted after ${rounds} ${rounds === 1 ? "round" : "rounds"}; memory left unchanged`}</span>
-          <span className="block text-xs opacity-90">The run ended at its last review round. Start another run to keep going; the last feedback is carried over as notes.</span>
+          <span className="mt-0.5 block opacity-90">The run ended at its last review round. Start another run to keep going; the last feedback is carried over as notes.</span>
         </p>
         {action}
       </div>
@@ -72,7 +73,7 @@ function VersionCompare({ doc }: { doc: DocumentArtifact }) {
   const b = useBlobText(sorted.find((v) => v.n === to)?.blob);
   const pick = (value: number | undefined, onChange: (n: number) => void, aria: string) => (
     <Select value={value !== undefined ? String(value) : undefined} onValueChange={(v) => onChange(Number(v))}>
-      <SelectTrigger size="sm" className="rounded-full" aria-label={aria}>
+      <SelectTrigger size="sm" aria-label={aria}>
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
@@ -87,12 +88,12 @@ function VersionCompare({ doc }: { doc: DocumentArtifact }) {
   );
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-2 text-[13px]">
-        <span className="text-muted-foreground">Compare</span>
+      <ToolbarGroup aria-label="Versions to compare" className="[&>[data-slot=select-trigger]]:border-0">
+        <ToolbarText>Compare</ToolbarText>
         {pick(from, setFrom, "Compare from version")}
-        <span className="text-muted-foreground">with</span>
+        <ToolbarText>with</ToolbarText>
         {pick(to, setTo, "Compare to version")}
-      </div>
+      </ToolbarGroup>
       {a.isPending || b.isPending ? <Skeleton className="h-40 w-full" /> : a.data !== undefined && b.data !== undefined ? <TextDiff before={a.data} after={b.data} maxHeightClass="max-h-[60vh]" /> : null}
     </div>
   );
@@ -106,17 +107,12 @@ export function DocStatusLine({ doc, run, kind, hideRound }: { doc?: DocumentArt
   const labels = doc ? versionLabels(doc.versions) : [];
   const last = labels.at(-1);
   return (
-    <div className="flex flex-wrap items-center gap-2 text-[13px]">
-      {doc ? <StatusPill status={{ kind: "doc", value: doc.status }} /> : <StatusPill tone="neutral" icon={FileClock} label="No draft yet" />}
-      {round && !hideRound && !isTerminal(run?.status) ? (
-        <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium">
-          Round {round}
-          {maxRounds ? ` of ${maxRounds}` : ""}
-        </span>
-      ) : null}
-      {last ? <span className="text-xs text-muted-foreground">{labels.length} {labels.length === 1 ? "version" : "versions"} · latest {last.label}</span> : null}
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-[13px]">
+      {doc ? <StatusPill status={{ kind: "doc", value: doc.status }} variant="chip" /> : <StatusPill tone="neutral" icon={FileClock} label="No draft yet" variant="chip" />}
+      {round && !hideRound && !isTerminal(run?.status) ? <FloatingChip label="Round" value={maxRounds ? `${round} of ${maxRounds}` : String(round)} tone="running" /> : null}
+      {last ? <span className="text-muted-foreground">{labels.length} {labels.length === 1 ? "version" : "versions"} · latest {last.label}</span> : null}
       {doc?.status === "accepted" ? (
-        <span className="inline-flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+        <span className="inline-flex flex-wrap items-center gap-1 text-muted-foreground">
           <CheckCircle2 aria-hidden className="size-3.5 text-status-success-fg" />
           Accepted by {doc.acceptedBy ? actorText(doc.acceptedBy) : "someone"}
           {doc.acceptedAt ? (
@@ -128,7 +124,7 @@ export function DocStatusLine({ doc, run, kind, hideRound }: { doc?: DocumentArt
           {out?.rounds ? ` · round ${out.rounds}` : ""}
         </span>
       ) : doc ? (
-        <span className="text-xs text-muted-foreground">{label} is a draft until you accept it.</span>
+        <span className="text-muted-foreground">{label} is a draft until you accept it.</span>
       ) : null}
     </div>
   );
@@ -154,15 +150,10 @@ export function DraftsPanel({ projectId, kind, doc, runId, run, runPending, runE
       <div className="flex flex-wrap items-center justify-between gap-2">
         <DocStatusLine doc={doc} run={run} kind={kind} hideRound={reviewing} />
         {doc && doc.versions.length > 1 ? (
-          <button
-            type="button"
-            onClick={() => setShowCompare((s) => !s)}
-            aria-expanded={showCompare}
-            className="inline-flex h-7 items-center gap-1.5 rounded-full border border-border px-3 text-xs font-medium hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-          >
-            <History aria-hidden className="size-3.5" />
+          <Button type="button" variant="secondary" onClick={() => setShowCompare((s) => !s)} aria-expanded={showCompare}>
+            <History aria-hidden />
             {showCompare ? "Hide version compare" : "Compare versions"}
-          </button>
+          </Button>
         ) : null}
       </div>
 
@@ -178,7 +169,7 @@ export function DraftsPanel({ projectId, kind, doc, runId, run, runPending, runE
       {runId && (drafting || (!doc && !isTerminal(run?.status))) ? (
         <RunProgress runId={runId} run={run} isPending={runPending} error={runError} onRetry={onRetry} docLabel={label} compact />
       ) : null}
-      {drafting && doc ? <p className="text-[13px] text-muted-foreground">The agent is writing round {reviewRound(run)}. The version below is the one you last reviewed; the new draft appears here when it is ready.</p> : null}
+      {drafting && doc ? <p className="px-1 text-sm text-muted-foreground">The agent is writing round {reviewRound(run)}. The version below is the one you last reviewed; the new draft appears here when it is ready.</p> : null}
 
       {showCompare && doc ? (
         <SectionCard density="dense" title="Compare versions">
@@ -206,7 +197,7 @@ export function DraftsPanel({ projectId, kind, doc, runId, run, runPending, runE
           <EmptyState icon={FilePen} title={`The run ended before a ${label} draft was written`} body={run.error?.message ?? "Start another run from the first step."} />
         </SectionCard>
       ) : (
-        <div className={cn("card-surface space-y-3 rounded-2xl p-4")} aria-busy="true" aria-label={`Waiting for the first ${label} draft`}>
+        <div className={cn("card-surface space-y-3 rounded-2xl p-5")} aria-busy="true" aria-label={`Waiting for the first ${label} draft`}>
           <Skeleton className="h-5 w-1/2" />
           <Skeleton className="h-4 w-full" />
           <Skeleton className="h-4 w-5/6" />

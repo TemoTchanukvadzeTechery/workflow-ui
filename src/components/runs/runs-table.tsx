@@ -10,7 +10,7 @@ import { Activity, ChevronLeft, ChevronRight, Search, SearchX, X } from "lucide-
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useId, useMemo, useState, type MouseEvent } from "react";
-import { EmptyState, ErrorState, IdChip, Money, RelativeTime, SectionCard, StatusDot, StatusPill, Tokens } from "@/components/common";
+import { EmptyState, ErrorState, IdChip, Money, RelativeTime, SectionCard, SegmentedControl, StatusDot, StatusPill, Tokens, ToolbarGroup, ToolbarText } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -97,37 +97,42 @@ export function RunsTable({ filters, onFiltersChange }: { filters: RunFilters; o
   return (
     <div className="@container flex min-w-0 flex-col gap-4">
       <div className="flex flex-col gap-3">
-        <div role="radiogroup" aria-label="Filter by status" className="-mx-1 flex flex-wrap gap-1.5 px-1">
-          <GroupPill label="All" count={runs.length} active={!filters.status} onClick={() => set({ status: undefined })} loading={runsQ.isPending} />
-          {STATUS_GROUPS.map((g) => (
-            <GroupPill
-              key={g.id}
-              label={g.label}
-              hint={g.hint}
-              tone={GROUP_TONE[g.id]}
-              pulse={g.id === "active" && counts.active > 0}
-              count={counts[g.id]}
-              active={filters.status === g.id}
-              onClick={() => set({ status: filters.status === g.id ? undefined : g.id })}
-              loading={runsQ.isPending}
-            />
-          ))}
-        </div>
-        <div className="flex flex-col gap-2 @xl:flex-row @xl:items-center">
-          <div className="relative min-w-0 @xl:w-64">
-            <Search aria-hidden className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+        <SegmentedControl<RunStatusGroup | "all">
+          aria-label="Filter by status"
+          value={filters.status ?? "all"}
+          onValueChange={(v) => set({ status: v === "all" ? undefined : v })}
+          className="self-start"
+          items={[
+            { value: "all", label: "All", count: runsQ.isPending ? undefined : runs.length },
+            ...STATUS_GROUPS.map((g) => ({
+              value: g.id,
+              title: g.hint,
+              label: (
+                <span className="inline-flex items-center gap-2">
+                  <StatusDot tone={GROUP_TONE[g.id]} pulse={g.id === "active" && counts.active > 0} size="sm" />
+                  {g.label}
+                </span>
+              ),
+              count: runsQ.isPending ? undefined : counts[g.id],
+              countTone: g.id === "needs_input" && counts.needs_input > 0 ? ("attention" as const) : g.id === "failed" && counts.failed > 0 ? ("danger" as const) : undefined,
+            })),
+          ]}
+        />
+        <div className="flex flex-col gap-2.5 @xl:flex-row @xl:items-center">
+          <div className="relative min-w-0 @xl:w-72">
+            <Search aria-hidden className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="search"
               value={filters.q ?? ""}
               onChange={(e) => set({ q: e.target.value || undefined })}
               placeholder="Search run id or task"
               aria-label="Search by run id or task id"
-              className="h-9 rounded-full bg-card pl-9 text-[13px] placeholder:font-sans [&:not(:placeholder-shown)]:font-mono"
+              className="pl-10 placeholder:font-sans [&:not(:placeholder-shown)]:font-mono"
             />
           </div>
-          <div className="grid grid-cols-2 gap-2 @xl:flex">
+          <ToolbarGroup aria-label="Filter by workflow and project" className="w-full @xl:w-auto">
             <Select value={filters.workflow ?? ALL} onValueChange={(v) => set({ workflow: v === ALL ? undefined : v })}>
-              <SelectTrigger aria-label="Filter by workflow" className="h-9 w-full rounded-full bg-card @xl:w-48">
+              <SelectTrigger aria-label="Filter by workflow" className="min-w-0 flex-1 @xl:w-44 @xl:flex-none">
                 <SelectValue placeholder="All workflows" />
               </SelectTrigger>
               <SelectContent>
@@ -139,8 +144,9 @@ export function RunsTable({ filters, onFiltersChange }: { filters: RunFilters; o
                 ))}
               </SelectContent>
             </Select>
+            <ToolbarText className="hidden @md:inline">in</ToolbarText>
             <Select value={filters.project ?? ALL} onValueChange={(v) => set({ project: v === ALL ? undefined : v })}>
-              <SelectTrigger aria-label="Filter by project" className="h-9 w-full min-w-0 rounded-full bg-card @xl:w-60">
+              <SelectTrigger aria-label="Filter by project" className="min-w-0 flex-1 @xl:w-60 @xl:flex-none">
                 <SelectValue placeholder="All projects" />
               </SelectTrigger>
               <SelectContent>
@@ -152,22 +158,22 @@ export function RunsTable({ filters, onFiltersChange }: { filters: RunFilters; o
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </ToolbarGroup>
           {anyFilter && (
-            <Button variant="ghost" size="sm" className="w-fit rounded-full text-muted-foreground" onClick={() => onFiltersChange({})}>
+            <Button variant="ghost" size="sm" className="w-fit text-muted-foreground" onClick={() => onFiltersChange({})}>
               <X aria-hidden />
               Clear filters
             </Button>
           )}
           {unlinked > 0 && !filters.project ? (
-            <div className="flex h-9 items-center gap-2 rounded-full px-1 @xl:ml-auto">
+            <div className="flex h-9 items-center gap-2 px-1 @xl:ml-auto">
               <Switch id={unlinkedId} checked={showUnlinked} onCheckedChange={setShowUnlinked} />
               <label htmlFor={unlinkedId} className="text-[13px] whitespace-nowrap text-muted-foreground" title="Runs of projects that were deleted">
                 Show {plural(unlinked, "unlinked run")}
               </label>
             </div>
           ) : null}
-          <span className={cn("text-xs text-muted-foreground", !(unlinked > 0 && !filters.project) && "@xl:ml-auto")} aria-live="polite">
+          <span className={cn("text-[13px] text-muted-foreground", !(unlinked > 0 && !filters.project) && "@xl:ml-auto")} aria-live="polite">
             {runsQ.isPending ? "" : `${plural(filtered.length, "run")}${anyFilter || hiddenUnlinked ? ` of ${runs.length}` : ""}`}
           </span>
         </div>
@@ -188,7 +194,7 @@ export function RunsTable({ filters, onFiltersChange }: { filters: RunFilters; o
             title="No runs yet"
             body="A run appears here as soon as a project starts po-brd, architect-aad or an implementation agent."
             action={
-              <Button asChild variant="outline" size="sm" className="rounded-full">
+              <Button asChild variant="secondary" size="sm">
                 <Link href="/projects">Open projects</Link>
               </Button>
             }
@@ -211,7 +217,7 @@ export function RunsTable({ filters, onFiltersChange }: { filters: RunFilters; o
               )
             }
             action={
-              <Button variant="outline" size="sm" className="rounded-full" onClick={() => onFiltersChange({})}>
+              <Button variant="secondary" size="sm" onClick={() => onFiltersChange({})}>
                 Clear filters
               </Button>
             }
@@ -231,18 +237,18 @@ export function RunsTable({ filters, onFiltersChange }: { filters: RunFilters; o
           </ul>
           {pages > 1 ? (
             <nav aria-label="Pages" className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-xs text-muted-foreground tabular-nums">
+              <span className="text-[13px] text-muted-foreground tabular-nums">
                 {page * PAGE_SIZE + 1}–{Math.min(filtered.length, (page + 1) * PAGE_SIZE)} of {filtered.length}
               </span>
               <span className="flex items-center gap-2">
-                <Button variant="outline" size="sm" className="rounded-full" disabled={page === 0} onClick={() => goPage(page - 1)}>
+                <Button variant="secondary" size="sm" disabled={page === 0} onClick={() => goPage(page - 1)}>
                   <ChevronLeft aria-hidden />
                   Newer
                 </Button>
-                <span className="text-xs text-muted-foreground tabular-nums">
+                <span className="text-[13px] text-muted-foreground tabular-nums">
                   Page {page + 1} of {pages}
                 </span>
-                <Button variant="outline" size="sm" className="rounded-full" disabled={page >= pages - 1} onClick={() => goPage(page + 1)}>
+                <Button variant="secondary" size="sm" disabled={page >= pages - 1} onClick={() => goPage(page + 1)}>
                   Older
                   <ChevronRight aria-hidden />
                 </Button>
@@ -252,26 +258,6 @@ export function RunsTable({ filters, onFiltersChange }: { filters: RunFilters; o
         </>
       )}
     </div>
-  );
-}
-
-function GroupPill({ label, count, active, onClick, tone, pulse, hint, loading }: { label: string; count: number; active: boolean; onClick: () => void; tone?: Tone; pulse?: boolean; hint?: string; loading?: boolean }) {
-  return (
-    <button
-      type="button"
-      role="radio"
-      aria-checked={active}
-      title={hint}
-      onClick={onClick}
-      className={cn(
-        "inline-flex h-8 items-center gap-2 rounded-full border px-3 text-[13px] font-medium transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none",
-        active ? "border-foreground bg-foreground text-background" : "border-transparent bg-card text-foreground shadow-card hover:border-border dark:border-border",
-      )}
-    >
-      {tone && <StatusDot tone={tone} pulse={pulse} size="sm" />}
-      {label}
-      <span className={cn("min-w-4 text-right text-xs tabular-nums", active ? "text-background/70" : "text-muted-foreground")}>{loading ? "·" : count}</span>
-    </button>
   );
 }
 
@@ -289,7 +275,7 @@ function openRow(router: ReturnType<typeof useRouter>, runId: string) {
 function RunsGrid({ runs, index, indexPending }: { runs: RunRow[]; index: RunIndex | undefined; indexPending: boolean }) {
   const router = useRouter();
   return (
-    <Table className="text-[13px]">
+    <Table className="text-sm">
       <TableHeader>
         <TableRow className="hover:bg-transparent">
           <TableHead className="w-[140px] pl-5">Status</TableHead>
@@ -341,7 +327,7 @@ function RunsGrid({ runs, index, indexPending }: { runs: RunRow[]; index: RunInd
 function RunCard({ run: r, index }: { run: RunRow; index: RunIndex | undefined }) {
   const router = useRouter();
   return (
-    <div onClick={openRow(router, r.runId)} className="card-surface flex cursor-pointer flex-col gap-2 rounded-2xl px-4 py-3 transition-colors hover:bg-muted/40">
+    <div onClick={openRow(router, r.runId)} className="card-surface flex cursor-pointer flex-col gap-2.5 rounded-[20px] px-4 py-3.5 transition-shadow hover:shadow-[var(--card-edge),0_20px_40px_-18px_rgb(0_0_0/0.18)]">
       <div className="flex min-w-0 items-center justify-between gap-2">
         <WorkflowName workflow={r.workflow} href={`/runs/${r.runId}`} badges="real" />
         <StatusPill status={{ kind: "run", value: r.status }} size="sm" />
@@ -350,7 +336,7 @@ function RunCard({ run: r, index }: { run: RunRow; index: RunIndex | undefined }
         <IdChip id={r.runId} size="sm" href={`/runs/${r.runId}`} />
         <RunContext entry={index?.[r.runId]} className="text-xs" wrap />
       </div>
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] text-muted-foreground tabular-nums">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs text-muted-foreground tabular-nums">
         <span>{plural(r.steps ?? 0, "step")}</span>
         {r.running ? (
           <span className="inline-flex items-center gap-1 text-status-running-fg">

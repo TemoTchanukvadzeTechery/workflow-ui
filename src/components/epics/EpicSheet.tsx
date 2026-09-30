@@ -47,18 +47,18 @@ function RefChecklist({ label, options, value, onChange, empty }: { label: strin
   const unknown = value.filter((v) => !options.some((o) => o.id === v));
   return (
     <fieldset className="space-y-1.5">
-      <legend className="text-xs font-medium">
+      <legend className="text-[13px] font-medium text-heading">
         {label} <span className="font-normal text-muted-foreground">{value.length} selected</span>
       </legend>
       {options.length === 0 && unknown.length === 0 ? (
-        <p className="rounded-lg bg-muted/50 px-3 py-3 text-xs text-muted-foreground">{empty}</p>
+        <p className="rounded-[16px] bg-well/60 px-3.5 py-3 text-[13px] text-muted-foreground">{empty}</p>
       ) : (
-        <ul className="max-h-56 space-y-0.5 overflow-y-auto rounded-lg border border-border p-1">
+        <ul className="max-h-56 space-y-0.5 overflow-y-auto rounded-[16px] bg-well p-1">
           {[...options, ...unknown.map((u): RefOption => ({ id: u, text: "Not in the current document" }))].map((o) => {
             const cid = `${id}-${o.id}`;
             return (
               <li key={o.id}>
-                <label htmlFor={cid} className={cn("flex cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 hover:bg-muted", set.has(o.id) && "bg-primary-soft/60")}>
+                <label htmlFor={cid} className={cn("flex cursor-pointer items-start gap-2.5 rounded-[12px] px-2.5 py-2 transition-[background-color,box-shadow] hover:bg-raised/60", set.has(o.id) && "bg-raised shadow-(--raised-shadow) hover:bg-raised")}>
                   <Checkbox
                     id={cid}
                     checked={set.has(o.id)}
@@ -66,7 +66,7 @@ function RefChecklist({ label, options, value, onChange, empty }: { label: strin
                     className="mt-0.5"
                   />
                   <span className="w-12 shrink-0 font-mono text-[11px] leading-5 text-muted-foreground">{o.id}</span>
-                  <span className="min-w-0 flex-1 text-xs leading-5">
+                  <span className="min-w-0 flex-1 text-[13px] leading-5 text-heading">
                     <span className="line-clamp-2">{o.text}</span>
                     {o.hint ? <span className="text-muted-foreground">{o.hint}</span> : null}
                   </span>
@@ -83,11 +83,11 @@ function RefChecklist({ label, options, value, onChange, empty }: { label: strin
 function Field({ label, htmlFor, hint, children, required }: { label: string; htmlFor: string; hint?: string; children: React.ReactNode; required?: boolean }) {
   return (
     <div className="space-y-1.5">
-      <label htmlFor={htmlFor} className="text-xs font-medium">
+      <label htmlFor={htmlFor} className="text-[13px] font-medium text-heading">
         {label} {required ? <span className="font-normal text-muted-foreground">required</span> : null}
       </label>
       {children}
-      {hint ? <p className="text-[11px] text-muted-foreground">{hint}</p> : null}
+      {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
     </div>
   );
 }
@@ -137,7 +137,7 @@ function EpicForm({ projectId, epic, requirements, frs = [], questions = [], par
         submit();
       }}
     >
-      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4">
+      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 pt-1 pb-5">
         <Field label="Title" htmlFor={ids.title} required>
           <Input id={ids.title} value={title} onChange={(e) => setTitle(e.target.value)} autoFocus aria-invalid={error && !title.trim() ? true : undefined} />
         </Field>
@@ -187,11 +187,11 @@ function EpicForm({ projectId, epic, requirements, frs = [], questions = [], par
           </p>
         ) : null}
       </div>
-      <SheetFooter className="flex-row justify-end border-t border-border">
-        <Button type="button" variant="outline" className="rounded-full" onClick={onDone}>
+      <SheetFooter className="flex-row justify-end border-t border-rule">
+        <Button type="button" variant="secondary" onClick={onDone}>
           Cancel
         </Button>
-        <Button type="submit" className="rounded-full" disabled={upsert.isPending}>
+        <Button type="submit" disabled={upsert.isPending}>
           {upsert.isPending ? "Saving…" : epic ? "Save epic" : "Add epic"}
         </Button>
       </SheetFooter>
@@ -204,7 +204,7 @@ export function EpicSheet(props: EpicSheetProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="gap-0 data-[side=right]:w-full data-[side=right]:sm:max-w-lg">
-        <SheetHeader className="border-b border-border pr-12">
+        <SheetHeader className="border-b border-rule pr-12">
           <SheetTitle>{epic ? `Edit ${epic.key ?? "draft epic"}` : "Add an epic"}</SheetTitle>
           <SheetDescription>
             {epic

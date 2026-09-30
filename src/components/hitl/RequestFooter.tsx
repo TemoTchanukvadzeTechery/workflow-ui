@@ -38,15 +38,15 @@ export function RequestFooter({ requestId, answer, reviewEdit, error, pending, m
   const jsonId = useId();
   const blocked = missing.length > 0;
   return (
-    <div className={cn("space-y-3 border-t border-border pt-3", className)}>
+    <div className={cn("space-y-3 border-t border-rule pt-4", className)}>
       {error ? (
-        <div role="alert" className="flex items-start gap-2 rounded-lg bg-destructive/10 px-3 py-2 text-[13px] text-destructive">
+        <div role="alert" className="flex items-start gap-2.5 rounded-[16px] bg-status-danger-bg px-4 py-3 text-[13px] text-status-danger-fg">
           <CircleAlert aria-hidden className="mt-0.5 size-4 shrink-0" />
           <span className="min-w-0 break-words">{error}</span>
         </div>
       ) : null}
       {showJson ? (
-        <pre id={jsonId} className="max-h-64 overflow-auto rounded-lg bg-muted/60 p-3 font-mono text-[11.5px] leading-5">
+        <pre id={jsonId} className="max-h-64 overflow-auto rounded-[16px] bg-well/70 p-3.5 font-mono text-[11.5px] leading-5 text-heading">
           {answerBodyPreview(requestId, answer, reviewEdit)}
         </pre>
       ) : null}
@@ -56,20 +56,20 @@ export function RequestFooter({ requestId, answer, reviewEdit, error, pending, m
           onClick={() => setShowJson((s) => !s)}
           aria-expanded={showJson}
           aria-controls={jsonId}
-          className="inline-flex items-center gap-1 rounded-md px-1 py-0.5 text-xs text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          className="inline-flex h-8 items-center gap-1 rounded-[10px] px-1.5 text-[13px] text-muted-foreground hover:text-heading focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
         >
           {showJson ? <ChevronDown aria-hidden className="size-3.5" /> : <ChevronRight aria-hidden className="size-3.5" />}
           {showJson ? "Hide answer JSON" : "Show answer JSON"}
         </button>
         {extra}
         <span className="flex-1" />
-        {blocked ? <span className="text-xs text-muted-foreground">{missing.join(" · ")}</span> : null}
+        {blocked ? <span className="text-[13px] text-muted-foreground">{missing.join(" · ")}</span> : null}
         {deny ? (
-          <Button type="button" variant="outline" className="rounded-full" disabled={pending} onClick={deny.onDeny}>
+          <Button type="button" variant="secondary" disabled={pending} onClick={deny.onDeny}>
             {deny.label ?? "Deny & stop"}
           </Button>
         ) : null}
-        <Button type="button" className="rounded-full px-4" disabled={pending || blocked} onClick={onSubmit}>
+        <Button type="button" disabled={pending || blocked} onClick={onSubmit}>
           {pending ? <Spinner aria-hidden /> : null}
           {pending ? "Answering…" : submitLabel}
         </Button>

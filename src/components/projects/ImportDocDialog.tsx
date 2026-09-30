@@ -7,8 +7,9 @@
  * stage <form> (the dialog is portalled, but React events still bubble through that form), so it
  * has no <form> of its own and its buttons are type="button".
  */
-import { BookOpen, ClipboardPaste, Import } from "lucide-react";
+import { BookOpen, ClipboardPaste, Eye, Import, Pencil } from "lucide-react";
 import { useId, useState, type ReactNode } from "react";
+import { SegmentedControl } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -103,7 +104,7 @@ export function ImportDocDialog({ projectId, stage, onImported, onSubmit, trigge
       {trigger !== null ? (
         <DialogTrigger asChild>
           {trigger ?? (
-            <Button type="button" variant="outline" size="sm" className="rounded-full">
+            <Button type="button" variant="secondary">
               <Import aria-hidden />
               Import existing {doc}
             </Button>
@@ -129,18 +130,25 @@ export function ImportDocDialog({ projectId, stage, onImported, onSubmit, trigge
             </TabsTrigger>
           </TabsList>
           <TabsContent value="paste" className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label htmlFor={contentId} className="text-xs font-medium">
+            <div className="flex min-h-9 items-center justify-between gap-2">
+              <label htmlFor={contentId} className="text-[13px] font-medium text-heading">
                 {doc} markdown
               </label>
               {content.trim() ? (
-                <button type="button" className="text-xs text-muted-foreground hover:text-foreground" onClick={() => setPreview((p) => !p)} aria-pressed={preview}>
-                  {preview ? "Edit" : "Preview"}
-                </button>
+                <SegmentedControl
+                  size="sm"
+                  aria-label="Markdown view"
+                  value={preview ? "preview" : "edit"}
+                  onValueChange={(v) => setPreview(v === "preview")}
+                  items={[
+                    { value: "edit", label: "Edit", icon: Pencil },
+                    { value: "preview", label: "Preview", icon: Eye },
+                  ]}
+                />
               ) : null}
             </div>
             {preview ? (
-              <div className="relative max-h-[50vh] overflow-y-auto rounded-lg border border-border px-4 py-3">
+              <div className="relative max-h-[50vh] overflow-y-auto rounded-[16px] bg-field px-5 py-4 shadow-[0_0_0_1px_var(--rule)]">
                 <Markdown source={content} size="sm" />
               </div>
             ) : (
@@ -153,14 +161,14 @@ export function ImportDocDialog({ projectId, stage, onImported, onSubmit, trigge
                   setError(null);
                 }}
                 spellCheck={false}
-                className="max-h-[50vh] font-mono text-xs leading-5"
+                className="max-h-[50vh] font-mono text-[13px] leading-6"
                 placeholder={stage === "requirements" ? "# BRD: Ambassador Agreement Acceptance Reporting\n\n## Business and Product Lead\n…" : "# Architecture Approach - Ambassador Agreement Acceptance Reporting\n…"}
               />
             )}
             {unusual ? <Notice>This does not start with {stage === "requirements" ? '"# BRD: <title>"' : '"# Architecture Approach - <title>"'}; requirements may not be parsed from it.</Notice> : null}
           </TabsContent>
           <TabsContent value="confluence" className="space-y-2">
-            <label htmlFor={refId} className="text-xs font-medium">
+            <label htmlFor={refId} className="text-[13px] font-medium text-heading">
               Page id or URL
             </label>
             <Input
@@ -173,12 +181,12 @@ export function ImportDocDialog({ projectId, stage, onImported, onSubmit, trigge
               placeholder="48213377 or https://…/wiki/spaces/CP/pages/48213377/…"
               className="font-mono text-[13px]"
             />
-            {ref.trim() ? <p className="text-[11px] text-muted-foreground">{pageId ? <>Page id <span className="font-mono">{pageId}</span></> : "Not a page id or page URL yet."}</p> : null}
-            <p className="text-[11px] text-muted-foreground">Mock: the page is not really fetched; the server returns a sample {doc} for it.</p>
+            {ref.trim() ? <p className="text-xs text-muted-foreground">{pageId ? <>Page id <span className="font-mono">{pageId}</span></> : "Not a page id or page URL yet."}</p> : null}
+            <p className="text-xs text-muted-foreground">Mock: the page is not really fetched; the server returns a sample {doc} for it.</p>
           </TabsContent>
         </Tabs>
         <div className="space-y-1.5">
-          <label htmlFor={titleId} className="text-xs font-medium">
+          <label htmlFor={titleId} className="text-[13px] font-medium text-heading">
             Title <span className="font-normal text-muted-foreground">optional{tab === "paste" && heading ? `; defaults to "${heading}"` : ""}</span>
           </label>
           <Input id={titleId} value={title} onChange={(e) => setTitle(e.target.value)} />
@@ -189,10 +197,10 @@ export function ImportDocDialog({ projectId, stage, onImported, onSubmit, trigge
           </p>
         ) : null}
         <DialogFooter>
-          <Button type="button" variant="outline" className="rounded-full" onClick={() => setOpen(false)}>
+          <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
             Cancel
           </Button>
-          <Button type="button" className="rounded-full" onClick={submit} disabled={importDoc.isPending || (tab === "paste" ? !content.trim() : !pageId)}>
+          <Button type="button" onClick={submit} disabled={importDoc.isPending || (tab === "paste" ? !content.trim() : !pageId)}>
             {importDoc.isPending ? "Importing…" : projectId ? `Import ${doc}` : `Use this ${doc}`}
           </Button>
         </DialogFooter>

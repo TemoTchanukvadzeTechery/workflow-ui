@@ -52,7 +52,7 @@ export function Breadcrumbs({ className }: { className?: string }) {
 
   return (
     <Breadcrumb className={cn("min-w-0", className)}>
-      <BreadcrumbList className="flex-nowrap gap-1 text-[13px] text-[#6E6E6E] sm:gap-1.5 dark:text-[#A1A1AA]">
+      <BreadcrumbList className="flex-nowrap gap-1 text-[13px] text-muted-foreground sm:gap-1.5">
         {crumbs.map((c, i) => {
           const last = i === crumbs.length - 1;
           // Narrow screens keep only the current page; the page header carries the context.
@@ -61,14 +61,14 @@ export function Breadcrumbs({ className }: { className?: string }) {
             <Fragment key={`${i}:${c.label}`}>
               <BreadcrumbItem className={cn("min-w-0", hideNarrow)}>
                 {last || !c.href ? (
-                  <BreadcrumbPage className={cn("truncate", c.mono && "font-mono text-xs", last ? "text-[#1A1A1A] dark:text-[#E4E4E7]" : "text-inherit")}>{c.label}</BreadcrumbPage>
+                  <BreadcrumbPage className={cn("truncate", c.mono && "font-mono text-xs", last ? "text-foreground" : "text-inherit")}>{c.label}</BreadcrumbPage>
                 ) : (
-                  <BreadcrumbLink asChild className={cn("max-w-[14rem] truncate rounded-sm text-inherit outline-none hover:text-[#0B0B0B] focus-visible:ring-3 focus-visible:ring-ring/50 dark:hover:text-[#F4F4F5]", c.mono && "font-mono text-xs")}>
+                  <BreadcrumbLink asChild className={cn("max-w-[14rem] truncate rounded-sm text-inherit outline-none hover:text-heading focus-visible:ring-3 focus-visible:ring-ring/50", c.mono && "font-mono text-xs")}>
                     <Link href={c.href}>{c.label}</Link>
                   </BreadcrumbLink>
                 )}
               </BreadcrumbItem>
-              {!last && <BreadcrumbSeparator className={cn("text-[#A6A6A6] dark:text-[#5E6068]", hideNarrow)}>/</BreadcrumbSeparator>}
+              {!last && <BreadcrumbSeparator className={cn("text-muted-numeral", hideNarrow)}>/</BreadcrumbSeparator>}
             </Fragment>
           );
         })}

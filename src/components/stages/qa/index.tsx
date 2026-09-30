@@ -44,7 +44,7 @@ export function StageSkeleton({ pills = 4 }: { pills?: number }) {
       </div>
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="space-y-4">
-          <div className="card-surface space-y-3 rounded-2xl p-4">
+          <div className="card-surface space-y-3 rounded-2xl p-5">
             <Skeleton className="h-4 w-40" />
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {Array.from({ length: 4 }, (_, i) => (
@@ -161,10 +161,10 @@ export function QaStageView({ projectId }: { projectId: string }) {
         {active === "tasks" ? (
           <TasksPanel projectId={projectId} bundle={bundle} readOnly={readOnly} onReview={(taskId) => setReview({ taskId })} next={next} onGo={go} />
         ) : active === "traceability" ? (
-          <div className="card-surface rounded-2xl p-4">
-            <div className="mb-3 space-y-0.5">
-              <h2 className="text-base font-medium">Requirement traceability</h2>
-              <p className="text-[13px] text-muted-foreground">Every BRD requirement, traced through the AAD and the epics to the tasks, their acceptance criteria and the QA evidence.</p>
+          <div className="card-surface rounded-2xl p-5">
+            <div className="mb-4 space-y-1">
+              <h2 className="text-[20px] leading-7 font-medium tracking-[-0.015em] text-heading">Requirement traceability</h2>
+              <p className="text-[13px] leading-5 text-muted-foreground">Every BRD requirement, traced through the AAD and the epics to the tasks, their acceptance criteria and the QA evidence.</p>
             </div>
             <TraceMatrix projectId={projectId} rows={bundle.trace} tasks={bundle.tasks} epics={bundle.epics} evidence={bundle.evidence} readOnly={readOnly} onOpenEvidence={(taskId, evidenceId) => setReview({ taskId, evidenceId })} />
           </div>

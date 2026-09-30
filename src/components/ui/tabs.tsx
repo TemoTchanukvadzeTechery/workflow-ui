@@ -4,6 +4,7 @@ import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 import { Tabs as TabsPrimitive } from "radix-ui"
+import { useScrollFade } from "@/components/common/use-scroll-fade"
 
 function Tabs({
   className,
@@ -26,10 +27,11 @@ function Tabs({
 /*
  * Every Tabs list is a segmented control (STYLE.md 3): a well track (16px radius, 4px padding,
  * 44px tall) with the active segment raised. `line` is kept for compatibility and renders the
- * same control, so wrapping lists (flex-wrap) still read as one group.
+ * same control. A horizontal list is always one row: when the tabs do not fit it scrolls
+ * sideways with an edge fade (row-scroll-x) instead of wrapping into a second row.
  */
 const tabsListVariants = cva(
-  "group/tabs-list inline-flex w-fit items-center justify-center gap-1 rounded-[16px] bg-well p-1 text-muted-foreground group-data-horizontal/tabs:h-11 group-data-vertical/tabs:h-fit group-data-vertical/tabs:flex-col group-data-vertical/tabs:items-stretch",
+  "group/tabs-list row-scroll-x inline-flex w-fit max-w-full min-w-0 items-center justify-start gap-1 rounded-[16px] bg-well p-1 text-muted-foreground group-data-horizontal/tabs:h-11 group-data-vertical/tabs:h-fit group-data-vertical/tabs:flex-col group-data-vertical/tabs:items-stretch",
   {
     variants: {
       variant: {
@@ -43,17 +45,36 @@ const tabsListVariants = cva(
   }
 )
 
+/** Horizontal lists never wrap, even when a caller still passes flex-wrap / h-auto. */
+const ONE_ROW = "flex-nowrap group-data-horizontal/tabs:h-11"
+
 function TabsList({
   className,
   variant = "default",
+  ref,
   ...props
 }: React.ComponentProps<typeof TabsPrimitive.List> &
   VariantProps<typeof tabsListVariants>) {
+  const fadeRef = useScrollFade<HTMLDivElement>()
+  const setRef = React.useCallback(
+    (el: HTMLDivElement | null) => {
+      if (typeof ref === "function") ref(el)
+      else if (ref) ref.current = el
+      const cleanup = fadeRef(el)
+      return () => {
+        cleanup?.()
+        if (typeof ref === "function") ref(null)
+        else if (ref) ref.current = null
+      }
+    },
+    [ref, fadeRef]
+  )
   return (
     <TabsPrimitive.List
+      ref={setRef}
       data-slot="tabs-list"
       data-variant={variant}
-      className={cn(tabsListVariants({ variant }), className)}
+      className={cn(tabsListVariants({ variant }), className, ONE_ROW)}
       {...props}
     />
   )

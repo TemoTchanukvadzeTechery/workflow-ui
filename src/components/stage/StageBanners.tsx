@@ -28,12 +28,12 @@ export function LockedStage({ stage, className, children }: { stage: StageId; cl
   const prev = STAGES.find((s) => s.n === def.n - 1);
   return (
     <div className={className}>
-      <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-border px-6 py-10 text-center">
-        <span className="inline-flex size-9 items-center justify-center rounded-full bg-muted text-muted-foreground">
-          <Lock aria-hidden className="size-4" />
+      <div className="card-surface flex flex-col items-center gap-2.5 rounded-2xl px-6 py-12 text-center">
+        <span className="circle-btn mb-1 size-11 text-muted-foreground">
+          <Lock aria-hidden className="size-[18px]" strokeWidth={1.75} />
         </span>
-        <p className="text-[15px] font-medium">Unlocks when {prev ? prev.title : "the previous stage"} is approved</p>
-        <p className="max-w-md text-[13px] text-muted-foreground">
+        <p className="text-[20px] leading-7 font-medium tracking-[-0.015em] text-heading">Unlocks when {prev ? prev.title : "the previous stage"} is approved</p>
+        <p className="max-w-md text-sm text-muted-foreground">
           {def.title} starts once {prev ? `Stage ${prev.n}, ${prev.title},` : "the previous stage"} passes its gate. Anything already here stays and is shown read-only.
         </p>
         {children}
@@ -82,7 +82,7 @@ export function ReopenDialog({ projectId, stage, trigger, open, onOpenChange, on
       {trigger !== null ? (
         <DialogTrigger asChild>
           {trigger ?? (
-            <Button variant="outline" size="sm" className="rounded-full">
+            <Button variant="secondary">
               <History aria-hidden />
               Reopen
             </Button>
@@ -98,16 +98,16 @@ export function ReopenDialog({ projectId, stage, trigger, open, onOpenChange, on
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-1.5">
-          <label htmlFor={commentId} className="text-xs font-medium">
+          <label htmlFor={commentId} className="text-[13px] font-medium text-heading">
             Why are you reopening it? <span className="font-normal text-muted-foreground">required</span>
           </label>
           <Textarea id={commentId} rows={3} value={comment} onChange={(e) => setComment(e.target.value)} placeholder="e.g. Legal changed the retention rule; the BRD needs a new requirement." />
         </div>
         <DialogFooter>
-          <Button variant="outline" className="rounded-full" onClick={() => setOpen(false)}>
+          <Button variant="secondary" onClick={() => setOpen(false)}>
             Cancel
           </Button>
-          <Button className="rounded-full" onClick={submit} disabled={!comment.trim() || reopen.isPending}>
+          <Button onClick={submit} disabled={!comment.trim() || reopen.isPending}>
             {reopen.isPending ? "Reopening…" : `Reopen ${def.title}`}
           </Button>
         </DialogFooter>

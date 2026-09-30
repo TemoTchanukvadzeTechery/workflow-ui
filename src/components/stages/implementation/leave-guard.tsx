@@ -68,9 +68,8 @@ export function LeaveGuard({ active, title, body }: { active: boolean; title: st
           <AlertDialogDescription>{body}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className="rounded-full">Stay here</AlertDialogCancel>
+          <AlertDialogCancel>Stay here</AlertDialogCancel>
           <AlertDialogAction
-            className="rounded-full"
             onClick={() => {
               const href = held;
               setHeld(null);

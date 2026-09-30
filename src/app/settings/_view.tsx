@@ -7,7 +7,7 @@
 import { AlertTriangle, Check, CircleX, Database, FastForward, RotateCcw, Server, UserRound } from "lucide-react";
 import { useId, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { ErrorState, InitialsAvatar, PageHeader, SectionCard, StatusPill } from "@/components/common";
+import { ErrorState, InitialsAvatar, PageHeader, SectionCard, SegmentedControl, StatusPill } from "@/components/common";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   AlertDialog,
@@ -47,8 +47,8 @@ function OptionCard({ checked, onSelect, disabled, title, badge, children, icon 
       disabled={disabled}
       onClick={onSelect}
       className={cn(
-        "flex min-w-0 flex-col gap-1.5 rounded-xl border p-3 text-left transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60",
-        checked ? "border-primary/50 bg-primary-soft ring-1 ring-primary/25" : "bg-card hover:bg-muted/60",
+        "flex min-w-0 flex-col gap-1.5 rounded-[20px] p-4 text-left transition-[background-color,box-shadow] duration-150 outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-60",
+        checked ? "bg-(--chip-bg) shadow-[0_0_0_1.5px_var(--ring),0_8px_20px_-12px_rgb(27_111_252/0.45)]" : "bg-well hover:bg-well-hover",
       )}
     >
       <span className="flex items-center gap-2">
@@ -56,11 +56,11 @@ function OptionCard({ checked, onSelect, disabled, title, badge, children, icon 
           {checked ? <Check className="size-2.5" strokeWidth={3} /> : null}
         </span>
         {icon}
-        <span className="text-[13px] font-medium text-foreground">{title}</span>
+        <span className="text-[15px] font-medium text-heading">{title}</span>
         <span className="flex-1" />
         {badge}
       </span>
-      <span className="pl-6 text-xs leading-[18px] text-muted-foreground">{children}</span>
+      <span className="pl-6 text-[13px] leading-5 text-muted-foreground">{children}</span>
     </button>
   );
 }
@@ -79,7 +79,7 @@ function ActingAsCard() {
     toast.success(`Acting as ${name}`);
   };
   return (
-    <SectionCard kicker="You" title="Acting as" description="Every answer, approval and note records this name.">
+    <SectionCard title="Acting as" description="Every answer, approval and note records this name.">
       <form
         className="flex flex-col gap-3"
         onSubmit={(e) => {
@@ -87,20 +87,20 @@ function ActingAsCard() {
           save();
         }}
       >
-        <label htmlFor={inputId} className="text-xs font-medium">
+        <label htmlFor={inputId} className="text-[13px] font-medium text-heading">
           Display name
         </label>
         <div className="flex flex-wrap items-center gap-2">
-          <InitialsAvatar name={value.trim() || DEFAULT_ACTOR} size="md" />
-          <Input id={inputId} value={value} onChange={(e) => setDraft(e.target.value)} placeholder={DEFAULT_ACTOR} className="h-9 min-w-0 flex-1 basis-48" autoComplete="name" maxLength={60} />
-          <Button type="submit" className="rounded-full" disabled={!dirty}>
+          <InitialsAvatar name={value.trim() || DEFAULT_ACTOR} size="xl" ring />
+          <Input id={inputId} value={value} onChange={(e) => setDraft(e.target.value)} placeholder={DEFAULT_ACTOR} className="min-w-0 flex-1 basis-48" autoComplete="name" maxLength={60} />
+          <Button type="submit" size="lg" disabled={!dirty}>
             Save
           </Button>
         </div>
-        <p className="flex items-start gap-1.5 rounded-xl bg-muted/60 px-3 py-2 text-xs leading-[18px] text-muted-foreground">
-          <UserRound aria-hidden className="mt-px size-3.5 shrink-0" />
+        <p className="flex items-start gap-2 rounded-[16px] bg-well px-4 py-3 text-[13px] leading-5 text-muted-foreground">
+          <UserRound aria-hidden className="mt-0.5 size-4 shrink-0" strokeWidth={1.75} />
           <span>
-            <span className="font-medium text-foreground">No roles yet: anyone can approve.</span> Stage owners (Product Owner, Architect, Developer, QA) are labels only. The name is kept in this browser and sent with each request.
+            <span className="font-medium text-heading">No roles yet: anyone can approve.</span> Stage owners (Product Owner, Architect, Developer, QA) are labels only. The name is kept in this browser and sent with each request.
           </span>
         </p>
       </form>
@@ -110,29 +110,36 @@ function ActingAsCard() {
 
 function SpeedCard({ settings, pending }: { settings?: Settings; pending: boolean }) {
   const update = useUpdateSettings();
+  const current = SPEEDS.find((s) => s.value === settings?.speed);
   return (
-    <SectionCard kicker="Simulation" title="Demo speed" description="How long each simulated agent step takes. Applies to every run, including ones already going." className="@container">
+    <SectionCard title="Demo speed" description="How long each simulated agent step takes. Applies to every run, including ones already going." bodyClassName="flex flex-col gap-3">
       {!settings ? (
-        <div className="grid gap-2 @xl:grid-cols-3" aria-hidden>
-          {SPEEDS.map((s) => (
-            <Skeleton key={s.value} className="h-20 rounded-xl" />
-          ))}
-        </div>
+        <Skeleton className="h-12 rounded-[16px]" aria-hidden />
       ) : (
-        <div role="radiogroup" aria-label="Demo speed" className="grid gap-2 @xl:grid-cols-3">
-          {SPEEDS.map((s) => (
-            <OptionCard
-              key={s.value}
-              checked={settings.speed === s.value}
-              disabled={pending || update.isPending}
-              onSelect={() => settings.speed !== s.value && update.mutate({ speed: s.value }, { onSuccess: () => toast.success(`Demo speed: ${s.label.toLowerCase()}`) })}
-              title={s.label}
-              badge={<span className="font-mono text-[11px] text-muted-foreground">{s.factor}</span>}
-            >
-              {s.line}
-            </OptionCard>
-          ))}
-        </div>
+        <>
+          <SegmentedControl
+            aria-label="Demo speed"
+            fullWidth
+            itemClassName="px-2.5 sm:px-4"
+            value={settings.speed}
+            onValueChange={(speed) => {
+              const s = SPEEDS.find((x) => x.value === speed);
+              update.mutate({ speed }, { onSuccess: () => toast.success(`Demo speed: ${(s?.label ?? speed).toLowerCase()}`) });
+            }}
+            items={SPEEDS.map((s) => ({
+              value: s.value,
+              label: (
+                <>
+                  {s.label} <span className="hidden font-mono text-xs font-normal text-muted-foreground sm:inline">{s.factor}</span>
+                </>
+              ),
+              ariaLabel: `${s.label} (${s.factor})`,
+              title: s.line,
+              disabled: pending || update.isPending,
+            }))}
+          />
+          {current ? <p className="text-[13px] leading-5 text-muted-foreground">{current.line}</p> : null}
+        </>
       )}
     </SectionCard>
   );
@@ -165,7 +172,7 @@ function SwitchToDaemonDialog({ open, onOpenChange, url, probe }: { open: boolea
             This applies to everyone using this demo server, not just you. Runs, pending requests and blobs then come from the daemon at <span className="font-mono">{url}</span>, while projects stay mocked and keep pointing at mock run ids the daemon does not know.
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <div role="status" aria-live="polite" className="flex items-start gap-2 rounded-xl bg-muted/60 px-3 py-2 text-[13px]">
+        <div role="status" aria-live="polite" className="flex items-start gap-2 rounded-[16px] bg-well px-4 py-3 text-sm">
           {probe.isPending || !result ? (
             <>
               <Spinner className="mt-0.5" />
@@ -191,13 +198,13 @@ function SwitchToDaemonDialog({ open, onOpenChange, url, probe }: { open: boolea
           </p>
         ) : null}
         <AlertDialogFooter>
-          <AlertDialogCancel className="rounded-full">Cancel</AlertDialogCancel>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
           {!probe.isPending && result && !result.ok ? (
-            <Button variant="outline" className="rounded-full" onClick={() => probe.mutate()}>
+            <Button variant="secondary" onClick={() => probe.mutate()}>
               Check again
             </Button>
           ) : null}
-          <Button className="rounded-full" disabled={!reachable || update.isPending} onClick={switchNow}>
+          <Button disabled={!reachable || update.isPending} onClick={switchNow}>
             {update.isPending ? "Switching…" : "Switch for everyone"}
           </Button>
         </AlertDialogFooter>
@@ -232,11 +239,11 @@ function DataSourceCard({ settings }: { settings?: Settings }) {
   };
 
   return (
-    <SectionCard kicker="Backend" title="Data source" description="Where the weft API (/api/weft) is served from.">
+    <SectionCard title="Data source" description="Where the weft API (/api/weft) is served from.">
       {!settings ? (
         <div className="space-y-2" aria-hidden>
-          <Skeleton className="h-16 rounded-xl" />
-          <Skeleton className="h-16 rounded-xl" />
+          <Skeleton className="h-20 rounded-[20px]" />
+          <Skeleton className="h-20 rounded-[20px]" />
         </div>
       ) : (
         <div className="flex flex-col gap-3">
@@ -246,8 +253,8 @@ function DataSourceCard({ settings }: { settings?: Settings }) {
               disabled={update.isPending}
               onSelect={() => weft && update.mutate({ dataSource: "mock" }, { onSuccess: () => toast.success("Data source: built-in mock") })}
               title="Mock (built in)"
-              icon={<Database aria-hidden className="size-3.5 text-muted-foreground" />}
-              badge={<span className="text-[11px] text-muted-foreground">Default</span>}
+              icon={<Database aria-hidden className="size-4 text-muted-foreground" strokeWidth={1.75} />}
+              badge={<span className="text-xs text-muted-foreground">Default</span>}
             >
               A simulated weft engine inside this app runs all five workflows on timers. Nothing leaves this server.
             </OptionCard>
@@ -261,7 +268,7 @@ function DataSourceCard({ settings }: { settings?: Settings }) {
                 setConfirmDaemon(true);
               }}
               title="weft daemon"
-              icon={<Server aria-hidden className="size-3.5 text-muted-foreground" />}
+              icon={<Server aria-hidden className="size-4 text-muted-foreground" strokeWidth={1.75} />}
             >
               Proxy /api/weft to a real daemon. Needs the daemon running, by default on 127.0.0.1:4781. Applies to everyone on this server; you confirm first.
             </OptionCard>
@@ -274,7 +281,7 @@ function DataSourceCard({ settings }: { settings?: Settings }) {
               saveUrl();
             }}
           >
-            <label htmlFor={urlId} className="text-xs font-medium">
+            <label htmlFor={urlId} className="text-[13px] font-medium text-heading">
               Daemon URL
             </label>
             <div className="flex flex-wrap gap-2">
@@ -282,13 +289,13 @@ function DataSourceCard({ settings }: { settings?: Settings }) {
                 id={urlId}
                 value={daemon}
                 onChange={(e) => setUrl(e.target.value)}
-                className="h-9 min-w-0 flex-1 basis-56 font-mono text-[13px]"
+                className="min-w-0 flex-1 basis-56 font-mono text-sm md:text-sm"
                 inputMode="url"
                 spellCheck={false}
                 aria-invalid={urlError ? true : undefined}
                 aria-describedby={urlError ? `${urlId}-err` : undefined}
               />
-              <Button type="submit" variant="outline" className="rounded-full" disabled={url === null || url.trim() === settings.weftDaemon || update.isPending}>
+              <Button type="submit" variant="secondary" size="lg" disabled={url === null || url.trim() === settings.weftDaemon || update.isPending}>
                 Save URL
               </Button>
             </div>
@@ -317,17 +324,17 @@ function DemoToolsCard() {
   const reset = useResetDemo();
   const ff = useFastForward();
   return (
-    <SectionCard kicker="Tools" title="Demo tools" description="These affect everyone using this demo server." bodyClassName="flex flex-col divide-y">
+    <SectionCard title="Demo tools" description="These affect everyone using this demo server." bodyClassName="flex flex-col divide-y divide-rule">
       <div className="flex flex-col gap-3 pb-4">
         <div className="space-y-1">
-          <h3 className="text-[13px] font-medium text-foreground">Skip to the next human step</h3>
-          <p className="text-xs leading-[18px] text-muted-foreground">
+          <h3 className="text-[15px] font-medium text-heading">Skip to the next human step</h3>
+          <p className="text-[13px] leading-5 text-muted-foreground">
             Every running agent finishes its simulated work now and stops at its next question, review or approval. Runs already waiting on a person are left alone.
           </p>
         </div>
         <Button
-          variant="outline"
-          className="self-start rounded-full"
+          variant="secondary"
+          className="self-start"
           disabled={ff.isPending}
           onClick={() => ff.mutate(undefined, { onSuccess: () => toast.success("Skipped ahead: running agents moved on to their next human step") })}
         >
@@ -337,12 +344,12 @@ function DemoToolsCard() {
       </div>
       <div className="flex flex-col gap-3 pt-4">
         <div className="space-y-1">
-          <h3 className="text-[13px] font-medium text-foreground">Reset demo data</h3>
-          <p className="text-xs leading-[18px] text-muted-foreground">Puts the seven seeded projects back in their starting states and deletes projects created since. Open pages refresh on their own.</p>
+          <h3 className="text-[15px] font-medium text-heading">Reset demo data</h3>
+          <p className="text-[13px] leading-5 text-muted-foreground">Puts the seven seeded projects back in their starting states and deletes projects created since. Open pages refresh on their own.</p>
         </div>
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="outline" className="self-start rounded-full text-destructive hover:text-destructive" disabled={reset.isPending}>
+            <Button variant="destructive" className="self-start" disabled={reset.isPending}>
               {reset.isPending ? <Spinner /> : <RotateCcw aria-hidden />}
               Reset demo data
             </Button>
@@ -355,8 +362,8 @@ function DemoToolsCard() {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel className="rounded-full">Cancel</AlertDialogCancel>
-              <AlertDialogAction className="rounded-full bg-destructive text-white hover:bg-destructive/90" onClick={() => reset.mutate()}>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction className="bg-destructive bg-none text-white shadow-none hover:bg-destructive/90 dark:text-[#1a0b0b]" onClick={() => reset.mutate()}>
                 Reset demo data
               </AlertDialogAction>
             </AlertDialogFooter>
@@ -373,52 +380,51 @@ function AboutCard() {
   const stageOf = (name: string) => STAGES.find((s) => s.workflows.includes(name));
   return (
     <SectionCard
-      kicker="About"
       title="Workflows"
       description="Requirements and Architecture run the real po-workspace weft workflows (scripted here). Implementation and QA are mocked in the same shape, so real workflows can replace them later."
       flush
     >
       {workflows.isPending ? (
-        <div className="space-y-2 border-t px-5 py-4" aria-busy="true" aria-label="Loading workflows">
+        <div className="space-y-2 border-t border-rule px-5 py-4 sm:px-7" aria-busy="true" aria-label="Loading workflows">
           {Array.from({ length: 5 }, (_, i) => (
             <Skeleton key={i} className="h-10 rounded-lg" />
           ))}
         </div>
       ) : workflows.error ? (
-        <div className="border-t">
+        <div className="border-t border-rule">
           <ErrorState title="Could not load workflows" error={workflows.error} onRetry={() => void workflows.refetch()} size="sm" />
         </div>
       ) : (
-        <ul className="divide-y border-t">
+        <ul className="divide-y divide-rule border-t border-rule">
           {(workflows.data ?? []).map((w) => {
             const real = REAL_WORKFLOWS.has(w.name);
             const stage = stageOf(w.name);
             return (
-              <li key={w.id} className="flex flex-col gap-2 px-5 py-3 sm:flex-row sm:items-start sm:gap-4">
+              <li key={w.id} className="flex flex-col gap-2 px-5 py-4 sm:flex-row sm:items-start sm:gap-5 sm:px-7">
                 <div className="flex shrink-0 flex-col items-start gap-1 sm:w-40">
-                  <span className="font-mono text-[13px] text-foreground">{w.name}</span>
+                  <span className="font-mono text-sm text-heading">{w.name}</span>
                   {stage ? (
-                    <span className="text-[11px] text-muted-foreground">
+                    <span className="text-xs text-muted-foreground">
                       Stage {stage.n} · {stage.title}
                     </span>
                   ) : null}
                   <StatusPill tone={real ? "success" : "neutral"} icon={real ? Check : null} label={real ? "Real weft workflow" : "Mocked (spec)"} size="sm" className="mt-0.5" />
                 </div>
-                <p className="min-w-0 flex-1 text-xs leading-[18px] text-muted-foreground">{w.description}</p>
+                <p className="min-w-0 flex-1 text-[13px] leading-5 text-muted-foreground">{w.description}</p>
               </li>
             );
           })}
-          <li className="flex flex-col gap-1 px-5 py-3 sm:flex-row sm:items-start sm:gap-4">
+          <li className="flex flex-col gap-1 px-5 py-4 sm:flex-row sm:items-start sm:gap-5 sm:px-7">
             <div className="flex shrink-0 flex-col gap-1 sm:w-40">
-              <span className="text-[13px] text-foreground">PO Review</span>
-              <span className="text-[11px] text-muted-foreground">Stage 5</span>
+              <span className="text-sm text-heading">PO Review</span>
+              <span className="text-xs text-muted-foreground">Stage 5</span>
             </div>
-            <p className="min-w-0 flex-1 text-xs leading-[18px] text-muted-foreground">No workflow: the Product Owner reviews the certified work and signs off in the app.</p>
+            <p className="min-w-0 flex-1 text-[13px] leading-5 text-muted-foreground">No workflow: the Product Owner reviews the certified work and signs off in the app.</p>
           </li>
         </ul>
       )}
       {meta.data ? (
-        <p className="border-t px-5 py-3 font-mono text-[11px] text-muted-foreground">
+        <p className="border-t border-rule px-5 py-4 font-mono text-xs text-muted-foreground sm:px-7">
           weft {meta.data.version} · repo {meta.data.repo.name} · {meta.data.defaults.provider}
           {meta.data.defaults.model ? ` / ${meta.data.defaults.model}` : ""}
         </p>
@@ -431,7 +437,7 @@ export function SettingsView() {
   const settings = useSettings();
   return (
     <div className="@container flex min-w-0 flex-col gap-6">
-      <PageHeader kicker="Demo controls" title="Settings" description="This app runs on a mock of the weft daemon. These settings shape the demo; nothing here touches Jira, Confluence or a real repository." />
+      <PageHeader title="Settings" description="This app runs on a mock of the weft daemon. These settings shape the demo; nothing here touches Jira, Confluence or a real repository." />
       {settings.error && !settings.data ? (
         <SectionCard>
           <ErrorState title="Could not load settings" error={settings.error} onRetry={() => void settings.refetch()} />

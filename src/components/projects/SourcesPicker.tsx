@@ -55,16 +55,16 @@ function SourceChip({ source, onRemove, disabled }: { source: RequirementSource;
   const Icon = SOURCE_ICONS[source.kind];
   const mono = source.kind !== "note-text";
   return (
-    <li className="inline-flex h-7 max-w-full items-center gap-1.5 rounded-full border border-border bg-card pr-1 pl-2.5 text-xs" title={source.kind === "note-text" ? source.value : `${source.label} · added by ${source.addedBy.kind === "human" ? source.addedBy.name : "system"}`}>
+    <li className="inline-flex h-8 max-w-full items-center gap-1.5 rounded-full bg-well pr-1 pl-3 text-[13px] text-heading" title={source.kind === "note-text" ? source.value : `${source.label} · added by ${source.addedBy.kind === "human" ? source.addedBy.name : "system"}`}>
       <Icon aria-hidden className="size-3.5 shrink-0 text-muted-foreground" />
       <span className={cn("truncate", mono && "font-mono")}>{source.label}</span>
-      {source.kind === "confluence" && source.label !== source.value && !source.label.includes(source.value) ? <span className="font-mono text-[10.5px] text-muted-foreground">{source.value}</span> : null}
+      {source.kind === "confluence" && source.label !== source.value && !source.label.includes(source.value) ? <span className="font-mono text-[11px] text-muted-foreground">{source.value}</span> : null}
       <button
         type="button"
         onClick={onRemove}
         disabled={disabled}
         aria-label={`Remove ${SOURCE_KIND_LABEL[source.kind]} ${source.label}`}
-        className="inline-flex size-5 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+        className="inline-flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-raised hover:text-heading focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
       >
         <X aria-hidden className="size-3" />
       </button>
@@ -78,7 +78,7 @@ function NoteFilePicker({ onPick, taken }: { onPick: (path: string) => void; tak
   const typed = query.trim();
   const canUseTyped = typed.length > 0 && /\.(md|txt)$/i.test(typed) && !files.data?.some((f) => f.path === typed);
   return (
-    <Command className="rounded-lg border border-border" shouldFilter>
+    <Command className="rounded-[16px] shadow-[0_0_0_1px_var(--rule)]" shouldFilter>
       <CommandInput placeholder="Search notes/ files" value={query} onValueChange={setQuery} />
       <CommandList>
         <CommandEmpty>{files.isPending ? "Loading files…" : "No matching files in notes/."}</CommandEmpty>
@@ -88,7 +88,7 @@ function NoteFilePicker({ onPick, taken }: { onPick: (path: string) => void; tak
               <CommandItem key={f.path} value={f.path} disabled={taken.has(f.path)} onSelect={() => onPick(f.path)}>
                 <FileText aria-hidden />
                 <span className="truncate font-mono text-xs">{f.path}</span>
-                <span className="ml-auto text-[10.5px] text-muted-foreground">{taken.has(f.path) ? "added" : `${Math.max(1, Math.round(f.size / 1024))} KB`}</span>
+                <span className="ml-auto text-[11px] text-muted-foreground">{taken.has(f.path) ? "added" : `${Math.max(1, Math.round(f.size / 1024))} KB`}</span>
               </CommandItem>
             ))}
           </CommandGroup>
@@ -151,12 +151,12 @@ function AddSourceForm({ onAdd, existing, workflow }: { onAdd: (kind: Requiremen
           setError(null);
         }}
         ariaLabel="Source type"
-        className="flex w-full flex-wrap rounded-2xl"
+        className="flex w-full flex-wrap"
         options={KINDS.map((k) => ({ value: k, label: SOURCE_KIND_LABEL[k], icon: SOURCE_ICONS[k] }))}
       />
       {kind === "jira" || kind === "confluence" ? (
         <form className="space-y-2" onSubmit={ownSubmit(addRef)}>
-          <label htmlFor={refId} className="block text-xs font-medium">
+          <label htmlFor={refId} className="block text-[13px] font-medium text-heading">
             {kind === "jira" ? "Issue or epic key" : "Page id or URL"}
           </label>
           <Input
@@ -174,11 +174,11 @@ function AddSourceForm({ onAdd, existing, workflow }: { onAdd: (kind: Requiremen
           />
           {kind === "confluence" ? (
             <>
-              <label htmlFor={titleId} className="block text-xs font-medium">
+              <label htmlFor={titleId} className="block text-[13px] font-medium text-heading">
                 Title <span className="font-normal text-muted-foreground">optional</span>
               </label>
               <Input id={titleId} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Notification preferences" className="placeholder:text-muted-foreground/60" aria-describedby={`${titleId}-hint`} />
-              <p id={`${titleId}-hint`} className="text-[11px] text-muted-foreground">
+              <p id={`${titleId}-hint`} className="text-xs text-muted-foreground">
                 Only a label for this list; {workflow} is sent the page id and reads the page&apos;s own title.
               </p>
             </>
@@ -188,9 +188,9 @@ function AddSourceForm({ onAdd, existing, workflow }: { onAdd: (kind: Requiremen
               {error}
             </p>
           ) : null}
-          <p className="text-[11px] text-muted-foreground">Sent to {workflow} as a seed; discovery fetches it first.</p>
+          <p className="text-xs text-muted-foreground">Sent to {workflow} as a seed; discovery fetches it first.</p>
           <div className="flex justify-end">
-            <Button type="submit" size="sm" className="rounded-full" disabled={!ref.trim()}>
+            <Button type="submit" size="sm" disabled={!ref.trim()}>
               Add source
             </Button>
           </div>
@@ -198,7 +198,7 @@ function AddSourceForm({ onAdd, existing, workflow }: { onAdd: (kind: Requiremen
       ) : kind === "note-file" ? (
         <div className="space-y-2">
           <NoteFilePicker taken={taken} onPick={(path) => onAdd("note-file", path)} />
-          <p className="text-[11px] text-muted-foreground">A repo-relative file, sent to {workflow} in notes and cited as {workflow === "architect-aad" ? "A1, A2" : "N1, N2"}, … with line numbers.</p>
+          <p className="text-xs text-muted-foreground">A repo-relative file, sent to {workflow} in notes and cited as {workflow === "architect-aad" ? "A1, A2" : "N1, N2"}, … with line numbers.</p>
         </div>
       ) : (
         <form
@@ -209,7 +209,7 @@ function AddSourceForm({ onAdd, existing, workflow }: { onAdd: (kind: Requiremen
             reset();
           })}
         >
-          <label htmlFor={noteId} className="block text-xs font-medium">
+          <label htmlFor={noteId} className="block text-[13px] font-medium text-heading">
             Note text
           </label>
           <Textarea id={noteId} autoFocus rows={4} value={note} onChange={(e) => setNote(e.target.value)} placeholder="e.g. Legal wants aggregate numbers only." className="placeholder:text-muted-foreground/60" />
@@ -219,7 +219,7 @@ function AddSourceForm({ onAdd, existing, workflow }: { onAdd: (kind: Requiremen
             </Notice>
           ) : null}
           <div className="flex justify-end">
-            <Button type="submit" size="sm" variant={single ? "outline" : "default"} className="rounded-full" disabled={!note.trim()}>
+            <Button type="submit" size="sm" variant={single ? "secondary" : "default"} disabled={!note.trim()}>
               {single ? "Add anyway" : "Add note"}
             </Button>
           </div>
@@ -239,12 +239,12 @@ export function SourcesPicker({ value, onChange, disabled, className, docLabel =
   };
   return (
     <div className={cn("space-y-2.5", className)}>
-      {groups.length === 0 ? <p className="text-[13px] text-muted-foreground">No sources yet. Add Jira issues, Confluence pages or notes the {docLabel} should draw on.</p> : null}
+      {groups.length === 0 ? <p className="text-sm text-muted-foreground">No sources yet. Add Jira issues, Confluence pages or notes the {docLabel} should draw on.</p> : null}
       {groups.map((g) => (
         <div key={g.kind} className="space-y-1.5">
           <div className="flex items-baseline gap-2 text-xs">
             <span className="font-medium">{SOURCE_GROUP_LABEL[g.kind]}</span>
-            <span className="text-[11px] text-muted-foreground">{g.kind === "jira" || g.kind === "confluence" ? "searched first" : "read as notes"}</span>
+            <span className="text-xs text-muted-foreground">{g.kind === "jira" || g.kind === "confluence" ? "searched first" : "read as notes"}</span>
           </div>
           <ul className="flex flex-wrap gap-1.5" aria-label={SOURCE_GROUP_LABEL[g.kind]}>
             {g.items.map((s) => (
@@ -255,12 +255,12 @@ export function SourcesPicker({ value, onChange, disabled, className, docLabel =
       ))}
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button type="button" variant="outline" size="sm" className="rounded-full" disabled={disabled}>
-            <Plus aria-hidden />
+          <Button type="button" variant="secondary" disabled={disabled}>
             Add source
+            <Plus aria-hidden />
           </Button>
         </PopoverTrigger>
-        <PopoverContent align="start" className="w-[min(26rem,calc(100vw-2rem))] p-3">
+        <PopoverContent align="start" className="w-[min(26rem,calc(100vw-2rem))] p-4">
           <AddSourceForm existing={value} onAdd={add} workflow={workflow} />
         </PopoverContent>
       </Popover>

@@ -47,14 +47,14 @@ export function DataPane({ title, note, value, emptyText = "Nothing recorded.", 
   const simple = value === null || typeof value !== "object" || isBlobRef(value);
 
   return (
-    <div className={cn("min-w-0 overflow-hidden rounded-xl border bg-card", className)}>
-      <div className="flex min-h-10 flex-wrap items-center gap-x-2 gap-y-1 border-b bg-muted/40 px-3 py-1.5">
-        <span className="kicker text-foreground/80">{title}</span>
-        {note && <span className="text-xs text-muted-foreground">{note}</span>}
+    <div className={cn("min-w-0 overflow-hidden rounded-[16px] bg-field shadow-[0_0_0_1px_var(--rule)]", className)}>
+      <div className="flex min-h-11 flex-wrap items-center gap-x-2 gap-y-1 border-b border-rule py-1.5 pr-1.5 pl-4">
+        <span className="text-[13px] font-medium text-heading">{title}</span>
+        {note && <span className="text-[13px] text-muted-foreground">{note}</span>}
         <span className="flex-1" />
         {actions}
         {!empty && !simple && (
-          <div role="radiogroup" aria-label={`${title} view`} className="inline-flex rounded-full border bg-background p-0.5">
+          <div role="radiogroup" aria-label={`${title} view`} className="inline-flex h-8 items-center gap-0.5 rounded-[10px] bg-well p-[3px]">
             {(["structured", "json"] as const).map((m) => (
               <button
                 key={m}
@@ -63,8 +63,8 @@ export function DataPane({ title, note, value, emptyText = "Nothing recorded.", 
                 aria-checked={mode === m}
                 onClick={() => setMode(m)}
                 className={cn(
-                  "h-6 rounded-full px-2.5 text-[11px] font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none",
-                  mode === m ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
+                  "h-full rounded-[8px] px-2.5 text-xs font-medium transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
+                  mode === m ? "bg-raised text-heading shadow-(--raised-shadow)" : "text-muted-foreground hover:text-heading",
                 )}
               >
                 {m === "structured" ? "Structured" : "JSON"}
@@ -73,7 +73,7 @@ export function DataPane({ title, note, value, emptyText = "Nothing recorded.", 
           </div>
         )}
       </div>
-      <div className="relative max-h-[560px] min-w-0 overflow-auto p-3">
+      <div className="relative max-h-[560px] min-w-0 overflow-auto p-4">
         {empty ? (
           <p className="text-[13px] text-muted-foreground">{emptyText}</p>
         ) : mode === "json" && !simple ? (
@@ -110,7 +110,7 @@ function StructuredValue({ value }: { value: unknown }) {
   const entries = Object.entries(value as Record<string, unknown>).filter(([, v]) => v !== undefined);
   if (entries.length === 0) return <span className="font-mono text-xs text-muted-foreground">{"{}"} no fields</span>;
   return (
-    <dl className="flex flex-col divide-y divide-border/70">
+    <dl className="flex flex-col divide-y divide-rule">
       {entries.map(([k, v]) => (
         <Field key={k} name={k} value={v} />
       ))}
@@ -129,7 +129,7 @@ function Field({ name, value }: { name: string; value: unknown }) {
   const short = isShort(value);
   return (
     <div className={cn("grid min-w-0 gap-x-4 py-2 first:pt-0 last:pb-0", short ? "grid-cols-[minmax(96px,160px)_1fr]" : "grid-cols-1 gap-y-1.5")}>
-      <dt className="truncate font-mono text-[11px] leading-5 text-muted-foreground">{name}</dt>
+      <dt className="truncate font-mono text-xs leading-5 text-muted-foreground">{name}</dt>
       <dd className="min-w-0">
         {short ? <ShortValue value={value} /> : <StructuredValue value={value} />}
       </dd>
@@ -146,7 +146,7 @@ function ShortValue({ value }: { value: unknown }) {
     return (
       <span className="flex flex-wrap gap-1">
         {value.map((v, i) => (
-          <span key={i} className="inline-flex h-5 items-center rounded-md border bg-muted/60 px-1.5 font-mono text-[11px]">
+          <span key={i} className="inline-flex h-6 items-center rounded-full bg-well px-2 font-mono text-xs">
             {String(v)}
           </span>
         ))}
@@ -163,7 +163,7 @@ function StringValue({ text }: { text: string }) {
   if (md && !raw) {
     return (
       <div className="relative min-w-0">
-        <button type="button" onClick={() => setRaw(true)} className="float-right ml-2 rounded-full border px-2 text-[11px] text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none">
+        <button type="button" onClick={() => setRaw(true)} className="float-right ml-2 rounded-full bg-well px-2.5 py-0.5 text-xs text-muted-foreground hover:text-heading focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none">
           Raw
         </button>
         <Markdown source={text} size="sm" />
@@ -173,7 +173,7 @@ function StringValue({ text }: { text: string }) {
   return (
     <div className="relative min-w-0">
       {md && (
-        <button type="button" onClick={() => setRaw(false)} className="float-right ml-2 rounded-full border px-2 text-[11px] text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none">
+        <button type="button" onClick={() => setRaw(false)} className="float-right ml-2 rounded-full bg-well px-2.5 py-0.5 text-xs text-muted-foreground hover:text-heading focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none">
           Rendered
         </button>
       )}
@@ -190,7 +190,7 @@ function BlobValue({ blob }: { blob: BlobRef }) {
       <div className="flex flex-wrap items-center gap-2">
         <FileText aria-hidden className="size-4 text-muted-foreground" />
         <span className="font-mono text-xs text-muted-foreground">blob {blob.$blob.slice(0, 12)} · {formatBytes(blob.size)}</span>
-        <Button type="button" size="sm" variant="outline" className="h-6 rounded-full px-2.5 text-[11px]" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
+        <Button type="button" size="xs" variant="secondary" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
           {open ? "Hide" : "Load"}
         </Button>
       </div>

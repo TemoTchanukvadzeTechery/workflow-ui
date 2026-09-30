@@ -217,13 +217,13 @@ function FileBlock({ file, context, defaultOpen }: { file: DiffFile; context: nu
   const segments = useMemo(() => segment(file.rows, context), [file.rows, context]);
   const showNumbers = file.rows.some((r) => r.oldNo !== undefined || r.newNo !== undefined);
   return (
-    <div className="border-b border-border last:border-b-0">
+    <div className="border-b border-rule last:border-b-0">
       {file.path ? (
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
-          className="sticky top-0 z-[1] flex w-full items-center gap-2 border-b border-border bg-muted/80 px-3 py-1.5 text-left font-mono text-xs backdrop-blur focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          className="sticky top-0 z-[1] flex w-full items-center gap-2 border-b border-rule bg-well/85 px-3.5 py-2 text-left font-mono text-xs text-heading backdrop-blur focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
         >
           {open ? <ChevronDown aria-hidden className="size-3.5" /> : <ChevronRight aria-hidden className="size-3.5" />}
           <FileCode2 aria-hidden className="size-3.5 text-muted-foreground" />
@@ -242,7 +242,7 @@ function FileBlock({ file, context, defaultOpen }: { file: DiffFile; context: nu
                 key={i}
                 type="button"
                 onClick={() => setExpanded((s) => new Set(s).add(seg.id))}
-                className="w-full bg-muted/50 px-3 py-0.5 text-left text-[11px] text-muted-foreground hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                className="w-full bg-well/50 px-3.5 py-1 text-left text-xs text-muted-foreground hover:bg-well focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
               >
                 Show {seg.rows.length} unchanged lines
               </button>
@@ -263,12 +263,12 @@ export function TextDiff(props: TextDiffProps) {
   }, [props.diffText, props.before, props.after]);
 
   if (files.length === 0 || files.every((f) => f.rows.length === 0)) {
-    return <div className={cn("rounded-xl bg-muted/50 px-3 py-6 text-center text-sm text-muted-foreground", className)}>{emptyText}</div>;
+    return <div className={cn("rounded-[16px] bg-well/60 px-4 py-8 text-center text-sm text-muted-foreground", className)}>{emptyText}</div>;
   }
   const totals = files.reduce((acc, f) => ({ adds: acc.adds + f.adds, dels: acc.dels + f.dels }), { adds: 0, dels: 0 });
   return (
-    <div className={cn("overflow-hidden rounded-xl border border-border bg-card", className)}>
-      <div className="flex items-center gap-3 border-b border-border px-3 py-1.5 text-xs text-muted-foreground">
+    <div className={cn("overflow-hidden rounded-[16px] bg-field shadow-[0_0_0_1px_var(--rule)]", className)}>
+      <div className="flex items-center gap-3 border-b border-rule px-3.5 py-2 text-[13px] text-muted-foreground">
         {files.length > 1 ? <span>{files.length} files</span> : null}
         <span className="font-mono text-status-success-fg">+{totals.adds}</span>
         <span className="font-mono text-status-danger-fg">-{totals.dels}</span>
@@ -287,8 +287,8 @@ export function VersionDiff({ before, after, beforeLabel, afterLabel, className 
   return (
     <div className={cn("space-y-2", className)}>
       <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-        <span className="rounded-md bg-status-danger-bg px-1.5 py-0.5 font-mono text-status-danger-fg">- {beforeLabel}</span>
-        <span className="rounded-md bg-status-success-bg px-1.5 py-0.5 font-mono text-status-success-fg">+ {afterLabel}</span>
+        <span className="rounded-[6px] bg-status-danger-bg px-1.5 py-0.5 font-mono text-status-danger-fg">- {beforeLabel}</span>
+        <span className="rounded-[6px] bg-status-success-bg px-1.5 py-0.5 font-mono text-status-success-fg">+ {afterLabel}</span>
       </div>
       <TextDiff before={before} after={after} />
     </div>

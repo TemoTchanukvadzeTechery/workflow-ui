@@ -75,16 +75,15 @@ export function ProjectsView() {
   const hiddenDone = !filters.includeDone ? applyFilters(all, { ...filters, includeDone: true }).filter((p) => p.done).length : 0;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 lg:gap-7">
       <PageHeader
-        kicker="Portfolio"
         title="Projects"
         description="Each project moves through Requirements, Architecture, Implementation, QA Certification and PO Review. Agents draft; people accept."
         actions={
-          <Button asChild className="h-9 rounded-full px-4">
+          <Button asChild size="lg">
             <Link href="/projects/new">
-              <Plus aria-hidden />
               New project
+              <Plus aria-hidden />
             </Link>
           </Button>
         }
@@ -100,7 +99,7 @@ export function ProjectsView() {
             ))}
           </div>
         ) : (
-          <div className="card-surface overflow-hidden rounded-2xl pt-3" aria-busy="true" aria-label="Loading projects">
+          <div className="card-surface overflow-hidden rounded-[28px] pt-4" aria-busy="true" aria-label="Loading projects">
             <ProjectRowsSkeleton rows={7} />
           </div>
         )
@@ -115,7 +114,7 @@ export function ProjectsView() {
             title="No projects yet"
             body="Start from a Product Owner request with Jira and Confluence sources, or import an existing BRD."
             action={
-              <Button asChild className="rounded-full">
+              <Button asChild>
                 <Link href="/projects/new">
                   <Plus aria-hidden />
                   New project
@@ -126,7 +125,7 @@ export function ProjectsView() {
         </SectionCard>
       ) : (
         <div className="flex flex-col gap-3">
-          <p className="text-[13px] text-muted-foreground" aria-live="polite">
+          <p className="px-1 text-sm text-muted-foreground" aria-live="polite">
             {rows.length === all.length ? plural(all.length, "project") : `${rows.length} of ${plural(all.length, "project")}`}
             {stage !== "all" ? ` in ${stageDef(stage).title}` : ""}
             {hiddenDone > 0 ? (
@@ -146,7 +145,7 @@ export function ProjectsView() {
                 body={stage !== "all" ? `No active project is in ${stageDef(stage).title} right now.` : "Try another search or clear the filters."}
                 action={
                   isFiltered(filters) ? (
-                    <Button variant="outline" className="rounded-full" onClick={() => onFilters({ ...EMPTY_FILTERS, includeDone: filters.includeDone })}>
+                    <Button variant="secondary" onClick={() => onFilters({ ...EMPTY_FILTERS, includeDone: filters.includeDone })}>
                       Clear filters
                     </Button>
                   ) : undefined
@@ -167,7 +166,7 @@ export function ProjectsView() {
                   <ProjectCard key={p.id} project={p} />
                 ))}
               </div>
-              <SectionCard flush bodyClassName="pt-1" className="hidden sm:flex">
+              <SectionCard flush bodyClassName="pt-2" className="hidden sm:flex">
                 <ProjectsTable rows={rows} showNextStep />
               </SectionCard>
             </>
