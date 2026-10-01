@@ -26,8 +26,8 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   const p = await lookupProject(projectId);
   if (p === null) return { title: "Project not found" };
   if (!p) return {};
-  // The overview gets "<name> · Delivery Flow"; child pages "<Stage> · <name> · Delivery Flow".
-  return { title: { default: p.name, template: `%s · ${p.name} · Delivery Flow` } };
+  // The overview gets "<name> · Wefty"; child pages "<Stage> · <name> · Wefty".
+  return { title: { default: p.name, template: `%s · ${p.name} · Wefty` } };
 }
 
 export default async function ProjectLayout({ children, params }: { children: ReactNode; params: Promise<Params> }) {

@@ -3,7 +3,7 @@
 @import "shadcn/tailwind.css";
 
 /*
- * Delivery Flow tokens (docs/design/STYLE.md, which overrides SPEC 5.3): a light grey canvas,
+ * Wefty tokens (docs/design/STYLE.md, which overrides SPEC 5.3): a light grey canvas,
  * soft off-white cards drawn with box-shadow edges, wells and raised segments, an ink primary
  * button and cobalt for links, focus and the current stage. Stages carry no color; color always
  * means status (--status-<tone>-fg/-bg/-solid) or a data series (--chart-*).

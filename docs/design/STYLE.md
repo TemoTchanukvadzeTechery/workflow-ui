@@ -90,7 +90,7 @@ Stages have no color of their own; color means status or a data series.
 | danger | `#C8252C` | `#FFE8E8` | `#EF4444` |
 | neutral | `#6E6E6E` | `#EDEDED` | `#A3A3A3` |
 
-Chart-only extras: pink line `#E8358A`, pink stripe `#FF9FCC`, blue dot `#1976FF` with its light variant `#A1CBF8`, green dot `#0DAA2C` with its light variant `#9CD6A3`. Brand mark: an orange rounded square, `linear-gradient(135deg,#FFB547,#F26A1B)`.
+Chart-only extras: pink line `#E8358A`, pink stripe `#FF9FCC`, blue dot `#1976FF` with its light variant `#A1CBF8`, green dot `#0DAA2C` with its light variant `#9CD6A3`. Brand mark: an orange rounded square, `linear-gradient(135deg,#FFB547,#F26A1B)`, holding the Wefty "woven W": two V-shaped threads, cream `#FFF6E4` over peach `#FFD9A0`, where the peach thread passes under the cream one at the crossing (`src/components/shell/brand.tsx`; the favicon and app icons in `src/app/` use the same geometry).
 
 `--primary` stays brand blue: links, focus rings, current-stage highlight, the active chart column. Primary buttons and the active nav item use `--ink`.
 
@@ -130,7 +130,7 @@ Chart-only extras: pink line `#E8358A`, pink stripe `#FF9FCC`, blue dot `#1976FF
 ## 6. Layout changes
 
 1. **Top navigation replaces the sidebar,** laid out like the reference:
-   - Left: orange brand mark and wordmark.
+   - Left: orange brand mark and the "Wefty" wordmark.
    - Centre: text nav items (Home, Inbox with a count chip, Projects, Runs, Settings); the active item is an ink pill.
    - Right: circle search (opens ⌘K), circle bell (dot and count, links to the Inbox), a small live dot, and an avatar with a gradient ring that opens the "Acting as" menu (name, theme, demo speed).
    - Nested pages show a small muted breadcrumb row under the nav.

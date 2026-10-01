@@ -1,6 +1,6 @@
-# workflow-ui
+# Wefty
 
-A Next.js 16 app that walks a project through a five-stage, agent-assisted delivery flow on weft. Today it runs against an in-memory mock of the weft daemon. Nothing it does reaches Jira, Confluence or a repository.
+Wefty (this repo, `workflow-ui`) is a Next.js 16 app that walks a project through a five-stage, agent-assisted delivery flow on weft. Today it runs against an in-memory mock of the weft daemon. Nothing it does reaches Jira, Confluence or a repository.
 
 The build contract, domain rules and seed states are in [docs/SPEC.md](docs/SPEC.md).
 The visual style follows [docs/design/STYLE.md](docs/design/STYLE.md) and the reference images in `docs/design/reference/`.

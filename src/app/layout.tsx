@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: { default: "Delivery Flow", template: "%s · Delivery Flow" },
+  title: { default: "Wefty", template: "%s · Wefty" },
   description: "Agent-assisted delivery from requirements to PO sign-off: BRD, architecture, implementation, QA certification and review, on weft (mock).",
 };
 

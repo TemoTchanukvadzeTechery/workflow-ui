@@ -45,7 +45,7 @@ function MobileMenu({ pathname, inboxCount }: { pathname: string; inboxCount: nu
       <SheetContent side="right" showCloseButton={false} className="w-[min(20rem,86vw)] gap-0 bg-background p-0">
         <SheetHeader className="h-[76px] flex-row items-center justify-between gap-3 px-5 py-0">
           <SheetTitle className="sr-only">Menu</SheetTitle>
-          <SheetDescription className="sr-only">Pages of Delivery Flow</SheetDescription>
+          <SheetDescription className="sr-only">Pages of Wefty</SheetDescription>
           <Brand onNavigate={close} className="[&>span:nth-child(2)]:text-[20px]" />
           <SheetClose asChild>
             <CircleIconButton icon={X} label="Close menu" size="md" />
