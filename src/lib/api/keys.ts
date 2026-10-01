@@ -11,6 +11,13 @@ export const qk = {
   settings: ["settings"] as const,
   workspaceFiles: (prefix: string) => ["workspace-files", prefix] as const,
 
+  memoryStatus: ["memory", "status"] as const,
+  memoryOverview: ["memory", "overview"] as const,
+  memoryNote: (id: string) => ["memory", "note", id] as const,
+  memorySearch: (q: string, types?: string, deep?: boolean, limit?: number) => ["memory", "search", q, types ?? "", deep ?? false, limit ?? 0] as const,
+  memoryGraph: ["memory", "graph"] as const,
+  memoryStale: ["memory", "stale"] as const,
+
   meta: ["weft", "meta"] as const,
   workflows: ["weft", "workflows"] as const,
   workflow: (name: string) => ["weft", "workflow", name] as const,

@@ -183,6 +183,9 @@ export function useLiveUpdates(onNotify?: (e: NotifyEvent) => void) {
           case "settings":
             queue(["settings"]);
             break;
+          case "memory":
+            queue(["memory"]);
+            break;
           case "reset":
             void qc.invalidateQueries();
             break;

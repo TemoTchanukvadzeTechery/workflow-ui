@@ -5,8 +5,9 @@ import { usePathname } from "next/navigation";
 import { Fragment } from "react";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { stageHref } from "@/hooks/use-stage-params";
-import { useProject } from "@/lib/api/queries";
+import { useMemoryNote, useProject } from "@/lib/api/queries";
 import { isStageId, stageDef, type ProjectBundle } from "@/lib/delivery/types";
+import { isMemoryNoteId } from "@/lib/memory/types";
 import { cn } from "@/lib/utils";
 
 interface Crumb {
@@ -44,10 +45,14 @@ export function Breadcrumbs({ className }: { className?: string }) {
   const seg = pathname.split("/").filter(Boolean).map(safeDecode);
   const projectId = seg[0] === "projects" && seg[1] && seg[1] !== "new" ? seg[1] : undefined;
   const bundle = useProject(projectId);
+  // Memory note ids are `<type>/<slug>`; the detail page fetches the same key, so this is cached.
+  const memoryId = seg[0] === "memory" && seg[1] && seg[2] && isMemoryNoteId(`${seg[1]}/${seg[2]}`) ? `${seg[1]}/${seg[2]}` : undefined;
+  const memoryNote = useMemoryNote(memoryId);
   const crumbs = buildCrumbs(seg, {
     projectName: bundle.data?.project.name,
     taskStage: seg[2] === "tasks" && seg[3] ? taskSection(bundle.data, seg[3]) : undefined,
     docTitle: seg[2] === "docs" && seg[3] ? docCrumb(bundle.data?.documents.find((d) => d.id === seg[3]), bundle.data?.project.name) : undefined,
+    memoryTitle: memoryNote.data?.card.title,
   });
 
   return (
@@ -78,7 +83,7 @@ export function Breadcrumbs({ className }: { className?: string }) {
 }
 
 /** Top-level pages have the nav item as their context; only nested pages get a breadcrumb row. */
-const TOP_LEVEL = new Set(["/", "/inbox", "/projects", "/runs", "/settings"]);
+const TOP_LEVEL = new Set(["/", "/inbox", "/projects", "/runs", "/memory", "/settings"]);
 
 /** The small muted breadcrumb row under the top navigation, on nested pages only. */
 export function BreadcrumbRow({ className }: { className?: string }) {
@@ -91,7 +96,7 @@ export function BreadcrumbRow({ className }: { className?: string }) {
   );
 }
 
-function buildCrumbs(seg: string[], names: { projectName?: string; docTitle?: string; taskStage?: "implementation" | "qa" }): Crumb[] {
+function buildCrumbs(seg: string[], names: { projectName?: string; docTitle?: string; taskStage?: "implementation" | "qa"; memoryTitle?: string }): Crumb[] {
   const [a, b, c, d] = seg;
   if (!a) return [{ label: "Home" }];
   switch (a) {
@@ -101,6 +106,12 @@ function buildCrumbs(seg: string[], names: { projectName?: string; docTitle?: st
       return [{ label: "Settings" }];
     case "runs":
       return b ? [{ label: "Runs", href: "/runs" }, { label: b, mono: true }] : [{ label: "Runs" }];
+    case "memory": {
+      // Note ids are `<type>/<slug>`, so a note detail path has two segments after /memory.
+      if (!b) return [{ label: "Memory" }];
+      const id = c ? `${b}/${c}` : b;
+      return [{ label: "Memory", href: "/memory" }, { label: names.memoryTitle ?? id, mono: !names.memoryTitle }];
+    }
     case "projects": {
       const root: Crumb = { label: "Projects", href: "/projects" };
       if (!b) return [{ label: "Projects" }];

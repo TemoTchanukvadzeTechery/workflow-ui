@@ -28,7 +28,7 @@ import {
   type WaiveBody,
 } from "@/lib/delivery/types";
 import type { AnswerBody, RunStatus } from "@/lib/weft/types";
-import { delivery, weft } from "./client";
+import { delivery, memory, weft } from "./client";
 import { qk } from "./keys";
 
 const noopSubscribe = () => () => {};
@@ -99,6 +99,33 @@ export const useSettings = () => useQuery({ queryKey: qk.settings, queryFn: deli
 
 export const useWorkspaceFiles = (prefix = "notes/") =>
   useQuery({ queryKey: qk.workspaceFiles(prefix), queryFn: () => delivery.workspaceFiles(prefix), staleTime: 30_000 });
+
+// ---------------------------------------------------------------------------------------------
+// Memory vault reads (/api/memory)
+// ---------------------------------------------------------------------------------------------
+
+/** Vault/CLI/index health; pass `{ refetchInterval }` while the index is building. */
+export const useMemoryStatus = (o?: Opts<Awaited<ReturnType<typeof memory.status>>>) =>
+  useQuery({ queryKey: qk.memoryStatus, queryFn: memory.status, staleTime: 5_000, ...o });
+
+export const useMemoryOverview = (o?: Opts<Awaited<ReturnType<typeof memory.overview>>>) =>
+  useQuery({ queryKey: qk.memoryOverview, queryFn: memory.overview, staleTime: 15_000, ...o });
+
+/** `id` is `<type>/<slug>`. A 404 (unknown note) surfaces as ApiError with status 404. */
+export const useMemoryNote = (id: string | undefined, o?: Opts<Awaited<ReturnType<typeof memory.note>>>) =>
+  useQuery({ queryKey: qk.memoryNote(id ?? ""), queryFn: () => memory.note(id!), enabled: !!id, staleTime: 15_000, ...o });
+
+export const useMemoryGraph = (o?: Opts<Awaited<ReturnType<typeof memory.graph>>>) =>
+  useQuery({ queryKey: qk.memoryGraph, queryFn: memory.graph, staleTime: 15_000, ...o });
+
+/** Debounce `q` at the call site (the server caches, but every distinct string is a CLI spawn). */
+export const useMemorySearch = (q: string, o: { enabled?: boolean; types?: string[]; deep?: boolean; limit?: number } = {}) =>
+  useQuery({
+    queryKey: qk.memorySearch(q.trim(), o.types?.join(","), o.deep, o.limit),
+    queryFn: () => memory.search(q.trim(), { types: o.types, deep: o.deep, limit: o.limit }),
+    enabled: (o.enabled ?? true) && q.trim().length > 0,
+    staleTime: 30_000,
+  });
 
 // ---------------------------------------------------------------------------------------------
 // Weft reads
@@ -281,6 +308,19 @@ export const useResetDemo = () => {
 };
 
 export const useFastForward = () => useMutation({ mutationFn: (runId?: string) => delivery.fastForward(runId), onError: onErrorToast });
+
+/** Rebuild the memory vault's derived search index (the page's only write). */
+export const useRebuildMemoryIndex = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => memory.rebuildIndex(),
+    onSuccess: (stats) => {
+      void qc.invalidateQueries({ queryKey: ["memory"] });
+      toast.success(`Memory index rebuilt: ${stats.totals.notes} notes, ${stats.totals.claims} claims`);
+    },
+    onError: onErrorToast,
+  });
+};
 
 /** Asks whether the configured weft daemon answers (a mutation: it runs on demand, never cached). */
 export const useDaemonProbe = () => useMutation({ mutationFn: () => delivery.daemonProbe() });

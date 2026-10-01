@@ -36,6 +36,15 @@ import type {
   WaiveBody,
 } from "@/lib/delivery/types";
 import type {
+  MemoryBuildStats,
+  MemoryGraphPayload,
+  MemoryNoteDetailPayload,
+  MemoryOverviewPayload,
+  MemorySearchPayload,
+  MemoryStaleEntry,
+  MemoryStatusPayload,
+} from "@/lib/memory/types";
+import type {
   AnswerBody,
   ArtifactEntry,
   Meta,
@@ -180,4 +189,20 @@ export const delivery = {
   fastForward: (runId?: string) => request<{ ok: true }>("POST", "/api/delivery/admin/fast-forward", { runId }),
   /** Whether the daemon at settings.weftDaemon answers, before switching the data source to it. */
   daemonProbe: () => request<{ ok: boolean; url: string; version?: string; error?: string }>("GET", "/api/delivery/daemon-probe"),
+};
+
+// ---------------------------------------------------------------------------------------------
+// /api/memory: read-only view over the po-workspace memory vault (plan A1)
+// ---------------------------------------------------------------------------------------------
+
+export const memory = {
+  status: () => request<MemoryStatusPayload>("GET", "/api/memory/status"),
+  overview: () => request<MemoryOverviewPayload>("GET", "/api/memory/overview"),
+  /** `id` is `<type>/<slug>`, e.g. `system/customer-service-v2` or `org/plexus`. */
+  note: (id: string) => request<MemoryNoteDetailPayload>("GET", `/api/memory/notes/${id.split("/").map(enc).join("/")}`),
+  search: (q: string, o: { types?: string[]; deep?: boolean; limit?: number } = {}) =>
+    request<MemorySearchPayload>("GET", `/api/memory/search${qs({ q, types: o.types?.join(","), deep: o.deep, limit: o.limit })}`),
+  graph: () => request<MemoryGraphPayload>("GET", "/api/memory/graph"),
+  stale: () => request<{ stale: MemoryStaleEntry[] }>("GET", "/api/memory/stale"),
+  rebuildIndex: () => request<MemoryBuildStats>("POST", "/api/memory/index/build", {}),
 };

@@ -33,6 +33,19 @@ Open http://localhost:3000. Settings has the demo speed (instant, fast, realisti
 
 State lives in memory. It survives hot reload and is lost on a server restart, which reseeds the demo. The engine, store and orchestrator are built once and kept on `globalThis.__workflowUi`, so edits to their code take effect after Reset, which rebuilds them from the current code, or after a restart.
 
+## Memory page
+
+`/memory` is a read-only view of the po-workspace memory vault (`po-workspace/memory/`, the Obsidian vault the pipeline reads and cites). It lists every note with its type, status, trust flags and connections, shows each note's claims, prose and neighbors, draws the connection graph, and makes `[M <note-id>]` / `[M <note-id>#^c-xxxxxx]` citations in documents link to the note with a hover card. ⌘K searches the vault too.
+
+Unlike the rest of the app it reads real data: the server runs `node tools/memory/memory.mjs` (the vault's own CLI, contract in `po-workspace/tools/memory/CONTRACT.md`) one call at a time and caches the result until a note file changes. When the vault's derived search index is missing it is rebuilt automatically; the first build may download a small embeddings model. A file watcher refreshes open Memory pages when notes change. Code: `src/server/memory` (config, CLI runner, service, router, watcher), `src/app/api/memory`, `src/app/memory`, `src/components/memory`.
+
+| Variable | Default | Use |
+|---|---|---|
+| `MEMORY_WORKSPACE` (or `PO_WORKSPACE`) | `../po-workspace` | The workspace holding `memory/` and `tools/memory/memory.mjs` |
+| `NEXT_PUBLIC_OBSIDIAN_VAULT` | unset | Vault name; shows an "Open in Obsidian" button on notes |
+| `NEXT_PUBLIC_JIRA_BASE_URL` | unset | Links Jira keys in note sources, e.g. `https://example.atlassian.net` |
+| `NEXT_PUBLIC_CONFLUENCE_BASE_URL` | unset | Links `confluence:<id>` sources to `<base>/pages/viewpage.action?pageId=<id>` |
+
 ## Seeded demo projects
 
 | Key | Project | What to look at |
@@ -53,6 +66,7 @@ AGR and LCE runs are live at the end of seeding, so their tasks move on for a mi
 Browser (client components, TanStack Query)
   ├─ /api/weft/*      weft daemon API: served by the mock engine, or proxied to a daemon
   ├─ /api/delivery/*  projects, stages, documents, epics, tasks, QA, inbox, settings, reset
+  ├─ /api/memory/*    the po-workspace memory vault, read through its CLI
   └─ /api/events      one SSE stream per tab: change hints and toasts
 ```
 

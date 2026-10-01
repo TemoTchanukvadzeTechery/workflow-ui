@@ -2,6 +2,7 @@
  * /api/events: one SSE stream per browser tab (SPEC 3.3). Every LiveEvent from the bus goes out
  * as `event: change`; a comment heartbeat every 15 s keeps proxies from closing the stream.
  */
+import { ensureMemoryWatch } from "@/server/memory/watch";
 import { getRuntime } from "@/server/runtime";
 
 export const dynamic = "force-dynamic";
@@ -10,6 +11,7 @@ const HEARTBEAT_MS = 15_000;
 
 export async function GET(req: Request): Promise<Response> {
   const { bus } = getRuntime();
+  ensureMemoryWatch(bus);
   const encoder = new TextEncoder();
   let cleanup = () => {};
 

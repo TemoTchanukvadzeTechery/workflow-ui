@@ -4,7 +4,7 @@
  * Demo controls: who you are acting as, how fast the simulated agents run, where /api/weft is
  * served from, reset and skip-ahead tools, and which workflows are real weft versus mocked.
  */
-import { AlertTriangle, Check, CircleX, Database, FastForward, RotateCcw, Server, UserRound } from "lucide-react";
+import { AlertTriangle, Check, CircleX, Database, FastForward, RefreshCw, RotateCcw, Server, UserRound } from "lucide-react";
 import { useId, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { ErrorState, InitialsAvatar, PageHeader, SectionCard, SegmentedControl, StatusPill } from "@/components/common";
@@ -25,7 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { DEFAULT_ACTOR, useActorName } from "@/lib/api/actor";
-import { useDaemonProbe, useFastForward, useMeta, useResetDemo, useSettings, useUpdateSettings, useWorkflows } from "@/lib/api/queries";
+import { useDaemonProbe, useFastForward, useMemoryStatus, useMeta, useRebuildMemoryIndex, useResetDemo, useSettings, useUpdateSettings, useWorkflows } from "@/lib/api/queries";
 import { STAGES, type DemoSpeed, type Settings } from "@/lib/delivery/types";
 import { cn } from "@/lib/utils";
 
@@ -326,6 +326,76 @@ function DataSourceCard({ settings }: { settings?: Settings }) {
   );
 }
 
+/**
+ * Read-only view of the memory vault behind /memory (plan A8: MP1): the resolved workspace path,
+ * vault / CLI / index health from useMemoryStatus, and the page's only write — rebuilding the
+ * derived search index (useRebuildMemoryIndex toasts the result). The path is env-configured
+ * (MEMORY_WORKSPACE / PO_WORKSPACE), so nothing here is editable.
+ */
+function MemoryVaultCard() {
+  const status = useMemoryStatus({
+    // While a build is running, poll so the pill flips to "ready" on its own.
+    refetchInterval: (q) => (q.state.data?.indexState === "building" ? 2_000 : false),
+  });
+  const rebuild = useRebuildMemoryIndex();
+  const data = status.data;
+  const indexState = data?.indexState;
+  const building = indexState === "building" || rebuild.isPending;
+  return (
+    <SectionCard title="Memory vault" description="The po-workspace vault the Memory page reads. Set MEMORY_WORKSPACE in .env.local to point at another checkout.">
+      {status.isPending ? (
+        <Skeleton className="h-36 rounded-[16px]" aria-hidden />
+      ) : status.error || !data ? (
+        <ErrorState title="Could not check the memory vault" error={status.error ?? undefined} onRetry={() => void status.refetch()} size="sm" />
+      ) : (
+        <div className="flex flex-col gap-4">
+          <div className="space-y-1.5">
+            <span className="text-[13px] font-medium text-heading">Workspace</span>
+            <p className="rounded-[14px] bg-well px-3.5 py-2.5 font-mono text-[13px] leading-5 break-all text-foreground">{data.check.workspace}</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusPill
+              tone={data.check.vaultExists ? "success" : "danger"}
+              icon={data.check.vaultExists ? Check : CircleX}
+              label={data.check.vaultExists ? "Vault found" : "Vault missing"}
+              size="sm"
+              title={data.check.vaultDir}
+            />
+            <StatusPill
+              tone={data.check.cliExists ? "success" : "danger"}
+              icon={data.check.cliExists ? Check : CircleX}
+              label={data.check.cliExists ? "Memory CLI found" : "Memory CLI missing"}
+              size="sm"
+              title={data.check.cliPath}
+            />
+            <StatusPill
+              tone={building ? "review" : indexState === "ready" ? "success" : "attention"}
+              icon={building ? null : indexState === "ready" ? Check : AlertTriangle}
+              pulse={building}
+              label={building ? "Index building…" : indexState === "ready" ? "Index ready" : "Index missing"}
+              size="sm"
+              title="The derived search index at memory/.index; reads rebuild it on demand."
+            />
+            <span className="text-[13px] text-muted-foreground tabular-nums">
+              {data.noteCount} note{data.noteCount === 1 ? "" : "s"}
+            </span>
+          </div>
+          <div className="flex flex-col gap-2">
+            <Button variant="secondary" className="self-start" disabled={rebuild.isPending || !data.check.ok} onClick={() => rebuild.mutate()}>
+              {rebuild.isPending ? <Spinner /> : <RefreshCw aria-hidden />}
+              Rebuild index
+            </Button>
+            <p className="text-[13px] leading-5 text-muted-foreground">
+              Rebuilds the derived search index (memory/.index, safe to regenerate). The first build may download a small embeddings model and
+              take a few minutes.
+            </p>
+          </div>
+        </div>
+      )}
+    </SectionCard>
+  );
+}
+
 function DemoToolsCard() {
   const reset = useResetDemo();
   const ff = useFastForward();
@@ -457,6 +527,7 @@ export function SettingsView() {
         </div>
         <div className="flex min-w-0 flex-col gap-4">
           <DataSourceCard settings={settings.data} />
+          <MemoryVaultCard />
           <AboutCard />
         </div>
       </div>

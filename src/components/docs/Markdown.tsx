@@ -3,27 +3,39 @@
 /**
  * GFM markdown for BRDs, AADs, reports and memory: rehype-slug heading ids (matching toc.ts),
  * ruled tables (no outer border, STYLE 6), fenced mermaid rendered by MermaidBlock, and source
- * citations such as [N1 L2, R2 Acceptance Criteria] as small mono token chips with a tooltip. Raw HTML is not rendered
+ * citations such as [N1 L2, R2 Acceptance Criteria] as small mono token chips with a tooltip. A
+ * memory citation naming a vault note or claim ([M system/x], [M system/x#^c-7f3a12]) is a link to
+ * that note with a hover-card preview (MemoryCitationCard). Raw HTML is not rendered
  * (react-markdown escapes it), which matters because agent output is untrusted.
  */
+import Link from "next/link";
 import { createContext, memo, useContext, type ComponentProps, type ReactNode } from "react";
 import ReactMarkdown, { type Components, type ExtraProps, type Options } from "react-markdown";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
+import { MemoryCitationCard } from "@/components/memory/MemoryCitationCard";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { describeCitationPart, parseCitation, remarkCitations } from "./citations";
+import { describeCitationPart, memoryRef, parseCitation, remarkCitations } from "./citations";
 import { MermaidBlock } from "./MermaidBlock";
 
 export interface MarkdownProps {
   source: string;
-  /** Called with the source id ("R2") and the whole citation text ("R2 Acceptance Criteria"). */
+  /**
+   * Called with the source id ("R2") and the whole citation text ("R2 Acceptance Criteria").
+   * Not for memory citations that name a vault note or claim: those are links to the note.
+   */
   onCitationClick?: (source: string, part: string) => void;
   className?: string;
   /** Prefix for heading ids when two copies of one document share a page. */
   idPrefix?: string;
   /** Smaller type for rails and report tabs. */
   size?: "base" | "sm";
+  /**
+   * Extra remark plugins appended after GFM + citations (e.g. the memory pages' wikilinks).
+   * Keep the array identity stable across renders (useMemo or a module const): Markdown is memoized.
+   */
+  remarkPlugins?: Options["remarkPlugins"];
 }
 
 type HastNode = { type: string; value?: string; tagName?: string; properties?: Record<string, unknown>; children?: HastNode[] };
@@ -43,17 +55,27 @@ function CitationChip({ inner }: { inner: string }) {
   return (
     <span className="mx-0.5 inline-flex flex-wrap gap-0.5 align-baseline">
       {parts.map((part, i) => {
+        const memory = memoryRef(part);
         const chip = (
           <span
             className={cn(
               // One line per chip: in a narrow table cell the text wraps between chips, never inside one.
               "token-chip h-[18px] rounded-[5px] px-1 font-mono text-[10.5px] leading-none",
-              onCitationClick && "cursor-pointer transition-[filter] hover:brightness-95 dark:hover:brightness-125",
+              (onCitationClick || memory) && "cursor-pointer transition-[filter] hover:brightness-95 dark:hover:brightness-125",
             )}
           >
             {part.raw}
           </span>
         );
+        // A vault note or claim ([M system/x#^c-7f3a12]): a link to it with a hover preview. Legacy
+        // section citations ([M Document register]) keep the tooltip and onCitationClick below.
+        if (memory) {
+          return (
+            <MemoryCitationCard key={i} target={memory} label={describeCitationPart(part)}>
+              {chip}
+            </MemoryCitationCard>
+          );
+        }
         return (
           <Tooltip key={i}>
             <TooltipTrigger asChild>
@@ -99,15 +121,11 @@ function buildComponents(size: "base" | "sm"): Components {
     },
     a: ({ node: _node, className, href, ...props }: P<"a">) => {
       void _node;
+      const cls = cn("text-primary underline decoration-primary/30 underline-offset-2 hover:decoration-primary", className);
+      // Root-relative hrefs are app routes our own plugins emit (memory wikilinks): client-side nav.
+      if (href?.startsWith("/")) return <Link href={href} className={cls} {...props} />;
       const external = !!href && /^https?:\/\//.test(href);
-      return (
-        <a
-          href={href}
-          className={cn("text-primary underline decoration-primary/30 underline-offset-2 hover:decoration-primary", className)}
-          {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
-          {...props}
-        />
-      );
+      return <a href={href} className={cls} {...(external ? { target: "_blank", rel: "noreferrer" } : {})} {...props} />;
     },
     ul: ({ node: _node, className, ...props }: P<"ul">) => {
       void _node;
@@ -179,19 +197,20 @@ function buildComponents(size: "base" | "sm"): Components {
   };
 }
 
-const remarkPlugins = [remarkGfm, remarkCitations] as unknown as NonNullable<Options["remarkPlugins"]>;
+const BASE_REMARK_PLUGINS = [remarkGfm, remarkCitations] as unknown as NonNullable<Options["remarkPlugins"]>;
 
 const COMPONENTS = { base: buildComponents("base"), sm: buildComponents("sm") };
 const INLINE_CODE = "[&_:not(pre)>code]:rounded-[6px] [&_:not(pre)>code]:bg-foreground/[0.06] [&_:not(pre)>code]:px-1.5 [&_:not(pre)>code]:py-0.5 [&_:not(pre)>code]:font-mono [&_:not(pre)>code]:text-[0.84em] [&_:not(pre)>code]:text-heading";
 
-function MarkdownImpl({ source, onCitationClick, className, idPrefix, size = "base" }: MarkdownProps): ReactNode {
+function MarkdownImpl({ source, onCitationClick, className, idPrefix, size = "base", remarkPlugins }: MarkdownProps): ReactNode {
+  const plugins = remarkPlugins?.length ? [...BASE_REMARK_PLUGINS, ...remarkPlugins] : BASE_REMARK_PLUGINS;
   // `relative` keeps the absolutely positioned sr-only citation text inside any scroll container
   // around the document; without it, a long doc in a max-height viewer stretched the whole page.
   return (
     <CitationClick.Provider value={onCitationClick}>
       <TooltipProvider delayDuration={150}>
         <div className={cn("relative min-w-0 text-foreground [overflow-wrap:anywhere]", INLINE_CODE, size === "sm" ? "text-sm leading-6" : "text-[15px] leading-[1.7]", className)}>
-          <ReactMarkdown remarkPlugins={remarkPlugins} rehypePlugins={[[rehypeSlug, { prefix: idPrefix ?? "" }]]} components={COMPONENTS[size]}>
+          <ReactMarkdown remarkPlugins={plugins} rehypePlugins={[[rehypeSlug, { prefix: idPrefix ?? "" }]]} components={COMPONENTS[size]}>
             {source}
           </ReactMarkdown>
         </div>

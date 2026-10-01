@@ -812,6 +812,8 @@ export type LiveEvent =
   | { type: "project"; projectId: string }
   | { type: "inbox" }
   | { type: "settings" }
+  /** A memory vault note changed on disk (the vault watcher). */
+  | { type: "memory" }
   | { type: "reset" }
   | {
       type: "notify";
