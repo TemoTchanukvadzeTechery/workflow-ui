@@ -15,8 +15,17 @@ export function localDayMs(iso: string | null | undefined): number {
 
 /** "Today", "Yesterday", "3 days ago", then "Sep 12" (or "Sep 12, 2025" in another year). */
 export function formatDay(iso: string | null | undefined, now: number): string | null {
-  const day = localDayMs(iso);
-  if (!Number.isFinite(day)) return null;
+  return formatDayMs(localDayMs(iso), now);
+}
+
+/**
+ * formatDay for a moment in epoch ms (a commit time): the local calendar day it falls on, so a
+ * day-grouped list (the vault timeline) labels its groups the same way. Null for NaN.
+ */
+export function formatDayMs(ms: number, now: number): string | null {
+  if (!Number.isFinite(ms)) return null;
+  const at = new Date(ms);
+  const day = new Date(at.getFullYear(), at.getMonth(), at.getDate()).getTime();
   const today = new Date(now);
   const todayMs = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
   const days = Math.round((todayMs - day) / DAY_MS);

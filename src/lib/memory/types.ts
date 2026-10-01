@@ -335,3 +335,392 @@ export interface MemoryStatusPayload {
   noteCount: number;
   generatedAt: number;
 }
+
+// ---------------------------------------------------------------------------------------------
+// Note paths (CONTRACT §2.1, the CLI's idFor / pathFor)
+// ---------------------------------------------------------------------------------------------
+
+/** The vault folder inside the workspace. Git paths are workspace-relative: `memory/systems/x.md`. */
+export const MEMORY_VAULT_PREFIX = "memory/";
+
+const ORG_NOTE_PATH = "plexus.md";
+const ORG_NOTE_ID = "org/plexus";
+/** `<folder>/<slug>.md`, one level deep; anything else under the vault is not a note. */
+const NOTE_PATH_RE = /^([a-z]+)\/([a-z0-9-]+)\.md$/;
+
+/** Vault-relative path of a note id (`system/x` → `systems/x.md`, `org/plexus` → `plexus.md`); null for a malformed id. */
+export function notePathForId(id: string): string | null {
+  if (id === ORG_NOTE_ID) return ORG_NOTE_PATH;
+  if (!isMemoryNoteId(id)) return null;
+  const [type, slug] = id.split("/");
+  const folder = NOTE_TYPES.find((t) => t.type === type)?.folder;
+  return folder ? `${folder}/${slug}.md` : null;
+}
+
+/**
+ * The note id a vault-relative path holds, or null when the file is not a note: `README.md`,
+ * `_bases/`, `_templates/`, `.obsidian/`, `.index/`, `brd-memory.md` and any other root file,
+ * nested folders, non-`.md` files and slugs outside `[a-z0-9-]+`.
+ */
+export function noteIdForPath(vaultRel: string): string | null {
+  if (vaultRel === ORG_NOTE_PATH) return ORG_NOTE_ID;
+  const m = NOTE_PATH_RE.exec(vaultRel);
+  if (!m) return null;
+  const type = NOTE_TYPES.find((t) => t.folder === m[1])?.type;
+  return type ? `${type}/${m[2]}` : null;
+}
+
+/** `memory/systems/x.md` → `systems/x.md`; null for a path outside the vault folder. */
+export function vaultRelativePath(workspaceRel: string): string | null {
+  return workspaceRel.startsWith(MEMORY_VAULT_PREFIX) ? workspaceRel.slice(MEMORY_VAULT_PREFIX.length) : null;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Git state (shared by Health and Timeline)
+// ---------------------------------------------------------------------------------------------
+
+/** Why there is no history: git missing from PATH, the workspace is not in a repository, or git failed. */
+export type MemoryGitUnavailableReason = "no-git" | "not-a-repo" | "failed";
+
+/**
+ * The workspace repository as payloads report it. History and health answer 200 with `ok: false`
+ * when git is unavailable, so the UI shows an empty state instead of an error.
+ */
+export type MemoryGitState =
+  | {
+      ok: true;
+      /** Full sha of HEAD; null on an unborn branch (no commits yet). */
+      head: string | null;
+      /** First 7 hex of `head`. */
+      shortHead: string | null;
+      /** The checked-out branch; null when HEAD is detached. */
+      branch: string | null;
+      /** A shallow clone: history stops at the graft, not at the first commit. */
+      shallow: boolean;
+    }
+  | { ok: false; reason: MemoryGitUnavailableReason; message: string };
+
+// ---------------------------------------------------------------------------------------------
+// Health (plan §3): GET /api/memory/health[?refresh=1]
+// ---------------------------------------------------------------------------------------------
+
+export type MemoryHealthGroupId = "integrity" | "freshness" | "coverage" | "trust";
+
+export type MemoryHealthCheckId =
+  | "loads"
+  | "lint"
+  | "links"
+  | "index"
+  | "committed"
+  | "stale-docs"
+  | "recency"
+  | "connected"
+  | "owners"
+  | "claims"
+  | "sources"
+  | "tags"
+  | "seed-blocked"
+  | "proposed"
+  | "retired-deps";
+
+/** "skipped": the check could not be evaluated (no snapshot, no git, lint failed) and is left out of the score. */
+export type MemoryHealthStatus = "pass" | "warn" | "fail" | "skipped";
+
+/** Excellent ≥ 90, Good ≥ 75, Fair ≥ 50, Poor < 50. */
+export type MemoryHealthBand = "excellent" | "good" | "fair" | "poor";
+
+/**
+ * ready: every input was available. partial: some were not (index missing, git unavailable, lint
+ * failed), so their checks are skipped. building: an index build is running; poll again.
+ */
+export type MemoryHealthState = "ready" | "partial" | "building";
+
+/** One note (or vault file) a check lists. */
+export interface MemoryHealthAffected {
+  /** Note id; null for a vault file that is not a note (a lint finding on README.md). */
+  id: string | null;
+  title: string | null;
+  /** Vault-relative path, when known. */
+  path: string | null;
+  /** Why it is listed, e.g. "no owner", "unresolved [[systems/x]]", "updated 2025-01-02". */
+  detail: string | null;
+}
+
+/** What a check counted: `value` of `of`, plus the one-line summary its row shows. */
+export interface MemoryHealthMeasure {
+  value: number;
+  /** The population, e.g. 42 notes; null for a bare count (lint findings, seed-blocked notes). */
+  of: number | null;
+  /** e.g. "32 of 42 notes have a connection". */
+  summary: string;
+}
+
+export interface MemoryHealthCheck {
+  id: MemoryHealthCheckId;
+  group: MemoryHealthGroupId;
+  status: MemoryHealthStatus;
+  /** Points the check is worth (its catalogue weight). */
+  weight: number;
+  /** Share of the weight earned, 0..1; null when skipped. */
+  score: number | null;
+  measure: MemoryHealthMeasure;
+  /** Up to 50 entries, worst first. */
+  affected: MemoryHealthAffected[];
+  /** How many there are in all (affected is capped). */
+  affectedTotal: number;
+  /** Extra context, e.g. "Embeddings are off" or why the check was skipped. */
+  note?: string;
+}
+
+/** A group's points: Σ weight·score over its evaluated checks, out of Σ weight. */
+export interface MemoryHealthGroup {
+  id: MemoryHealthGroupId;
+  earned: number;
+  possible: number;
+}
+
+export interface MemoryHealthCounts {
+  pass: number;
+  warn: number;
+  fail: number;
+  skipped: number;
+}
+
+/** The newest note file on disk (mtime), with its title when the snapshot has it. */
+export interface MemoryHealthLastChange {
+  id: string;
+  /** Vault-relative. */
+  path: string;
+  title: string | null;
+  /** File mtime, ms since epoch. */
+  at: number;
+}
+
+/** `git log -1 -- memory/`. */
+export interface MemoryHealthLastCommit {
+  sha: string;
+  shortSha: string;
+  subject: string;
+  author: string;
+  /** Committer date, ISO 8601. */
+  at: string;
+}
+
+export interface MemoryHealthPayload {
+  state: MemoryHealthState;
+  /** 0–100 after caps; null when nothing could be evaluated. */
+  score: number | null;
+  band: MemoryHealthBand | null;
+  counts: MemoryHealthCounts;
+  /** Always the four groups, in catalogue order. */
+  groups: MemoryHealthGroup[];
+  /** Catalogue order. */
+  checks: MemoryHealthCheck[];
+  vault: {
+    notes: number;
+    claims: number;
+    edges: number;
+    /** Note files that differ from HEAD (incl. untracked); null when git is unavailable. */
+    uncommitted: number | null;
+    lastChange: MemoryHealthLastChange | null;
+    lastCommit: MemoryHealthLastCommit | null;
+  };
+  index: {
+    state: MemoryIndexState;
+    /** memory.sqlite mtime, ms since epoch; null when missing. */
+    builtAt: number | null;
+    /** From the last build this server saw; null when unknown. */
+    embeddings: MemoryBuildStats["embeddings"] | null;
+  };
+  /** Null when lint could not run. `fatal` counts findings of the rules that abort an index build. */
+  lint: { findings: number; fatal: number; checkedAt: number } | null;
+  git: MemoryGitState;
+  /** Inputs that failed; their checks are skipped. */
+  errors: Array<{ source: "snapshot" | "lint" | "git" | "index"; message: string }>;
+  checkedAt: number;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Timeline (plan §4): GET /api/memory/timeline, notes/:type/:slug/history, commits/:sha
+// ---------------------------------------------------------------------------------------------
+
+/** The sha that stands for the uncommitted working tree in events, history entries and commits/:sha. */
+export const MEMORY_WORKING_SHA = "working";
+
+/** The timeline filter (`?kind=`): every event, sign-off commits only, or everything else. */
+export const MEMORY_TIMELINE_KINDS = ["all", "signoff", "edit"] as const;
+export type MemoryTimelineKind = (typeof MEMORY_TIMELINE_KINDS)[number];
+
+export function isMemoryTimelineKind(value: string): value is MemoryTimelineKind {
+  return (MEMORY_TIMELINE_KINDS as readonly string[]).includes(value);
+}
+
+/** signoff: a `memory: sign-off of <slug>` commit; commit: any other; uncommitted: the working tree. */
+export type MemoryTimelineEventKind = "signoff" | "commit" | "uncommitted";
+
+/** A file's git status letter in a commit (`--raw`); untracked working-tree files are "A" with `untracked`. */
+export type MemoryChangeStatus = "A" | "M" | "D" | "R" | "C" | "T";
+
+/** One vault file a commit (or the working tree) changed. */
+export interface MemoryFileChange {
+  status: MemoryChangeStatus;
+  /** Workspace-relative posix path after the change, e.g. `memory/systems/x.md`. */
+  path: string;
+  /** The path before a rename or copy; null otherwise. */
+  oldPath: string | null;
+  /** noteIdForPath of `path`; null for vault files that are not notes. */
+  noteId: string | null;
+  /** noteIdForPath of `oldPath`. */
+  oldNoteId: string | null;
+  /** Current title from the snapshot; null for removed notes, other files, or when unknown. */
+  title: string | null;
+  /** `--numstat`; null for binary files. */
+  additions: number | null;
+  deletions: number | null;
+  /** Working tree only: a file git does not track yet. */
+  untracked?: boolean;
+}
+
+export type MemoryClaimChangeKind = "added" | "retired" | "removed" | "edited" | "promoted";
+
+/** What happened to one claim (`^c-<id>`) in a commit. */
+export interface MemoryClaimChange {
+  kind: MemoryClaimChangeKind;
+  /** Bare 6-hex block id, without `c-`. */
+  blockId: string;
+  noteId: string;
+  /** The claim text after the change; before it for "removed". */
+  text: string;
+  /** "edited": the text before. */
+  previousText?: string;
+  /** "retired": the `(retired: …)` reason. */
+  reason?: string;
+  /** "retired" with reason `superseded by ^c-<id>`: that bare id; null otherwise. */
+  supersededBy?: string | null;
+}
+
+export type MemoryClaimCounts = Record<MemoryClaimChangeKind, number>;
+
+/** `claimDeltas(diff)`: every claim change in a diff (note files only) and their counts. */
+export interface MemoryClaimDelta {
+  counts: MemoryClaimCounts;
+  changes: MemoryClaimChange[];
+}
+
+/**
+ * Whether claim changes were counted: yes; truncated (the diff hit the 4 MB cap, counts are a
+ * lower bound); too-large (over 200k changed lines, not analysed); failed (git error).
+ */
+export type MemoryClaimsAnalysed = "yes" | "truncated" | "too-large" | "failed";
+
+/** A changed file plus the claim changes inside it (the diff sheet's file list). */
+export interface MemoryCommitFile extends MemoryFileChange {
+  claims: MemoryClaimChange[];
+}
+
+/** Per-event counts for the change chips. */
+export interface MemoryTimelineTotals {
+  notesAdded: number;
+  notesChanged: number;
+  notesRemoved: number;
+  notesRenamed: number;
+  /** Vault files that are not notes (README, templates, bases, Obsidian settings). */
+  otherFiles: number;
+  linesAdded: number;
+  linesRemoved: number;
+  claims: MemoryClaimCounts;
+}
+
+export interface MemoryTimelineEvent {
+  kind: MemoryTimelineEventKind;
+  /** Full commit sha; MEMORY_WORKING_SHA for the uncommitted entry. */
+  sha: string;
+  shortSha: string;
+  parents: string[];
+  /** Commit subject; a generated line for the uncommitted entry. */
+  subject: string;
+  /** Null for the uncommitted entry. */
+  author: { name: string; email: string } | null;
+  /** ISO 8601. For the uncommitted entry, the newest mtime among its files. */
+  authoredAt: string;
+  committedAt: string;
+  /** Sign-offs: the `<slug>` of `memory: sign-off of <slug>`. */
+  project: string | null;
+  /** Adds ≥ 10 notes and ≥ 80% of its note changes are additions (a seed or an import). */
+  bulk: boolean;
+  files: MemoryFileChange[];
+  totals: MemoryTimelineTotals;
+  claimsAnalysed: MemoryClaimsAnalysed;
+}
+
+/** Page 1 only: the strip above the timeline and the weekly chart. */
+export interface MemoryTimelineSummary {
+  commits: number;
+  signoffs: number;
+  /** Distinct notes any commit touched. */
+  notesTouched: number;
+  /** ISO 8601 of the newest commit (or uncommitted change); null for an empty history. */
+  lastChangeAt: string | null;
+  /** Oldest first; `week` is the Monday, `YYYY-MM-DD`. */
+  weeks: Array<{ week: string; commits: number; signoffs: number }>;
+}
+
+export interface MemoryTimelinePayload {
+  git: MemoryGitState;
+  /** Page 1 only: the uncommitted vault changes, or null when the vault is clean. */
+  working: MemoryTimelineEvent | null;
+  /** Newest first. */
+  events: MemoryTimelineEvent[];
+  /** Opaque `<pinnedHead>.<offset>` for `?before=`; null at the start of history. */
+  nextCursor: string | null;
+  /** Page 1 only. */
+  summary?: MemoryTimelineSummary;
+  generatedAt: number;
+}
+
+/** One commit (or the working tree) that touched a note. */
+export interface MemoryNoteHistoryEntry {
+  kind: MemoryTimelineEventKind;
+  sha: string;
+  shortSha: string;
+  /** What happened to this note: A created, M edited, R renamed, D removed. */
+  status: MemoryChangeStatus;
+  /** Workspace-relative path at that commit. */
+  path: string;
+  oldPath: string | null;
+  subject: string;
+  author: { name: string; email: string } | null;
+  committedAt: string;
+  project: string | null;
+  additions: number | null;
+  deletions: number | null;
+  /** Null when the commit was not analysed (MemoryClaimsAnalysed other than yes/truncated). */
+  claims: MemoryClaimCounts | null;
+  claimChanges: MemoryClaimChange[];
+}
+
+export interface MemoryNoteHistoryPayload {
+  id: string;
+  /** Vault-relative path today (notePathForId). */
+  path: string | null;
+  git: MemoryGitState;
+  /** Newest first; the uncommitted entry on top when the note has uncommitted changes. */
+  entries: MemoryNoteHistoryEntry[];
+  /** More entries exist beyond `limit`. */
+  hasMore: boolean;
+  generatedAt: number;
+}
+
+export interface MemoryCommitDiffPayload {
+  git: MemoryGitState;
+  /** Null when git is unavailable. */
+  commit: MemoryTimelineEvent | null;
+  files: MemoryCommitFile[];
+  /** The file the diff is limited to (workspace-relative), or null for every vault file of the commit. */
+  path: string | null;
+  /** Unified git diff text (TextDiff's `diffText`). */
+  diff: string;
+  /** The diff hit its 1 MB cap and was cut at a line boundary. */
+  truncated: boolean;
+  generatedAt: number;
+}

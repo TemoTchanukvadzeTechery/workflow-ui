@@ -61,7 +61,7 @@ export function MemoryStatsHeader({ stats, className }: MemoryStatsHeaderProps) 
 
   return (
     <SectionCard className={className}>
-      <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between lg:gap-12">
+      <div className="flex flex-col gap-8 xl:flex-row xl:items-start xl:justify-between xl:gap-12">
         <div className="grid shrink-0 grid-cols-2 gap-x-8 gap-y-6 sm:grid-cols-3 sm:gap-x-12">
           <Stat label="Notes" value={stats.notes} muted={stats.notes === 0} hint={plural(stats.edges, "connection")} />
           <Stat
@@ -83,7 +83,7 @@ export function MemoryStatsHeader({ stats, className }: MemoryStatsHeaderProps) 
             hint={stats.staleDocs === 0 ? "Every signed-off file matches its accepted version" : "Signed-off files that changed after acceptance"}
           />
         </div>
-        <div className="flex w-full min-w-0 flex-col gap-3 lg:max-w-xl">
+        <div className="flex w-full min-w-0 flex-col gap-3 xl:max-w-xl">
           <div className="text-[13px] leading-5 text-muted-foreground">Notes by type</div>
           {breakdown.length === 0 ? (
             <p className="text-sm text-muted-foreground">No notes yet.</p>

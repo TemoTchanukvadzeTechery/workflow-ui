@@ -25,13 +25,15 @@ import {
   type MemoryRetiredClaim,
   type MemorySearchHit,
   type MemorySearchPayload,
-  type MemorySource,
   type MemoryStaleEntry,
   type MemoryStats,
   type MemoryStatusPayload,
 } from "@/lib/memory/types";
+import { parseRetiredBullet } from "./claim-grammar";
+import { assertMemoryNoteId, isMemoryCliError, memoryIndexBuilding, runMemory, runMemoryBuild } from "./cli";
 import { checkVault, memoryPaths } from "./config";
-import { assertMemoryNoteId, memoryIndexBuilding, runMemory, runMemoryBuild } from "./cli";
+
+export { memoryIndexBuilding };
 
 const WALK_TTL_MS = 5_000;
 /** Ids per `get` spawn: one argv comfortably holds 150 ids and the JSON stays well under maxBuffer. */
@@ -61,7 +63,7 @@ interface Fingerprint {
   maxMtimeMs: number;
 }
 
-interface SnapshotNote {
+export interface SnapshotNote {
   card: MemoryNoteCard;
   claims: MemoryClaim[];
   links: MemoryNeighbors;
@@ -70,7 +72,7 @@ interface SnapshotNote {
   linkCount: number;
 }
 
-interface MemorySnapshot {
+export interface MemorySnapshot {
   key: string;
   generatedAt: number;
   byId: Map<string, SnapshotNote>;
@@ -83,11 +85,27 @@ interface MemorySnapshot {
   resolve(target: string): MemoryNoteCard | null;
 }
 
+/**
+ * The last `index build` this server ran (implicitly when the index was older than the notes, or
+ * from POST index/build). Health reuses its lint findings while `key` still matches the walk.
+ */
+export interface MemoryBuildRecord {
+  /** The vault fingerprint taken just before the build. */
+  key: string;
+  /** When the build finished (or failed), ms since epoch. */
+  at: number;
+  /** Null when the build failed. */
+  stats: MemoryBuildStats | null;
+  /** A failed build: the CLI's error. A fatal lint finding aborts with code 2 and `details.findings`. */
+  failure: { message: string; code: number; details: unknown } | null;
+}
+
 interface ServiceState {
   walk?: { at: number; fp: Fingerprint };
   snapshot?: { key: string; promise: Promise<MemorySnapshot> };
   search: Map<string, Promise<MemorySearchPayload>>;
   searchKey?: string;
+  build?: MemoryBuildRecord;
 }
 
 const state: ServiceState = ((globalThis as { __memoryService?: ServiceState }).__memoryService ??= { search: new Map() });
@@ -152,6 +170,42 @@ function fingerprint(): Fingerprint {
   return fp;
 }
 
+export interface MemoryVaultWalk {
+  /** The fingerprint the snapshot and search caches key on; changes with any note file. */
+  key: string;
+  count: number;
+  /** The note file with the newest mtime; null for an empty vault. */
+  newest: { id: string; path: string; mtimeMs: number } | null;
+}
+
+/** The cached fs walk of the note files (no spawn; at most one walk per 5 s). */
+export function vaultWalk(): MemoryVaultWalk {
+  const fp = fingerprint();
+  let newest: WalkFile | null = null;
+  for (const f of fp.files) if (!newest || f.mtimeMs > newest.mtimeMs) newest = f;
+  return { key: fp.key, count: fp.count, newest: newest ? { id: newest.id, path: newest.path, mtimeMs: newest.mtimeMs } : null };
+}
+
+/** The last index build this server ran, successful or not; undefined until one runs. */
+export function lastMemoryBuild(): MemoryBuildRecord | undefined {
+  return state.build;
+}
+
+/** Run `index build` and remember its stats (or its failure) against the fingerprint `key`. */
+async function buildAndRecord(key: string): Promise<MemoryBuildStats> {
+  try {
+    const stats = await runMemoryBuild();
+    state.build = { key, at: Date.now(), stats, failure: null };
+    return stats;
+  } catch (err) {
+    const failure = isMemoryCliError(err)
+      ? { message: err.message, code: err.code, details: err.details }
+      : { message: err instanceof Error ? err.message : String(err), code: 5, details: undefined };
+    state.build = { key, at: Date.now(), stats: null, failure };
+    throw err;
+  }
+}
+
 // ---------------------------------------------------------------------------------------------
 // Snapshot
 // ---------------------------------------------------------------------------------------------
@@ -177,7 +231,7 @@ async function ensureIndexFresh(fp: Fingerprint): Promise<void> {
   } catch {
     // missing: build below
   }
-  if (indexMtime < fp.maxMtimeMs) await runMemoryBuild();
+  if (indexMtime < fp.maxMtimeMs) await buildAndRecord(fp.key);
 }
 
 function emptyStats(): MemoryStats {
@@ -317,91 +371,6 @@ export async function getStale(): Promise<MemoryStaleEntry[]> {
 // ---------------------------------------------------------------------------------------------
 // Note detail: snapshot entry + the body read from the vault file (no spawn)
 // ---------------------------------------------------------------------------------------------
-
-/** The claim-line grammar of CONTRACT §2.4, ported for the retired bullets the index excludes. */
-const BLOCK_ID_RE = /^\^c-([0-9a-f]{6})$/;
-const RETIRED_RE = /^(.*?)\s*\(retired:\s*(.*)\)$/;
-const DOCUMENT_RE = /^\[\[documents?\/([a-z0-9-]+)\]\]$/;
-const JIRA_RE = /^[A-Z][A-Z0-9]+-\d+$/;
-const CONFLUENCE_RE = /^confluence:(\d+)$/;
-const CODE_RE = /^bitbucket\.org\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+(\/[^\s@]*)?(@[A-Za-z0-9._-]+)?$/;
-
-function parseSourceToken(token: string): MemorySource | null {
-  const doc = DOCUMENT_RE.exec(token);
-  if (doc) return { kind: "document", ref: doc[1] };
-  if (JIRA_RE.test(token)) return { kind: "jira", ref: token };
-  const page = CONFLUENCE_RE.exec(token);
-  if (page) return { kind: "confluence", ref: page[1] };
-  if (CODE_RE.test(token)) return { kind: "code", ref: token };
-  return null;
-}
-
-/** The trailing run of tokens that are only sources, `§section` text and `(proposed)`. */
-function parseTrailingRun(tokens: string[]): { sources: MemorySource[]; proposed: boolean } | null {
-  const sources: MemorySource[] = [];
-  let proposed = false;
-  let sectionWords: string[] | null = null;
-  for (const token of tokens) {
-    const source = parseSourceToken(token);
-    if (source) {
-      sources.push(source);
-      sectionWords = null;
-      continue;
-    }
-    if (token === "(proposed)") {
-      proposed = true;
-      sectionWords = null;
-      continue;
-    }
-    const last = sources[sources.length - 1];
-    if (token.startsWith("§") && last?.kind === "document" && last.section === undefined) {
-      sectionWords = [];
-      const rest = token.slice(1);
-      if (rest !== "") sectionWords.push(rest);
-      last.section = sectionWords.join(" ");
-      continue;
-    }
-    if (sectionWords === null) return null;
-    sectionWords.push(token);
-    last.section = sectionWords.join(" ");
-  }
-  return { sources, proposed };
-}
-
-function parseSources(text: string): { sources: MemorySource[]; rest: string; proposed: boolean } {
-  const tokens = text.trim().split(/\s+/).filter((t) => t !== "");
-  for (let i = 0; i < tokens.length; i += 1) {
-    if (!parseSourceToken(tokens[i])) continue;
-    const run = parseTrailingRun(tokens.slice(i));
-    if (!run) continue;
-    const restTokens = tokens.slice(0, i);
-    if (restTokens[restTokens.length - 1] === "(proposed)") return { sources: run.sources, rest: restTokens.slice(0, -1).join(" "), proposed: true };
-    return { sources: run.sources, rest: restTokens.join(" "), proposed: run.proposed };
-  }
-  if (tokens[tokens.length - 1] === "(proposed)") return { sources: [], rest: tokens.slice(0, -1).join(" "), proposed: true };
-  return { sources: [], rest: tokens.join(" "), proposed: false };
-}
-
-function parseRetiredBullet(line: string): MemoryRetiredClaim | null {
-  const trimmed = line.trim();
-  if (!trimmed.startsWith("- ")) return null;
-  let content = trimmed.slice(2).trim();
-  let blockId: string | null = null;
-  const tokens = content.split(/\s+/);
-  const idMatch = BLOCK_ID_RE.exec(tokens[tokens.length - 1]);
-  if (idMatch) {
-    blockId = idMatch[1];
-    content = tokens.slice(0, -1).join(" ");
-  }
-  let retired = "";
-  const retiredMatch = RETIRED_RE.exec(content);
-  if (retiredMatch) {
-    retired = retiredMatch[2].trim();
-    content = retiredMatch[1];
-  }
-  const { sources, rest, proposed } = parseSources(content);
-  return { blockId, text: rest.trim(), proposed, sources, retired };
-}
 
 /** The body after the frontmatter block (CONTRACT §2.2), with an optional leading `# title` dropped. */
 function stripFrontmatter(text: string): string {
@@ -568,7 +537,7 @@ export function getMemoryStatus(): MemoryStatusPayload {
 
 /** POST index/build: force a rebuild and drop every cache so the next read reflects it. */
 export async function rebuildMemoryIndex(): Promise<MemoryBuildStats> {
-  const stats = await runMemoryBuild();
+  const stats = await buildAndRecord(walkVault().key);
   state.snapshot = undefined;
   state.walk = undefined;
   state.search.clear();

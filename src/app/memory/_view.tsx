@@ -1,37 +1,45 @@
 "use client";
 
 /**
- * /memory: the read-only overview of the po-workspace memory vault (plan A2/A3). A SegmentedControl
- * switches Table | Graph; the graph (plan A5) shares the table's type-group filter and can hide
- * notes without connections (on by default).
+ * /memory: the read-only overview of the po-workspace memory vault (plan A2/A3). Four tabs, kept
+ * in `?view=` (use-memory-view.ts): Table, Graph (plan A5; shares the table's type-group filter
+ * and can hide notes without connections, on by default), Health (plan §3) and Timeline (plan
+ * §4). The header is MemoryHero: the title, the tabs and refresh under the description, and the
+ * data brain drawn from the same graph cache as the Graph tab.
  * Error/empty states per plan A7: vault missing → full ErrorState with the resolved paths and the
  * env hint (from /api/memory/status); index building → skeleton with a caption about the first
  * build; a claim-less vault reads as quiet, not broken.
  */
 import { useIsFetching, useQueryClient } from "@tanstack/react-query";
-import { Check, Loader2, RefreshCw, Rows3, Waypoints, X } from "lucide-react";
+import { Check, HeartPulse, History, Loader2, RefreshCw, Rows3, Waypoints, X } from "lucide-react";
 import { useId, useMemo, useState } from "react";
-import { CardSkeleton, CircleIconButton, EmptyState, ErrorState, PageHeader, SectionCard, SegmentedControl, type SegmentedItem } from "@/components/common";
+import { CardSkeleton, CircleIconButton, EmptyState, ErrorState, SectionCard, SegmentedControl, type SegmentedItem } from "@/components/common";
+import { MemoryHero } from "@/components/memory/brain/memory-hero";
 import { filterGraph } from "@/components/memory/graph-layout";
+import { MemoryHealthPanel } from "@/components/memory/health/health-panel";
 import { MemoryGraph } from "@/components/memory/memory-graph";
 import { MemoryNoteTable } from "@/components/memory/note-table";
 import { MemoryStaleBand } from "@/components/memory/stale-band";
 import { MemoryStatsHeader } from "@/components/memory/stats-header";
 import { TYPES_BY_GROUP, typeGroupItems } from "@/components/memory/status-meta";
+import { MemoryTimelinePanel } from "@/components/memory/timeline/timeline-panel";
+import { useMemoryView, type MemoryViewMode } from "@/components/memory/use-memory-view";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
-import { qk } from "@/lib/api/keys";
 import { useMemoryGraph, useMemoryOverview, useMemoryStatus } from "@/lib/api/queries";
 import { plural } from "@/lib/format";
 import type { MemoryNoteListItem, MemoryNoteType, MemoryTypeGroup, MemoryWorkspaceCheck } from "@/lib/memory/types";
 import { cn } from "@/lib/utils";
 
-type MemoryViewMode = "table" | "graph";
-
 const VIEW_ITEMS: ReadonlyArray<SegmentedItem<MemoryViewMode>> = [
   { value: "table", label: "Table", icon: Rows3, id: "memory-tab-table", controls: "memory-panel-table" },
   { value: "graph", label: "Graph", icon: Waypoints, id: "memory-tab-graph", controls: "memory-panel-graph" },
+  { value: "health", label: "Health", icon: HeartPulse, id: "memory-tab-health", controls: "memory-panel-health" },
+  { value: "timeline", label: "Timeline", icon: History, id: "memory-tab-timeline", controls: "memory-panel-timeline" },
 ];
+
+/** Every memory query: refresh invalidates them all, and the spinner turns while any refetches. */
+const MEMORY_PREFIX = ["memory"] as const;
 
 export function MemoryView() {
   // Poll while the index builds so the skeleton flips to content the moment the build lands.
@@ -42,46 +50,43 @@ export function MemoryView() {
     },
   });
   const overview = useMemoryOverview();
-  const [view, setView] = useState<MemoryViewMode>("table");
+  const { view, setView } = useMemoryView();
   const qc = useQueryClient();
-  const graphFetching = useIsFetching({ queryKey: qk.memoryGraph }) > 0;
+  const refreshing = useIsFetching({ queryKey: MEMORY_PREFIX }) > 0;
 
   const check = status.data?.check;
   const vaultMissing = !!check && !check.ok;
   const building = !!status.data && status.data.check.ok && status.data.indexState !== "ready";
-  const refreshing = overview.isFetching || status.isFetching || graphFetching;
-  const refresh = () => {
-    void status.refetch();
-    if (vaultMissing) return;
-    void overview.refetch();
-    // Refetches only while the Graph tab has it mounted; otherwise marks it stale for next time.
-    void qc.invalidateQueries({ queryKey: qk.memoryGraph });
-  };
+  // The header's brain and the Graph tab share this cache.
+  const graph = useMemoryGraph({ enabled: !vaultMissing });
+  // Refetches what is mounted (status, overview, graph, the open tab) and marks the rest stale.
+  const refresh = () => void qc.invalidateQueries({ queryKey: MEMORY_PREFIX });
 
   return (
     <div className="flex flex-col gap-6 lg:gap-7">
-      <PageHeader
-        title="Memory"
+      <MemoryHero
         description={
           <>
             The organizational memory the pipeline reads and cites: typed notes, claims and their connections from the po-workspace vault. Documents reference it as{" "}
             <span className="font-mono whitespace-nowrap text-foreground">[M note-id]</span>. Read-only here; the vault is edited in Obsidian or by memory updates.
           </>
         }
-        actions={
+        toolbar={
           vaultMissing ? undefined : (
-            <div className="flex items-center gap-2">
+            <div className="flex min-w-0 items-center gap-2">
               <SegmentedControl<MemoryViewMode> role="tablist" aria-label="Memory view" value={view} onValueChange={setView} items={VIEW_ITEMS} />
               <CircleIconButton
                 icon={<RefreshCw aria-hidden className={cn("size-[18px]", refreshing && "animate-spin")} strokeWidth={1.75} />}
                 label="Refresh from the vault"
                 size="md"
+                className="shrink-0"
                 onClick={refresh}
                 disabled={refreshing}
               />
             </div>
           )
         }
+        graph={vaultMissing ? undefined : graph.data}
       />
 
       {vaultMissing ? (
@@ -89,6 +94,14 @@ export function MemoryView() {
       ) : view === "graph" ? (
         <div role="tabpanel" id="memory-panel-graph" aria-labelledby="memory-tab-graph">
           <GraphPanel building={building} notes={overview.data?.notes} />
+        </div>
+      ) : view === "health" ? (
+        <div role="tabpanel" id="memory-panel-health" aria-labelledby="memory-tab-health">
+          <MemoryHealthPanel building={building} />
+        </div>
+      ) : view === "timeline" ? (
+        <div role="tabpanel" id="memory-panel-timeline" aria-labelledby="memory-tab-timeline">
+          <MemoryTimelinePanel />
         </div>
       ) : (
         <div role="tabpanel" id="memory-panel-table" aria-labelledby="memory-tab-table" className="flex flex-col gap-6 lg:gap-7">

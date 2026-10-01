@@ -37,12 +37,17 @@ import type {
 } from "@/lib/delivery/types";
 import type {
   MemoryBuildStats,
+  MemoryCommitDiffPayload,
   MemoryGraphPayload,
+  MemoryHealthPayload,
   MemoryNoteDetailPayload,
+  MemoryNoteHistoryPayload,
   MemoryOverviewPayload,
   MemorySearchPayload,
   MemoryStaleEntry,
   MemoryStatusPayload,
+  MemoryTimelineKind,
+  MemoryTimelinePayload,
 } from "@/lib/memory/types";
 import type {
   AnswerBody,
@@ -195,14 +200,24 @@ export const delivery = {
 // /api/memory: read-only view over the po-workspace memory vault (plan A1)
 // ---------------------------------------------------------------------------------------------
 
+const noteUrl = (id: string) => `/api/memory/notes/${id.split("/").map(enc).join("/")}`;
+
 export const memory = {
   status: () => request<MemoryStatusPayload>("GET", "/api/memory/status"),
   overview: () => request<MemoryOverviewPayload>("GET", "/api/memory/overview"),
   /** `id` is `<type>/<slug>`, e.g. `system/customer-service-v2` or `org/plexus`. */
-  note: (id: string) => request<MemoryNoteDetailPayload>("GET", `/api/memory/notes/${id.split("/").map(enc).join("/")}`),
+  note: (id: string) => request<MemoryNoteDetailPayload>("GET", noteUrl(id)),
   search: (q: string, o: { types?: string[]; deep?: boolean; limit?: number } = {}) =>
     request<MemorySearchPayload>("GET", `/api/memory/search${qs({ q, types: o.types?.join(","), deep: o.deep, limit: o.limit })}`),
   graph: () => request<MemoryGraphPayload>("GET", "/api/memory/graph"),
   stale: () => request<{ stale: MemoryStaleEntry[] }>("GET", "/api/memory/stale"),
   rebuildIndex: () => request<MemoryBuildStats>("POST", "/api/memory/index/build", {}),
+  /** Score and checks; `refresh` re-runs lint and git instead of reusing the cached results. */
+  health: (o: { refresh?: boolean } = {}) => request<MemoryHealthPayload>("GET", `/api/memory/health${qs({ refresh: o.refresh })}`),
+  /** One page of the vault's git history; `before` is the previous page's `nextCursor`. */
+  timeline: (o: { limit?: number; before?: string | null; kind?: MemoryTimelineKind } = {}) =>
+    request<MemoryTimelinePayload>("GET", `/api/memory/timeline${qs({ limit: o.limit, before: o.before, kind: o.kind === "all" ? undefined : o.kind })}`),
+  noteHistory: (id: string, o: { limit?: number } = {}) => request<MemoryNoteHistoryPayload>("GET", `${noteUrl(id)}/history${qs({ limit: o.limit })}`),
+  /** `sha` is a commit sha or "working"; `path` (workspace-relative, `memory/…`) limits the diff to one file. */
+  commit: (sha: string, path?: string) => request<MemoryCommitDiffPayload>("GET", `/api/memory/commits/${enc(sha)}${qs({ path })}`),
 };

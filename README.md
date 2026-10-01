@@ -37,7 +37,15 @@ State lives in memory. It survives hot reload and is lost on a server restart, w
 
 `/memory` is a read-only view of the po-workspace memory vault (`po-workspace/memory/`, the Obsidian vault the pipeline reads and cites). It lists every note with its type, status, trust flags and connections, shows each note's claims, prose and neighbors, draws the connection graph, and makes `[M <note-id>]` / `[M <note-id>#^c-xxxxxx]` citations in documents link to the note with a hover card. ⌘K searches the vault too.
 
-Unlike the rest of the app it reads real data: the server runs `node tools/memory/memory.mjs` (the vault's own CLI, contract in `po-workspace/tools/memory/CONTRACT.md`) one call at a time and caches the result until a note file changes. When the vault's derived search index is missing it is rebuilt automatically; the first build may download a small embeddings model. A file watcher refreshes open Memory pages when notes change. Code: `src/server/memory` (config, CLI runner, service, router, watcher), `src/app/api/memory`, `src/app/memory`, `src/components/memory`.
+The page has four tabs, kept in the URL as `?view=`:
+- **Table:** every note.
+- **Graph:** the link map.
+- **Health:** a 0–100 score from 15 checks in four groups (Integrity, Freshness, Coverage, Trust). Each check expands to list the affected notes and a fix hint, and `#check-<id>` deep-links to a check. A "Memory health" card on Home summarises the score and the top issues.
+- **Timeline:** the vault's git history from po-workspace. It shows sign-off commits (`memory: sign-off of <project>`), edits and bulk imports, with notes and claims added or retired per commit, an uncommitted-changes band (po-brd and architect-aad refuse to run while vault notes are uncommitted), and a diff panel per commit.
+
+Each note page also has a History card. The header's brain is drawn from the vault itself: notes are neurons, links are synapses.
+
+Unlike the rest of the app it reads real data: the server runs `node tools/memory/memory.mjs` (the vault's own CLI, contract in `po-workspace/tools/memory/CONTRACT.md`) one call at a time and caches the result until a note file changes. When the vault's derived search index is missing it is rebuilt automatically; the first build may download a small embeddings model. A file watcher refreshes open Memory pages when notes change, and a git watcher does the same when a commit lands. Git is only read, with optional locks off; `refs/weft/*` snapshot commits never show up. Code: `src/server/memory` (config, CLI runner, service, router, watcher), `src/app/api/memory`, `src/app/memory`, `src/components/memory`.
 
 | Variable | Default | Use |
 |---|---|---|

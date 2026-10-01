@@ -3,15 +3,15 @@
 /**
  * Home, laid out like the reference overview. Row 1: the pipeline funnel with the prompt band,
  * and agent spend by stage. Row 2: spend per day, agent runs and human decisions per weekday, and
- * the rotating insights. Row 3: what needs attention and recent activity; then the projects
- * table. The period switch in the header (7, 14 or 30 days) drives every chart. Everything is
- * live: SSE invalidates the queries as runs progress.
+ * the rotating insights. Row 3: what needs attention and recent activity; then the memory
+ * vault's health and the projects table. The period switch in the header (7, 14 or 30 days)
+ * drives every chart. Everything is live: SSE invalidates the queries as runs progress.
  */
 import { ArrowRight, FolderKanban, Plus } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, type ReactNode } from "react";
 import { EmptyState, ErrorState, SectionCard } from "@/components/common";
-import { ActivityFeed, AgentSpendCard, AttentionCard, CardMenu, DotsCard, GreetingHeader, InsightsCard, PipelineCard, SpendPerDayCard } from "@/components/dashboard";
+import { ActivityFeed, AgentSpendCard, AttentionCard, CardMenu, DotsCard, GreetingHeader, InsightsCard, MemoryHealthCard, PipelineCard, SpendPerDayCard } from "@/components/dashboard";
 import { computeHomeMetrics, parseDay, startOfDay, type PeriodDays } from "@/components/dashboard/metrics";
 import { orderByGroup } from "@/components/inbox/bits";
 import { ProjectCard, ProjectsTable } from "@/components/project-list";
@@ -136,6 +136,9 @@ export function HomeView() {
           <SectionCard title="Activity" cardMenu={<CardMenu href="/inbox" label="Open the inbox" />} className="@3xl:col-span-2 @6xl:col-span-4">
             <ActivityFeed items={d.activity} projects={Object.fromEntries(d.projects.map((p) => [p.id, { name: p.name, key: p.key }]))} initial={6} emptyText="Nothing has happened yet." />
           </SectionCard>
+
+          {/* A compact full-width row, so the 8 + 4 rows stay intact and Insights stays the only loud card. */}
+          <MemoryHealthCard className="@3xl:col-span-2 @6xl:col-span-12" />
 
           <SectionCard
             title="Projects"

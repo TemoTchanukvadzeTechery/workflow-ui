@@ -6,3 +6,4 @@ export { InsightsCard, buildInsights } from "./InsightsCard";
 export { AttentionCard, type AttentionCardProps } from "./AttentionCard";
 export { ActivityFeed, type ActivityFeedProps } from "./ActivityFeed";
 export { CardMenu, type CardMenuItem, type CardMenuProps } from "./CardMenu";
+export { MemoryHealthCard } from "./MemoryHealthCard";

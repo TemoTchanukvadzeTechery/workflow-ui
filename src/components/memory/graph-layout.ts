@@ -176,7 +176,7 @@ const BEND_STEP = 10;
 const pairKey = (a: string, b: string) => (a < b ? `${a}|${b}` : `${b}|${a}`);
 
 /** FNV-1a, as a fraction in [0, 1). */
-function hash01(s: string): number {
+export function hash01(s: string): number {
   let h = 0x811c9dc5;
   for (let i = 0; i < s.length; i++) {
     h ^= s.charCodeAt(i);
@@ -186,7 +186,7 @@ function hash01(s: string): number {
 }
 
 /** d3's own LCG constants, with a fixed seed. */
-function lcg(seed = 1): () => number {
+export function lcg(seed = 1): () => number {
   let s = seed;
   return () => (s = (1664525 * s + 1013904223) % 4294967296) / 4294967296;
 }

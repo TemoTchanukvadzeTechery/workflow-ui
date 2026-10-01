@@ -5,7 +5,16 @@
  * live.ts (SSE from /api/events) rather than polling. Mutations invalidate what they touch and
  * surface ApiError messages through sonner toasts unless the caller handles onError itself.
  */
-import { useMutation, useQuery as useTanstackQuery, useQueryClient, type UseQueryOptions, type UseQueryResult } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery as useTanstackQuery,
+  useQueryClient,
+  type InfiniteData,
+  type UseInfiniteQueryResult,
+  type UseQueryOptions,
+  type UseQueryResult,
+} from "@tanstack/react-query";
 import { useSyncExternalStore } from "react";
 import { toast } from "sonner";
 import {
@@ -27,8 +36,9 @@ import {
   type TaskStartBody,
   type WaiveBody,
 } from "@/lib/delivery/types";
+import { MEMORY_WORKING_SHA, type MemoryHealthPayload, type MemoryTimelineKind, type MemoryTimelinePayload } from "@/lib/memory/types";
 import type { AnswerBody, RunStatus } from "@/lib/weft/types";
-import { delivery, memory, weft } from "./client";
+import { ApiError, delivery, memory, weft } from "./client";
 import { qk } from "./keys";
 
 const noopSubscribe = () => () => {};
@@ -117,6 +127,82 @@ export const useMemoryNote = (id: string | undefined, o?: Opts<Awaited<ReturnTyp
 
 export const useMemoryGraph = (o?: Opts<Awaited<ReturnType<typeof memory.graph>>>) =>
   useQuery({ queryKey: qk.memoryGraph, queryFn: memory.graph, staleTime: 15_000, ...o });
+
+/**
+ * Vault health (plan §3): score, grouped checks, vault figures. Refetched on window focus; polls
+ * every 4 s while the index builds. A 503 (no workspace) is final, so it is never retried.
+ */
+export const useMemoryHealth = (o?: Opts<MemoryHealthPayload>) =>
+  useQuery<MemoryHealthPayload>({
+    queryKey: qk.memoryHealth,
+    queryFn: () => memory.health(),
+    staleTime: 15_000,
+    refetchOnWindowFocus: true,
+    retry: (count, error) => !(error instanceof ApiError && (error.status === 503 || (error.status >= 400 && error.status < 500))) && count < 1,
+    refetchInterval: (query) => (query.state.data?.state === "building" ? 4_000 : false),
+    ...o,
+  });
+
+/** One commit (or the working tree, sha "working") with its files and diff, limited to `path` when given. */
+export const useMemoryCommit = (sha: string | undefined, path?: string | null) =>
+  useQuery({
+    queryKey: qk.memoryCommit(sha ?? "", path),
+    queryFn: () => memory.commit(sha!, path ?? undefined),
+    enabled: !!sha,
+    // A commit never changes; the working tree does.
+    staleTime: sha === MEMORY_WORKING_SHA ? 0 : Infinity,
+    gcTime: 10 * 60_000,
+  });
+
+/** The commits that touched one note, newest first (the uncommitted change on top). */
+export const useMemoryNoteHistory = (id: string | undefined, o: { limit?: number } = {}) =>
+  useQuery({
+    queryKey: qk.memoryNoteHistory(id ?? "", o.limit),
+    queryFn: () => memory.noteHistory(id!, { limit: o.limit }),
+    enabled: !!id,
+    staleTime: 15_000,
+  });
+
+/** Pages of the timeline; each page param is the `before` cursor that fetched it (null for page 1). */
+type MemoryTimelinePages = InfiniteData<MemoryTimelinePayload, string | null>;
+type MemoryTimelineResult = UseInfiniteQueryResult<MemoryTimelinePages, Error>;
+
+/**
+ * The vault timeline, one page at a time (`fetchNextPage` follows `nextCursor`). Page 1 carries
+ * `working` and `summary`. Pending until hydration, like every other data hook here.
+ */
+export function useMemoryTimeline(kind: MemoryTimelineKind = "all"): MemoryTimelineResult {
+  const result = useInfiniteQuery<MemoryTimelinePayload, Error, MemoryTimelinePages, ReturnType<typeof qk.memoryTimeline>, string | null>({
+    queryKey: qk.memoryTimeline(kind),
+    queryFn: ({ pageParam }) => memory.timeline({ kind, before: pageParam }),
+    initialPageParam: null,
+    getNextPageParam: (last) => last.nextCursor,
+    staleTime: 15_000,
+  });
+  const hydrated = useHydrated();
+  if (hydrated) return result;
+  return {
+    ...result,
+    data: undefined,
+    error: null,
+    status: "pending",
+    fetchStatus: "idle",
+    isPending: true,
+    isLoading: true,
+    isFetching: false,
+    isSuccess: false,
+    isError: false,
+    isLoadingError: false,
+    isRefetchError: false,
+    isPlaceholderData: false,
+    hasNextPage: false,
+    hasPreviousPage: false,
+    isFetchingNextPage: false,
+    isFetchingPreviousPage: false,
+    isFetchNextPageError: false,
+    isFetchPreviousPageError: false,
+  } as unknown as MemoryTimelineResult;
+}
 
 /** Debounce `q` at the call site (the server caches, but every distinct string is a CLI spawn). */
 export const useMemorySearch = (q: string, o: { enabled?: boolean; types?: string[]; deep?: boolean; limit?: number } = {}) =>
@@ -317,6 +403,19 @@ export const useRebuildMemoryIndex = () => {
     onSuccess: (stats) => {
       void qc.invalidateQueries({ queryKey: ["memory"] });
       toast.success(`Memory index rebuilt: ${stats.totals.notes} notes, ${stats.totals.claims} claims`);
+    },
+    onError: onErrorToast,
+  });
+};
+
+/** "Run checks again": health with `?refresh=1`, written straight into the health query. */
+export const useRecheckMemoryHealth = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => memory.health({ refresh: true }),
+    onSuccess: (health) => {
+      qc.setQueryData(qk.memoryHealth, health);
+      toast.success(health.score === null ? "Memory checks finished" : `Memory checks finished: ${health.score}/100`);
     },
     onError: onErrorToast,
   });

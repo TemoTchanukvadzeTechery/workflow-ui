@@ -4,7 +4,8 @@
  * /memory/[...id] — the note detail page (plan A4): header (title, type, status pill, flag pills,
  * copy-id / copy-citation / refresh circle buttons), the frontmatter card, the claims card, the
  * prose rendered through the docs Markdown component with the wikilinks plugin, and the
- * Connections right rail with a one-hop ego graph (plan A5) above its link groups. A #c-xxxxxx
+ * Connections right rail with a one-hop ego graph (plan A5) above its link groups, then the
+ * note's git History (plan §4) and the outline. A #c-xxxxxx
  * location hash scrolls to and rings that claim row. An unknown or malformed id renders a 404
  * state linking back to /memory with a search prefill.
  */
@@ -20,6 +21,7 @@ import { FrontmatterCard } from "@/components/memory/frontmatter-card";
 import { MemoryGraph } from "@/components/memory/memory-graph";
 import { NoteOutline } from "@/components/memory/note-outline";
 import { MemoryTypeLabel, NoteFlagPills, NoteStatusPill, OriginChip } from "@/components/memory/status-meta";
+import { NoteHistoryCard } from "@/components/memory/timeline/note-history-card";
 import { remarkWikilinks } from "@/components/memory/wikilinks";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -237,6 +239,7 @@ export function MemoryNoteView({ id }: { id: string }) {
         </div>
         <div className="flex min-w-0 flex-col gap-4 xl:self-stretch">
           <ConnectionsRail neighbors={detail.neighbors} graphSlot={egoGraph} />
+          <NoteHistoryCard noteId={id} />
           <NoteOutline prose={prose} className="hidden xl:sticky xl:top-24 xl:flex" />
         </div>
       </div>

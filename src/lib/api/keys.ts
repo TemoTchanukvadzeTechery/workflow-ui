@@ -1,4 +1,5 @@
 /** TanStack Query keys. live.ts invalidates by these prefixes when /api/events says something changed. */
+import type { MemoryTimelineKind } from "@/lib/memory/types";
 import type { RunStatus } from "@/lib/weft/types";
 
 export const qk = {
@@ -17,6 +18,11 @@ export const qk = {
   memorySearch: (q: string, types?: string, deep?: boolean, limit?: number) => ["memory", "search", q, types ?? "", deep ?? false, limit ?? 0] as const,
   memoryGraph: ["memory", "graph"] as const,
   memoryStale: ["memory", "stale"] as const,
+  memoryHealth: ["memory", "health"] as const,
+  memoryTimeline: (kind: MemoryTimelineKind) => ["memory", "timeline", kind] as const,
+  memoryNoteHistory: (id: string, limit?: number) => ["memory", "history", id, limit ?? 0] as const,
+  /** Outside the "memory" prefix on purpose: a commit never changes, so live events never refetch it. */
+  memoryCommit: (sha: string, path?: string | null) => ["memory-commit", sha, path ?? ""] as const,
 
   meta: ["weft", "meta"] as const,
   workflows: ["weft", "workflows"] as const,
