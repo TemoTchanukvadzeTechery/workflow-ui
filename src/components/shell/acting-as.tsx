@@ -93,7 +93,7 @@ export function ActingAs() {
           aria-label={`Acting as ${name}. Change name, theme and demo settings`}
           className="inline-flex shrink-0 rounded-full outline-none transition-transform hover:scale-[1.03] focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-100"
         >
-          <RingAvatar name={name} size={44} className="max-[899px]:size-10!" />
+          <RingAvatar name={name} size={44} className="narrow-nav:size-10!" />
         </button>
       </PopoverTrigger>
       <PopoverContent

@@ -54,6 +54,15 @@ Unlike the rest of the app it reads real data: the server runs `node tools/memor
 | `NEXT_PUBLIC_JIRA_BASE_URL` | unset | Links Jira keys in note sources, e.g. `https://example.atlassian.net` |
 | `NEXT_PUBLIC_CONFLUENCE_BASE_URL` | unset | Links `confluence:<id>` sources to `<base>/pages/viewpage.action?pageId=<id>` |
 
+## Assistant
+
+The sparkle button in the top bar (or ⌘J / Ctrl J) opens the assistant: a chat that can do whatever the app can. Ask "what's waiting for me?", "start requirements for Agreement Reporting", "approve the architecture gate", "search memory for checkout" or "what can you do?". On screens 1024px and wider it docks to the right, open on a first visit and then as you left it. The page narrows beside it and lays out for the width it has: while docked, the breakpoint variants (`sm:` to `2xl:`) need 384px more window (globals.css). On narrower screens it opens as a sheet. The conversation is kept in the browser.
+
+- **Tools.** Every action is a tool in `src/lib/assistant/tools/` (one file per area). A tool calls the same `src/lib/api/client.ts` functions as the buttons, so it is attributed to the "Acting as" name like a click. Reads run at once. Anything that changes state shows a card and waits for Confirm, and destructive actions ask in the danger tone. Human requests open the same form the Inbox uses, right inside the chat.
+- **Coverage.** Each tool lists the client functions it calls (`covers`). The type check fails when a client function has no tool, so a new button's API call needs a tool too (`src/lib/assistant/tools/index.ts`).
+- **Brain.** Today it is a rule-based mock (`src/lib/assistant/mock-brain.ts`) with no model. It matches the message against each tool's utterance templates, resolves names to ids ("checkout" becomes the project, "stage 2" Architecture, "T-3" a task; `slots.ts`), takes the project, stage or run from the current page, and asks for anything still missing. A model-backed brain implements the same `AssistantBrain` interface (`src/lib/assistant/types.ts`). It would take the tools as model tool definitions from `toolDefinitions()` (name, description, JSON schema from the tool's params) through a server route that holds the API key. Its tool calls run in the browser, behind the same Confirm.
+- **Check.** `pnpm exec tsx scripts/check-assistant.ts` checks the registry without the app: unique names, templates that compile and capture real params, and examples that each tool's own templates match.
+
 ## Seeded demo projects
 
 | Key | Project | What to look at |

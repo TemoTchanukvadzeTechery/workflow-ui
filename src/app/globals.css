@@ -11,6 +11,72 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * Breakpoints that follow the page, not the window. While the assistant is docked beside the
+ * page (from 64rem; src/components/assistant), the page is 24rem narrower than the viewport, so
+ * each breakpoint variant (sm…2xl and max-sm…max-2xl) needs 24rem more viewport before it
+ * applies: every page lays out for the width it really has. `wide-nav` / `narrow-nav` are the
+ * top nav's 900px switch. `html[data-assistant="open"]` is set before first paint (layout.tsx).
+ * Keep 24rem and 64rem in step with DOCK_MEDIA and the dock's width (assistant-store.ts and
+ * assistant-dock.tsx).
+ */
+@custom-variant sm {
+  &:where(html:not([data-assistant="open"]) *) { @media (width >= 40rem) { @slot; } }
+  &:where(html[data-assistant="open"] *) { @media (width >= 40rem) and (width < 64rem) { @slot; } }
+  &:where(html[data-assistant="open"] *) { @media (width >= 64rem) { @slot; } }
+}
+@custom-variant max-sm {
+  &:where(html:not([data-assistant="open"]) *) { @media (width < 40rem) { @slot; } }
+  &:where(html[data-assistant="open"] *) { @media (width < 40rem) { @slot; } }
+}
+@custom-variant md {
+  &:where(html:not([data-assistant="open"]) *) { @media (width >= 48rem) { @slot; } }
+  &:where(html[data-assistant="open"] *) { @media (width >= 48rem) and (width < 64rem) { @slot; } }
+  &:where(html[data-assistant="open"] *) { @media (width >= 72rem) { @slot; } }
+}
+@custom-variant max-md {
+  &:where(html:not([data-assistant="open"]) *) { @media (width < 48rem) { @slot; } }
+  &:where(html[data-assistant="open"] *) { @media (width < 48rem) { @slot; } }
+  &:where(html[data-assistant="open"] *) { @media (width >= 64rem) and (width < 72rem) { @slot; } }
+}
+@custom-variant wide-nav {
+  &:where(html:not([data-assistant="open"]) *) { @media (width >= 56.25rem) { @slot; } }
+  &:where(html[data-assistant="open"] *) { @media (width >= 56.25rem) and (width < 64rem) { @slot; } }
+  &:where(html[data-assistant="open"] *) { @media (width >= 80.25rem) { @slot; } }
+}
+@custom-variant narrow-nav {
+  &:where(html:not([data-assistant="open"]) *) { @media (width < 56.25rem) { @slot; } }
+  &:where(html[data-assistant="open"] *) { @media (width < 56.25rem) { @slot; } }
+  &:where(html[data-assistant="open"] *) { @media (width >= 64rem) and (width < 80.25rem) { @slot; } }
+}
+@custom-variant lg {
+  &:where(html:not([data-assistant="open"]) *) { @media (width >= 64rem) { @slot; } }
+  &:where(html[data-assistant="open"] *) { @media (width >= 88rem) { @slot; } }
+}
+@custom-variant max-lg {
+  &:where(html:not([data-assistant="open"]) *) { @media (width < 64rem) { @slot; } }
+  &:where(html[data-assistant="open"] *) { @media (width < 64rem) { @slot; } }
+  &:where(html[data-assistant="open"] *) { @media (width >= 64rem) and (width < 88rem) { @slot; } }
+}
+@custom-variant xl {
+  &:where(html:not([data-assistant="open"]) *) { @media (width >= 80rem) { @slot; } }
+  &:where(html[data-assistant="open"] *) { @media (width >= 104rem) { @slot; } }
+}
+@custom-variant max-xl {
+  &:where(html:not([data-assistant="open"]) *) { @media (width < 80rem) { @slot; } }
+  &:where(html[data-assistant="open"] *) { @media (width < 64rem) { @slot; } }
+  &:where(html[data-assistant="open"] *) { @media (width >= 64rem) and (width < 104rem) { @slot; } }
+}
+@custom-variant 2xl {
+  &:where(html:not([data-assistant="open"]) *) { @media (width >= 96rem) { @slot; } }
+  &:where(html[data-assistant="open"] *) { @media (width >= 120rem) { @slot; } }
+}
+@custom-variant max-2xl {
+  &:where(html:not([data-assistant="open"]) *) { @media (width < 96rem) { @slot; } }
+  &:where(html[data-assistant="open"] *) { @media (width < 64rem) { @slot; } }
+  &:where(html[data-assistant="open"] *) { @media (width >= 64rem) and (width < 120rem) { @slot; } }
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -710,5 +776,16 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/*
+ * The docked assistant's column shows from 64rem (1024px; narrower, the assistant opens as a
+ * sheet) while <html data-assistant="open">, which layout.tsx's boot script sets before first
+ * paint, so a reload does not shift the page. Unlayered, so it wins over the column's `hidden`.
+ */
+@media (width >= 64rem) {
+  html[data-assistant="open"] [data-assistant-dock] {
+    display: flex;
   }
 }

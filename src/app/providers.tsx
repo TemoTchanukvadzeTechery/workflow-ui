@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
+import { useAssistantInset } from "@/components/assistant";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -34,8 +35,7 @@ export function Providers({ children }: { children: ReactNode }) {
         <TooltipProvider delayDuration={250}>
           {children}
           <LiveUpdates />
-          {/* Top right, under the 48px top bar: bottom-right covered the sticky gate footer's buttons. */}
-          <Toaster position="top-right" offset={{ top: 60, right: 16 }} mobileOffset={{ top: 56, left: 12, right: 12 }} closeButton />
+          <AppToaster />
         </TooltipProvider>
       </QueryClientProvider>
     </ThemeProvider>
@@ -60,4 +60,13 @@ function LiveUpdates() {
     else toast.info(ev.title, opts);
   });
   return null;
+}
+
+/**
+ * Top right, under the 48px top bar (bottom-right covered the sticky gate footer's buttons), and
+ * left of the assistant while it is docked.
+ */
+function AppToaster() {
+  const inset = useAssistantInset();
+  return <Toaster position="top-right" offset={{ top: 60, right: 16 + inset }} mobileOffset={{ top: 56, left: 12, right: 12 }} closeButton />;
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { Menu, Search, X } from "lucide-react";
+import { AssistantButton } from "@/components/assistant";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -40,7 +41,7 @@ function MobileMenu({ pathname, inboxCount }: { pathname: string; inboxCount: nu
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <CircleIconButton icon={Menu} label="Open menu" className={cn(CIRCLE_SIZE, "min-[900px]:hidden")} />
+        <CircleIconButton icon={Menu} label="Open menu" className={cn(CIRCLE_SIZE, "wide-nav:hidden")} />
       </SheetTrigger>
       <SheetContent side="right" showCloseButton={false} className="w-[min(20rem,86vw)] gap-0 bg-background p-0">
         <SheetHeader className="h-[76px] flex-row items-center justify-between gap-3 px-5 py-0">
@@ -96,23 +97,24 @@ function MobileMenu({ pathname, inboxCount }: { pathname: string; inboxCount: nu
 
 /**
  * The top navigation (STYLE.md 6.1): brand on the left, text nav items centred with the active
- * one an ink pill, and search, inbox bell, live dot and the "Acting as" avatar on the right.
+ * one an ink pill, and search, the assistant, inbox bell, live dot and the "Acting as" avatar on the right.
  * Below 900px the items move into a menu sheet.
  */
 export function TopNav() {
   const pathname = usePathname();
   const inboxCount = useInboxAttentionCount();
   return (
-    <header className="grid h-[76px] grid-cols-[minmax(0,1fr)_auto] items-center gap-3 min-[900px]:grid-cols-[1fr_auto_1fr] min-[900px]:gap-4">
+    <header className="grid h-[76px] grid-cols-[minmax(0,1fr)_auto] items-center gap-3 wide-nav:grid-cols-[1fr_auto_1fr] wide-nav:gap-4">
       <Brand className="justify-self-start" />
-      <nav aria-label="Primary" className="hidden items-center gap-1 min-[900px]:flex xl:gap-2">
+      <nav aria-label="Primary" className="hidden items-center gap-1 wide-nav:flex xl:gap-2">
         {NAV_ITEMS.map((item) => (
           <NavLink key={item.href} item={item} active={item.match(pathname)} count={item.href === "/inbox" ? inboxCount : undefined} className="max-lg:px-3.5" />
         ))}
       </nav>
-      <div className="flex items-center justify-self-end gap-1.5 min-[900px]:gap-2.5">
+      <div className="flex items-center justify-self-end gap-1.5 wide-nav:gap-2.5">
         <LiveIndicator className="max-sm:hidden" />
         <SearchButton className="max-[419px]:hidden" />
+        <AssistantButton />
         <InboxBell />
         <ActingAs />
         <MobileMenu pathname={pathname} inboxCount={inboxCount} />

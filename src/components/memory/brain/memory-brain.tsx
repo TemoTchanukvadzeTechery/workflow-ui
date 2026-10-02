@@ -80,18 +80,30 @@ function useOnScreen(el: Element | null): boolean {
 /**
  * Pulses run only at lg and up without reduced motion. A display:none group is not enough:
  * Chromium keeps ticking CSS animations on SVG descendants of a hidden group, so the pulses
- * are not mounted at all below lg.
+ * are not mounted at all below lg. While the assistant is docked, lg needs 24rem more viewport
+ * (the shifted breakpoints in globals.css), so the docked query applies then.
  */
 const PULSE_QUERY = "(min-width: 64rem) and (prefers-reduced-motion: no-preference)";
+const PULSE_QUERY_DOCKED = "(min-width: 88rem) and (prefers-reduced-motion: no-preference)";
 
 function subscribePulseQuery(onChange: () => void) {
-  const mql = window.matchMedia(PULSE_QUERY);
-  mql.addEventListener("change", onChange);
-  return () => mql.removeEventListener("change", onChange);
+  const lists = [window.matchMedia(PULSE_QUERY), window.matchMedia(PULSE_QUERY_DOCKED)];
+  for (const mql of lists) mql.addEventListener("change", onChange);
+  const docking = new MutationObserver(onChange);
+  docking.observe(document.documentElement, { attributes: true, attributeFilter: ["data-assistant"] });
+  return () => {
+    for (const mql of lists) mql.removeEventListener("change", onChange);
+    docking.disconnect();
+  };
+}
+
+function pulsesAllowedNow(): boolean {
+  const docked = document.documentElement.dataset.assistant === "open";
+  return window.matchMedia(PULSE_QUERY).matches && (!docked || window.matchMedia(PULSE_QUERY_DOCKED).matches);
 }
 
 function usePulsesAllowed(): boolean {
-  return useSyncExternalStore(subscribePulseQuery, () => window.matchMedia(PULSE_QUERY).matches, () => false);
+  return useSyncExternalStore(subscribePulseQuery, pulsesAllowedNow, () => false);
 }
 
 function Pulses({ pulses }: { pulses: readonly Pulse[] }) {

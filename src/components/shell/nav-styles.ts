@@ -4,7 +4,7 @@
  */
 
 /** Circle buttons in the bar: 44px from 900px up, 40px below (CircleIconButton is 44px). */
-export const CIRCLE_SIZE = "max-[899px]:size-10";
+export const CIRCLE_SIZE = "narrow-nav:size-10";
 
 /** A text nav item: 15px text, 40px tall, 14px radius; hover is a well tint. */
 export const NAV_ITEM =
